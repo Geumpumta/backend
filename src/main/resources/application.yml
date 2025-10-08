@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: Geumpumta-Backend
+  profiles:
+    group:
+      local: local
+      dev: dev
+---
+
+spring:
+  profiles:
+    active: local
