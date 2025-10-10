@@ -1,0 +1,41 @@
+services:
+  mysql-geumpumta:
+    image: mysql:8.4.0
+    container_name: mysql-geumpumta
+    restart: always
+    ports:
+      - "3311:3306"
+    environment:
+      MYSQL_DATABASE: geumpumta
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./docker-infra/mysql/data:/var/lib/mysql      # 데이터 파일
+      - ./docker-infra/mysql/config:/etc/mysql/conf.d # 사용자 정의 설정(.cnf)
+      - ./docker-infra/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - appnet
+
+  redis-geumpumta:
+    image: redis:alpine
+    container_name: redis-geumpumta
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: Asia/Seoul
+    labels:
+      - "name=redis"
+      - "mode=standalone"
+    volumes:
+      - ./docker-infra/redis/data:/data
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge
