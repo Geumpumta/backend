@@ -1,0 +1,4 @@
+[submodule "src/main/resources/security"]
+	path = src/main/resources/security
+	url = https://github.com/Geumpumta/backend-security.git
+	branch = main
