@@ -1,4 +1,8 @@
 spring:
+  config:
+    activate:
+      on-profile: test
+
   datasource:
     # H2 인메모리 DB (MySQL 호환 모드)
     url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
