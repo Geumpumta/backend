@@ -22,9 +22,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: eclipse-temurin:21-jdk
-
     services:
       mysql-geumpumta:
         image: mysql:8.4.0
