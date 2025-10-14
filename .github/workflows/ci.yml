@@ -37,15 +37,15 @@ jobs:
             --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
             --health-interval=10s --health-timeout=5s --health-retries=10
 
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        redis:
+          image: redis:alpine
+          ports:
+            - 6379:6379
+          options: >-
+            --health-cmd "redis-cli ping"
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
 
     steps:
       # 현재 저장소의 소스 코드와 서브 모듈 내려 받기
