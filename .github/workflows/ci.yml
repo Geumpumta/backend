@@ -70,11 +70,7 @@ jobs:
 
       # 빌드 진행
       - name: Build with Gradle
-        env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://mysql-geumpumta:3306/geumpumta?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=utf8
-          SPRING_DATASOURCE_USERNAME: app
-          SPRING_DATASOURCE_PASSWORD: app
-        run: ./gradlew clean build
+        run: ./gradlew clean build -Dspring.profiles.active=test
 
       # 테스트 결과 출력
       - name: Publish Test Report

@@ -5,6 +5,7 @@ spring:
     group:
       local: local
       dev: dev
+      test: test
 ---
 
 spring:

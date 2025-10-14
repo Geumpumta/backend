@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    # H2 인메모리 DB (MySQL 호환 모드)
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop   # 테스트 시 엔티티로 스키마 생성/삭제
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect  # 운영 DB가 MySQL이면 맞춰둠
+        format_sql: true
+    open-in-view: false
+
+  # 스키마/데이터 init 스크립트가 있으면 H2에서 충돌할 수 있어 비활성화
+  sql:
+    init:
+      mode: never
