@@ -58,7 +58,7 @@ jobs:
 
       # 빌드 진행
       - name: Build with Gradle
-        run: ./gradlew clean build -Dspring.profiles.active=test
+        run: ./gradlew clean build
 
       # 테스트 결과 출력
       - name: Publish Test Report
