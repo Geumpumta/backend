@@ -98,6 +98,6 @@ jobs:
             --name ${{ vars.CONTAINER_NAME }} \
             --network ${{ vars.NETWORK_NAME }} \
             -p ${{ secrets.DEV_WEB_PORT }}:8080 \
-            -e USE_PROFILE=dev \
+            -e SPRING_PROFILES_ACTIVE=dev \
             -e TZ=Asia/Seoul \
             ${{ needs.build.outputs.image-tag }}
