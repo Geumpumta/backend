@@ -37,6 +37,9 @@ spring:
       max-file-size: 10MB     # 한 파일 최대 크기
       max-request-size: 100MB  # 전체 요청 최대 크기 (여러 파일 합산)
 
+server:
+  forward-headers-strategy: framework
+
 logging:
   level:
     # ---- HTTP 트래픽 흐름을 살펴봅니다.
@@ -47,3 +50,4 @@ logging:
     org.hibernate.orm.jdbc.bind: trace
     # ---- 질의문 실행 결과를 살펴봅니다.
     org.hibernate.orm.jdbc.extract: trace
+
