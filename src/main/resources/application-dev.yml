@@ -4,6 +4,7 @@ spring:
       on-profile: dev
     import:
       - security/application-database.yml
+      - security/application-security.yml
 
   datasource:
     url: ${geumpumta.mysql.url}
