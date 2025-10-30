@@ -62,7 +62,7 @@ public class StudySessionController {
     @PostMapping("/reconnect")
     @PreAuthorize("hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<StudyStartResponse>> reconnect(@RequestBody StudyReconnectRequest request, Long userId){
+    public ResponseEntity<ResponseBody<StudyStartResponse>> reconnect(@Valid @RequestBody StudyReconnectRequest request, Long userId){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.reconnectStudySession(request, userId)));
     }
 }
