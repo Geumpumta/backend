@@ -113,7 +113,11 @@ public class EmailService {
     public boolean isEmailOwner(EmailCodeVerifyRequest request, Long userId){
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
-        if(user.getSchoolEmail().equals( request.email())){
+        String schoolEmail = user.getSchoolEmail();
+        if(schoolEmail == null){
+            return false;
+        }
+        if(user.getSchoolEmail().equals(request.email())){
             return false;
         }
         return true;
