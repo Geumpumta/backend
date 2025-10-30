@@ -32,7 +32,7 @@ public class StudySessionService {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime now = LocalDateTime.now();
         Long totalStudySession = studySessionRepository.sumCompletedStudySessionByUserId(userId, startOfDay, now);
-        return StudySessionResponse.fromEntity(totalStudySession);
+        return StudySessionResponse.of(totalStudySession);
     }
 
     /*
