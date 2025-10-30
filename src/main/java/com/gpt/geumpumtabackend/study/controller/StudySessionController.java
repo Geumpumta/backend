@@ -1,5 +1,6 @@
 package com.gpt.geumpumtabackend.study.controller;
 
+import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
@@ -9,14 +10,15 @@ import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.service.StudySessionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/study")
 @RequiredArgsConstructor
+@Slf4j
 public class StudySessionController {
 
     private final StudySessionService studySessionService;
@@ -26,7 +28,8 @@ public class StudySessionController {
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ResponseBody<StudySessionResponse>> getTodayStudySession(@AuthenticationPrincipal  Long userId){
+    @AssignUserId
+    public ResponseEntity<ResponseBody<StudySessionResponse>> getTodayStudySession(Long userId){
         StudySessionResponse studySessionResponse = studySessionService.getTodayStudySession(userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionResponse));
     }
@@ -36,7 +39,8 @@ public class StudySessionController {
      */
     @PostMapping("/start")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(@RequestBody StudyStartRequest request, @AuthenticationPrincipal Long userId){
+    @AssignUserId
+    public ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(@RequestBody StudyStartRequest request, Long userId){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.startStudySession(request, userId)));
     }
 
@@ -45,7 +49,8 @@ public class StudySessionController {
      */
     @PostMapping("/end")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ResponseBody<Void>> endStudySession(@RequestBody StudyEndRequest request, @AuthenticationPrincipal Long userId){
+    @AssignUserId
+    public ResponseEntity<ResponseBody<Void>> endStudySession(@RequestBody StudyEndRequest request, Long userId){
         studySessionService.endStudySession(request, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
@@ -55,7 +60,8 @@ public class StudySessionController {
      */
     @PostMapping("/reconnect")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ResponseBody<StudyStartResponse>> reconnect(@RequestBody StudyReconnectRequest request, @AuthenticationPrincipal Long userId){
+    @AssignUserId
+    public ResponseEntity<ResponseBody<StudyStartResponse>> reconnect(@RequestBody StudyReconnectRequest request, Long userId){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.reconnectStudySession(request, userId)));
     }
 }
