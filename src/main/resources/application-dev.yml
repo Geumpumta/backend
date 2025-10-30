@@ -5,6 +5,7 @@ spring:
     import:
       - security/application-database.yml
       - security/application-security.yml
+      - security/application-mail.yml
 
   datasource:
     url: ${geumpumta.mysql.url}
