@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 
 
 @Service
-@Getter
 @Slf4j
 @RequiredArgsConstructor
 public class EmailService {
@@ -31,7 +30,6 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final RedisTemplate<String, String> redisTemplate;
     private final UserRepository userRepository;
-    private String code;
 
     @Value("${spring.mail.username}")
     private String username;
@@ -63,8 +61,8 @@ public class EmailService {
     // 메일 전송
     public void sendMail(EmailCodeRequest request){
         try{
-            createCode();
-            MimeMessage mimeMessage = createMimeMessage(request);
+            String code = createCode();
+            MimeMessage mimeMessage = createMimeMessage(request, code);
 
             // TODO: 하드코딩된 key를 변경하기
             redisTemplate.opsForValue().set(
@@ -81,7 +79,7 @@ public class EmailService {
     }
 
     // 메일 생성
-    public MimeMessage createMimeMessage(EmailCodeRequest request) throws MessagingException {
+    public MimeMessage createMimeMessage(EmailCodeRequest request, String code) throws MessagingException {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
@@ -102,13 +100,13 @@ public class EmailService {
     }
 
     // 인증번호 생성
-    public void createCode(){
+    public String createCode(){
         Random r = new Random();
         StringBuilder randomNumber = new StringBuilder();
         for(int i = 0; i < 6; i++) {
             randomNumber.append(r.nextInt(10));
         }
-        code = randomNumber.toString();
+        return randomNumber.toString();
     }
 
     // 인증코드 요청 보낸 사람과 현재 api 호출하는 사람의 학교 이메일이 동일한지 검증
