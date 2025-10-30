@@ -21,6 +21,9 @@ public class User extends BaseEntity {
     @Column(unique = true)
     private String email;
 
+    @Column(unique = true)
+    private String schoolEmail;
+
     @Enumerated(value = EnumType.STRING)
     @Getter
     private UserRole role;
@@ -38,13 +41,17 @@ public class User extends BaseEntity {
     private String providerId;
 
     @Builder
-    public User(String email, UserRole role, String name, String picture, OAuth2Provider provider, String providerId, String mode) {
+    public User(String email, UserRole role, String name, String picture, OAuth2Provider provider, String providerId) {
         this.email = email;
         this.role = role;
         this.name = name;
         this.picture = picture;
         this.provider = provider;
         this.providerId = providerId;
+    }
+
+    public void setSchoolEmail(String schoolEmail) {
+        this.schoolEmail = schoolEmail;
     }
 
 }
