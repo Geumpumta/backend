@@ -3,6 +3,24 @@ spring:
     activate:
       on-profile: test
 
+  mail:
+    host: dummy-naver.com #smtp 서버 주소
+    port: 123 # 메일 인증서버 포트
+    username: dummyUsername #네이버 아이디
+    password: dummyPassword #네이버 애플리케이션 비밀번호
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+          ssl:
+            enable: true
+
   security:
     oauth2:
       client:
@@ -47,6 +65,13 @@ spring:
     username: sa
     password:
 
+  data:
+    redis:
+      host: dummy-redis-host
+      port: 122
+      password: dummy-redis-password
+      repositories:
+        enabled: false
   jpa:
     generate-ddl: false
     hibernate:
