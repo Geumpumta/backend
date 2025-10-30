@@ -51,7 +51,7 @@ public class EmailController {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('GUEST')")
     public ResponseEntity<ResponseBody<EmailCodeVerifyResponse>> verifyCode(
-            @RequestBody EmailCodeVerifyRequest request,
+            @RequestBody @Valid EmailCodeVerifyRequest request,
             Long userId
     ){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(emailService.verifyCode(request, userId)));
