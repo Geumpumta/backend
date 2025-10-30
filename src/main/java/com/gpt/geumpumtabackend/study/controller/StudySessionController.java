@@ -9,6 +9,7 @@ import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.service.StudySessionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class StudySessionController {
     메인 홈
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     @AssignUserId
     public ResponseEntity<ResponseBody<StudySessionResponse>> getTodayStudySession(Long userId){
         StudySessionResponse studySessionResponse = studySessionService.getTodayStudySession(userId);
@@ -38,9 +39,9 @@ public class StudySessionController {
     공부 시작
      */
     @PostMapping("/start")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(@RequestBody StudyStartRequest request, Long userId){
+    public ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(@Valid @RequestBody StudyStartRequest request, Long userId){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.startStudySession(request, userId)));
     }
 
@@ -48,9 +49,9 @@ public class StudySessionController {
     공부 종료
      */
     @PostMapping("/end")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<Void>> endStudySession(@RequestBody StudyEndRequest request, Long userId){
+    public ResponseEntity<ResponseBody<Void>> endStudySession(@Valid @RequestBody StudyEndRequest request, Long userId){
         studySessionService.endStudySession(request, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
@@ -59,7 +60,7 @@ public class StudySessionController {
     와이파이 끊겼을 시
      */
     @PostMapping("/reconnect")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('USER')")
     @AssignUserId
     public ResponseEntity<ResponseBody<StudyStartResponse>> reconnect(@RequestBody StudyReconnectRequest request, Long userId){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.reconnectStudySession(request, userId)));
