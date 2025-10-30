@@ -16,7 +16,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
 
 
     // 날짜가 오늘이고, userId와 일치하고, endTime이 null이 아닌 것
-    @Query(value = "SELECT COALESCE(SUM(TIMESTAMPDIFF(SECOND, s.start_time, s.end_time)), 0) " +
+    @Query(value = "SELECT COALESCE(SUM(s.total_millis), 0) " +
             "FROM study_session s " +
             "WHERE s.user_id = :userId " +
             "AND s.end_time BETWEEN :startOfDay AND :endOfDay", nativeQuery = true)
