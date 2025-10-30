@@ -35,7 +35,7 @@ public enum ExceptionType {
     BBAT_NOT_UPDATED(UNAUTHORIZED, "U005", "판매자 밭 정보가 입력되지 않았습니다."),
 
     // Study
-    STUDY_SESSION_NOT_FOUND(NOT_FOUND,"S001","해당 공부 세션을 찾을 수 없습니다.")
+    STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다.")
 
 
 
