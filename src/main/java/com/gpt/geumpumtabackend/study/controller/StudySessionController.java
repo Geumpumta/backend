@@ -28,7 +28,7 @@ public class StudySessionController {
     메인 홈
      */
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
     public ResponseEntity<ResponseBody<StudySessionResponse>> getTodayStudySession(Long userId){
         StudySessionResponse studySessionResponse = studySessionService.getTodayStudySession(userId);
@@ -39,7 +39,7 @@ public class StudySessionController {
     공부 시작
      */
     @PostMapping("/start")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
     public ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(@Valid @RequestBody StudyStartRequest request, Long userId){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.startStudySession(request, userId)));
@@ -49,7 +49,7 @@ public class StudySessionController {
     공부 종료
      */
     @PostMapping("/end")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
     public ResponseEntity<ResponseBody<Void>> endStudySession(@Valid @RequestBody StudyEndRequest request, Long userId){
         studySessionService.endStudySession(request, userId);
@@ -60,7 +60,7 @@ public class StudySessionController {
     와이파이 끊겼을 시
      */
     @PostMapping("/reconnect")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
     public ResponseEntity<ResponseBody<StudyStartResponse>> reconnect(@Valid @RequestBody StudyReconnectRequest request, Long userId){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.reconnectStudySession(request, userId)));
