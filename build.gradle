@@ -30,7 +30,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
@@ -44,15 +43,16 @@ dependencies {
     testImplementation 'com.h2database:h2'
     implementation 'com.h2database:h2'
 
-    // jwt
+    // Jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly   'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly   'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
+    // Validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     // mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
-
-
 }
 
 tasks.named('test') {
