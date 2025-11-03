@@ -41,7 +41,6 @@ dependencies {
 
     // h2
     testImplementation 'com.h2database:h2'
-    implementation 'com.h2database:h2'
 
     // jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
