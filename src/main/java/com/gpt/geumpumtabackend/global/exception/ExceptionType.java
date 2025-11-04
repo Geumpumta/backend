@@ -29,10 +29,8 @@ public enum ExceptionType {
 
     // User
     USER_NOT_FOUND(NOT_FOUND, "U001","사용자가 존재하지 않습니다"),
-    USER_NOT_FARMER(FORBIDDEN, "U002", "판매자만 가능한 기능입니다."),
-    LOCATION_NOT_FOUND(NOT_FOUND, "U003", "저장된 위치를 찾을 수 없습니다."),
-    USER_NICKNAME_DUPLICATED(FORBIDDEN, "U004", "중복된 닉네임을 사용할 수 없습니다."),
-    BBAT_NOT_UPDATED(UNAUTHORIZED, "U005", "판매자 밭 정보가 입력되지 않았습니다."),
+    SCHOOL_EMAIL_ALREADY_REGISTERED(FORBIDDEN, "U002", "이미 등록된 학교 이메일입니다"),
+    DUPLICATED_SCHOOL_EMAIL(FORBIDDEN, "U003", "중복된 학교 이메일입니다."),
 
     // Study
     STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다.")
