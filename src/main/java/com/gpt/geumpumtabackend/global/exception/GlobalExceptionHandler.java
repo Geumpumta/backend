@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RequiredArgsConstructor
 @Slf4j
-@RestControllerAdvice(annotations = {RestController.class}, basePackages = {"com.uhdyl.backend"})
+@RestControllerAdvice(annotations = {RestController.class}, basePackages = {"com.gpt.geumpumtabackend"})
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
