@@ -32,7 +32,7 @@ public class UserService {
         if(user.getSchoolEmail() != null)
             throw new BusinessException(ExceptionType.SCHOOL_EMAIL_ALREADY_REGISTERED);
 
-        if(userRepository.findBySchoolEmail(request.email()))
+        if(userRepository.existsBySchoolEmail((request.email())))
             throw new BusinessException(ExceptionType.DUPLICATED_SCHOOL_EMAIL);
 
         user.registerSchoolEmail(request.email());
