@@ -29,6 +29,6 @@ public class UserService {
     public void saveSchoolEmail(Long userId, EmailCodeRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        user.setSchoolEmail(request.email());
+        user.registerSchoolEmail(request.email());
     }
 }

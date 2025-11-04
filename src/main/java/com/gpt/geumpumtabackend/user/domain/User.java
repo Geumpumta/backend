@@ -50,7 +50,7 @@ public class User extends BaseEntity {
         this.providerId = providerId;
     }
 
-    public void setSchoolEmail(String schoolEmail) {
+    public void registerSchoolEmail(String schoolEmail) {
         this.schoolEmail = schoolEmail;
     }
 
