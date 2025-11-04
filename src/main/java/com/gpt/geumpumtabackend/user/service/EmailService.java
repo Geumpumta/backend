@@ -39,7 +39,7 @@ public class EmailService {
     // TODO : 인증코드 검증과 삭제를 원자적으로 수행해야함
     // 인증코드 검증
     public EmailCodeVerifyResponse verifyCode(EmailCodeVerifyRequest request, Long userId){
-        if(isEmailOwner(request, userId)){
+        if(!isEmailOwner(request, userId)){
             return EmailCodeVerifyResponse.of(false);
         }
         String emailCode = redisTemplate.opsForValue().get("email:"+request.email());
@@ -117,7 +117,7 @@ public class EmailService {
         if(schoolEmail == null){
             return false;
         }
-        if(user.getSchoolEmail().equals(request.email())){
+        if(!user.getSchoolEmail().equals(request.email())){
             return false;
         }
         return true;
