@@ -29,8 +29,8 @@ public enum ExceptionType {
 
     // User
     USER_NOT_FOUND(NOT_FOUND, "U001","사용자가 존재하지 않습니다"),
-    SCHOOL_EMAIL_ALREADY_REGISTERED(FORBIDDEN, "U002", "이미 등록된 학교 이메일입니다"),
-    DUPLICATED_SCHOOL_EMAIL(FORBIDDEN, "U003", "중복된 학교 이메일입니다."),
+    SCHOOL_EMAIL_ALREADY_REGISTERED(FORBIDDEN, "U002", "학교 이메일이 등록된 상태입니다"),
+    DUPLICATED_SCHOOL_EMAIL(FORBIDDEN, "U003", "이미 사용중인 이메일입니다"),
 
     // Study
     STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다.")
