@@ -34,8 +34,7 @@ public class EmailController {
             @RequestBody @Valid EmailCodeRequest request,
             Long userId
     ){
-        userService.saveSchoolEmail(userId, request);
-        emailService.sendMail(request);
+        emailService.sendMail(request, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
 
