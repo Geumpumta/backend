@@ -1,5 +1,7 @@
 package com.gpt.geumpumtabackend.user.domain;
 
+import com.gpt.geumpumtabackend.global.exception.BusinessException;
+import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +32,6 @@ public enum Department {
                 return department;
             }
         }
-        return null;
+        throw new BusinessException(ExceptionType.DEPARTMENT_NOT_FOUND);
     }
 }
