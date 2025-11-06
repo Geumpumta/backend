@@ -6,7 +6,7 @@ import com.gpt.geumpumtabackend.user.domain.Department;
 public record DepartmentRankingEntryResponse(
         Department departmentName,
         Long totalMillis,
-        Integer rank
+        Long rank
 ) {
     public static DepartmentRankingEntryResponse of(DepartmentRankingTemp departmentRankingTemp) {
         return new DepartmentRankingEntryResponse(

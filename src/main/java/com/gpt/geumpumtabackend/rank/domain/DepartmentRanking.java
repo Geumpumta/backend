@@ -18,8 +18,8 @@ public class DepartmentRanking {
     @Enumerated(EnumType.STRING)
     private Department department;
 
-    @Column(nullable = false)
-    private Integer rank;
+    @Column(nullable = false, name = "ranking")
+    private Long rank;
 
     @Column(nullable = false)
     private Long totalMillis;
@@ -32,7 +32,7 @@ public class DepartmentRanking {
     private LocalDateTime calculatedAt;
 
     @Builder
-    public DepartmentRanking(Department department, Integer rank, Long totalMillis, RankingType rankingType, LocalDateTime calculatedAt) {
+    public DepartmentRanking(Department department, Long rank, Long totalMillis, RankingType rankingType, LocalDateTime calculatedAt) {
         this.department = department;
         this.rank = rank;
         this.totalMillis = totalMillis;

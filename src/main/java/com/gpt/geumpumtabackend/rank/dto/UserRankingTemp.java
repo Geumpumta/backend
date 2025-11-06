@@ -7,9 +7,9 @@ public class UserRankingTemp {
     private Long userId;
     private String username;
     private Long totalMillis;
-    private Integer rank;
+    private Long rank;
 
-    public UserRankingTemp(Long userId, String username, Long totalMillis, Integer rank) {
+    public UserRankingTemp(Long userId, String username, Long totalMillis, Long rank) {
         this.userId = userId;
         this.username = username;
         this.totalMillis = totalMillis;

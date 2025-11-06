@@ -18,8 +18,8 @@ public class UserRanking {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false)
-    private int rank;
+    @Column(nullable = false, name = "ranking")
+    private Long rank;
 
     @Column(nullable = false)
     private Long totalMillis;
@@ -32,7 +32,7 @@ public class UserRanking {
     private LocalDateTime calculatedAt;
 
     @Builder
-    public UserRanking(Long id, User user, int rank, Long totalMillis, RankingType rankingType, LocalDateTime calculatedAt) {
+    public UserRanking(Long id, User user, Long rank, Long totalMillis, RankingType rankingType, LocalDateTime calculatedAt) {
         this.id = id;
         this.user = user;
         this.rank = rank;

@@ -6,7 +6,7 @@ import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
 public record PersonalRankingEntryResponse(
         Long userId,
         Long totalMillis,
-        Integer rank,
+        Long rank,
         String username
 ) {
     public static PersonalRankingEntryResponse of(UserRankingTemp userRankingTemp) {
