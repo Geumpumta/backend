@@ -26,7 +26,7 @@ public interface TokenApi {
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
                     response = TokenResponse.class,
-                    description = "토큰 재발급 검색 성공"
+                    description = "토큰 재발급 성공"
             ),
             errors = {
                     @SwaggerApiFailedResponse(ExceptionType.JWT_INVALID),
