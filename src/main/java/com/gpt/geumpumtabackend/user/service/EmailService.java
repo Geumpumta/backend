@@ -74,7 +74,7 @@ public class EmailService {
         }
         catch (Exception e){
             log.error("메일 전송 실패 email={}, err={}", request.email(), e.toString(), e);
-            throw new IllegalStateException("메일 전송에 실패했습니다.");
+            throw new BusinessException(ExceptionType.CANT_SEND_MAIL);
         }
     }
 
