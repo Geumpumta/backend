@@ -37,14 +37,18 @@ public class User extends BaseEntity {
 
     private String providerId;
 
+    @Enumerated(EnumType.STRING)
+    private Department department;
+
     @Builder
-    public User(String email, UserRole role, String name, String picture, OAuth2Provider provider, String providerId, String mode) {
+    public User(String email, UserRole role, String name, String picture, OAuth2Provider provider, String providerId, String mode, Department department) {
         this.email = email;
         this.role = role;
         this.name = name;
         this.picture = picture;
         this.provider = provider;
         this.providerId = providerId;
+        this.department = department;
     }
 
 }
