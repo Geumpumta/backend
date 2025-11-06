@@ -7,6 +7,7 @@ import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
 import com.gpt.geumpumtabackend.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,7 +31,7 @@ public class UserController {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('GUEST')")
     public ResponseEntity<ResponseBody<TokenResponse>> completeRegistration(
-            @RequestBody CompleteRegistrationRequest request,
+            @RequestBody @Valid CompleteRegistrationRequest request,
             Long userId
     ){
         TokenResponse response = userService.completeRegistration(request, userId);
