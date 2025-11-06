@@ -5,6 +5,8 @@ spring:
     import:
       - security/application-database.yml
       - security/application-security.yml
+      - security/application-mail.yml
+      - security/application-swagger.yml
 
   datasource:
     url: ${geumpumta.mysql.url}
@@ -24,7 +26,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     open-in-view: false
     show-sql: true
     properties:

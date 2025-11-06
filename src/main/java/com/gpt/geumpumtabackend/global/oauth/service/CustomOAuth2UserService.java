@@ -85,12 +85,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .orElseGet(() ->
                         User.builder()
                                 .email(oAuth2UserInfo.email())
-                                .role(UserRole.USER)
+                                .role(UserRole.GUEST)
                                 .name(oAuth2UserInfo.name())
                                 .picture(oAuth2UserInfo.profile())
                                 .provider(provider)
                                 .providerId(providerId)
-                                .mode("구매자")
                                 .build()
                 );
         return userRepository.save(user);
