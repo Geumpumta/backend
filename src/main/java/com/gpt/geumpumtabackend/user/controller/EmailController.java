@@ -3,6 +3,7 @@ package com.gpt.geumpumtabackend.user.controller;
 import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
+import com.gpt.geumpumtabackend.user.api.EmailApi;
 import com.gpt.geumpumtabackend.user.dto.request.EmailCodeRequest;
 import com.gpt.geumpumtabackend.user.dto.request.EmailCodeVerifyRequest;
 import com.gpt.geumpumtabackend.user.dto.response.EmailCodeVerifyResponse;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/email")
 @RequiredArgsConstructor
-public class EmailController {
+public class EmailController implements EmailApi {
 
     private final EmailService emailService;
     private final UserService userService;
