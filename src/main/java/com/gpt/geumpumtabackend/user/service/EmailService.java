@@ -42,31 +42,31 @@ public class EmailService {
         if(!isEmailOwner(request, userId)){
             return EmailCodeVerifyResponse.of(false);
         }
-        String emailCode = redisTemplate.opsForValue().get("email:"+request.email());
+        String emailCode = redisTemplate.opsForValue().get(userId + "email:" + request.email());
         if(emailCode == null){
             return EmailCodeVerifyResponse.of(false);
         }
         if(emailCode.equals(request.code())){
-            deleteCode(request.email());
+            deleteCode(request.email(), userId);
             return EmailCodeVerifyResponse.of(true);
         }
         return EmailCodeVerifyResponse.of(false);
     }
 
     // redis에서 인증코드 삭제
-    public void deleteCode(String email){
-        redisTemplate.delete("email:"+email);
+    public void deleteCode(String email, Long userId){
+        redisTemplate.delete(userId + "email:"+email);
     }
 
     // 메일 전송
-    public void sendMail(EmailCodeRequest request){
+    public void sendMail(EmailCodeRequest request, Long userId){
         try{
             String code = createCode();
             MimeMessage mimeMessage = createMimeMessage(request, code);
 
             // TODO: 하드코딩된 key를 변경하기
             redisTemplate.opsForValue().set(
-                    "email:" + request.email(),
+                    userId + "email:" + request.email(),
                     code,
                     5, TimeUnit.MINUTES
             );
@@ -111,13 +111,12 @@ public class EmailService {
 
     // 인증코드 요청 보낸 사람과 현재 api 호출하는 사람의 학교 이메일이 동일한지 검증
     public boolean isEmailOwner(EmailCodeVerifyRequest request, Long userId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
-        String schoolEmail = user.getSchoolEmail();
+        String schoolEmail = request.email();
         if(schoolEmail == null){
             return false;
         }
-        if(!user.getSchoolEmail().equals(request.email())){
+        // 해당 이메일의 인증코드가 존재하는지 확인
+        if(!redisTemplate.hasKey(userId + "email:" + request.email())){
             return false;
         }
         return true;
