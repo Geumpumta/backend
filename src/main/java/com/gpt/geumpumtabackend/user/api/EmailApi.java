@@ -6,8 +6,6 @@ import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiResponses;
 import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiSuccessResponse;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
-import com.gpt.geumpumtabackend.global.response.ResponseUtil;
-import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.dto.request.EmailCodeRequest;
 import com.gpt.geumpumtabackend.user.dto.request.EmailCodeVerifyRequest;
 import com.gpt.geumpumtabackend.user.dto.response.EmailCodeVerifyResponse;
@@ -27,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface EmailApi {
 
     @Operation(
-            summary =  "학교 이메일 인증코드 발송 pi",
+            summary =  "학교 이메일 인증코드 발송 api",
             description = "GUEST 권한을 가진 사용자는 학교 이메일 인증을 위해 인증코드 발송을 요청합니다."
 
     )
