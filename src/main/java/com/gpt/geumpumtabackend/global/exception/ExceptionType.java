@@ -33,6 +33,9 @@ public enum ExceptionType {
     DUPLICATED_SCHOOL_EMAIL(FORBIDDEN, "U003", "이미 사용중인 이메일입니다"),
     DEPARTMENT_NOT_FOUND(BAD_REQUEST, "U004", "존재하지 않는 학과 명입니다"),
 
+    // Mail
+    CANT_SEND_MAIL(INTERNAL_SERVER_ERROR, "M001", "인증코드 전송에 실패했습니다."),
+
     // Study
     STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다.")
 

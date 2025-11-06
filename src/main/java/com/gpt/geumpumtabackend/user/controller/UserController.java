@@ -5,6 +5,7 @@ import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
+import com.gpt.geumpumtabackend.user.api.UserApi;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
 import com.gpt.geumpumtabackend.user.service.UserService;
 import jakarta.validation.Valid;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
-public class UserController {
+public class UserController implements UserApi {
 
     private final UserService userService;
 
