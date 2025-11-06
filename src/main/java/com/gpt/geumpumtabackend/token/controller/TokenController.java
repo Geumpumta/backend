@@ -3,6 +3,7 @@ package com.gpt.geumpumtabackend.token.controller;
 
 
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
+import com.gpt.geumpumtabackend.token.api.TokenApi;
 import com.gpt.geumpumtabackend.token.domain.Token;
 import com.gpt.geumpumtabackend.token.dto.request.TokenRequest;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
@@ -20,7 +21,7 @@ import static com.gpt.geumpumtabackend.global.response.ResponseUtil.createSucces
 @RestController
 @RequestMapping("/auth/token")
 @RequiredArgsConstructor
-public class TokenController {
+public class TokenController implements TokenApi {
     private final TokenService tokenService;
 
     @PostMapping("/refresh")
