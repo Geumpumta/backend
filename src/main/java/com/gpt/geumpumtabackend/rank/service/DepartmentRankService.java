@@ -9,8 +9,6 @@ import com.gpt.geumpumtabackend.rank.repository.DepartmentRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
-import com.gpt.geumpumtabackend.study.repository.StudySessionRepository.DepartmentRankingProjection;
-import com.gpt.geumpumtabackend.study.repository.StudySessionRepository.UserRankingProjection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -36,15 +34,15 @@ public class DepartmentRankService {
         LocalDateTime startDay = today.atStartOfDay();
         LocalDateTime endDay = today.atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<DepartmentRankingProjection> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(startDay, endDay, nowTime);
+        List<DepartmentRankingTemp> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(startDay, endDay, nowTime);
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingProjection temp : departmentRankingList) {
-            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.from(temp);
+        for (DepartmentRankingTemp temp : departmentRankingList) {
+            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
-            if(user.getDepartment().equals(temp.getDepartment())){
+            if(user.getDepartment().equals(temp.getDepartmentName())){
                 myRanking = entry;
             }
         }
@@ -55,11 +53,11 @@ public class DepartmentRankService {
     완료된 학과 랭킹 일간 조회
      */
     public DepartmentRankingResponse getCompletedDailyDepartmentRanking(Long userId, LocalDateTime startDay){
-        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(startDay);
+        List<com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(startDay);
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingTemp temp : departmentRankingList) {
+        for (com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp temp : departmentRankingList) {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
@@ -78,15 +76,15 @@ public class DepartmentRankService {
         LocalDateTime weekStart = today.with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime weekEnd = today.with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<DepartmentRankingProjection> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(weekStart, weekEnd, nowTime);
+        List<DepartmentRankingTemp> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(weekStart, weekEnd, nowTime);
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingProjection temp : departmentRankingList) {
-            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.from(temp);
+        for (DepartmentRankingTemp temp : departmentRankingList) {
+            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
-            if(user.getDepartment().equals(temp.getDepartment())){
+            if(user.getDepartment().equals(temp.getDepartmentName())){
                 myRanking = entry;
             }
         }
@@ -97,11 +95,11 @@ public class DepartmentRankService {
     완료된 학과 랭킹 주간 조회
      */
     public DepartmentRankingResponse getCompletedWeeklyDepartmentRanking(Long userId, LocalDateTime weekFirstDay){
-        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(weekFirstDay);
+        List<com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(weekFirstDay);
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingTemp temp : departmentRankingList) {
+        for (com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp temp : departmentRankingList) {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
@@ -121,15 +119,15 @@ public class DepartmentRankService {
          LocalDateTime startMonth = today.withDayOfMonth(1).atStartOfDay();
          LocalDateTime endMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);
          LocalDateTime nowTime = LocalDateTime.now();
-         List<DepartmentRankingProjection> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(startMonth, endMonth, nowTime);
+         List<DepartmentRankingTemp> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(startMonth, endMonth, nowTime);
          DepartmentRankingEntryResponse myRanking = null;
          List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
          User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-         for (DepartmentRankingProjection temp : departmentRankingList) {
-             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.from(temp);
+         for (DepartmentRankingTemp temp : departmentRankingList) {
+             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
              topRankings.add(entry);
 
-             if(user.getDepartment().equals(temp.getDepartment())){
+             if(user.getDepartment().equals(temp.getDepartmentName())){
                  myRanking = entry;
              }
          }
@@ -141,11 +139,11 @@ public class DepartmentRankService {
     완료된 학과 랭킹 월간 조회
      */
     public DepartmentRankingResponse getCompletedMonthlyDepartmentRanking(Long userId, LocalDateTime monthFirstDay){
-        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(monthFirstDay);
+        List<com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(monthFirstDay);
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingTemp temp : departmentRankingList) {
+        for (com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp temp : departmentRankingList) {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 

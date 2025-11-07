@@ -1,11 +1,10 @@
 package com.gpt.geumpumtabackend.rank.service;
 
+import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingEntryResponse;
-import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
 import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
-import com.gpt.geumpumtabackend.study.repository.StudySessionRepository.UserRankingProjection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,11 +29,11 @@ public class PersonalRankService {
         LocalDateTime startToday = LocalDate.now().atStartOfDay();
         LocalDateTime endToday = LocalDate.now().atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<StudySessionRepository.UserRankingProjection> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startToday, endToday, nowTime);
+        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startToday, endToday, nowTime);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingProjection temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.from(temp);
+        for (UserRankingTemp temp : userRankingTempList) {
+            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
             if(temp.getUserId().equals(userId)){
@@ -48,10 +47,10 @@ public class PersonalRankService {
     완료된 일간 랭킹 조회
      */
     public PersonalRankingResponse getCompletedDaily(Long userId, LocalDateTime day) {
-        List<UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(day);
+        List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(day);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
+        for (com.gpt.geumpumtabackend.rank.dto.UserRankingTemp temp : userRankingTempList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
@@ -70,11 +69,11 @@ public class PersonalRankService {
         LocalDateTime weekStart = today.with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime weekEnd = today.with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<UserRankingProjection> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(weekStart, weekEnd, nowTime);
+        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(weekStart, weekEnd, nowTime);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingProjection temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.from(temp);
+        for (UserRankingTemp temp : userRankingTempList) {
+            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
             if(temp.getUserId().equals(userId)){
                 myRanking = entry;
@@ -88,10 +87,10 @@ public class PersonalRankService {
      */
 
     public PersonalRankingResponse getCompletedWeekly(Long userId, LocalDateTime weekFirstDay) {
-        List<UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(weekFirstDay);
+        List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(weekFirstDay);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
+        for (com.gpt.geumpumtabackend.rank.dto.UserRankingTemp temp : userRankingTempList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
@@ -110,11 +109,11 @@ public class PersonalRankService {
         LocalDateTime startMonth = today.withDayOfMonth(1).atStartOfDay();
         LocalDateTime endMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<UserRankingProjection> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startMonth, endMonth, nowTime);
+        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startMonth, endMonth, nowTime);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingProjection temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.from(temp);
+        for (UserRankingTemp temp : userRankingTempList) {
+            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
             if(temp.getUserId().equals(userId)){
@@ -127,10 +126,10 @@ public class PersonalRankService {
     완료된 월간 랭킹 조회
      */
     public PersonalRankingResponse getCompletedMonthly(Long userId, LocalDateTime monthFirstDay) {
-        List<UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(monthFirstDay);
+        List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(monthFirstDay);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
+        for (com.gpt.geumpumtabackend.rank.dto.UserRankingTemp temp : userRankingTempList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 

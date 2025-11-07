@@ -1,10 +1,8 @@
 package com.gpt.geumpumtabackend.study.repository;
 
-import com.gpt.geumpumtabackend.rank.domain.DepartmentRanking;
 import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
-import com.gpt.geumpumtabackend.user.domain.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,19 +15,7 @@ import java.util.Optional;
 @Repository
 public interface StudySessionRepository extends JpaRepository<StudySession, Long> {
 
-    // Interface Projections
-    interface UserRankingProjection {
-        Long getUserId();
-        String getUsername();
-        Long getTotalMillis();
-        Long getRanking();
-    }
 
-    interface DepartmentRankingProjection {
-        Department getDepartment();
-        Long getTotalMillis();
-        Long getRanking();
-    }
 
     Optional<StudySession> findByIdAndUser_Id(Long id, Long userId);
 
@@ -84,7 +70,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             END
         ) * 1000) DESC
 """, nativeQuery = true)
-    List<UserRankingProjection> calculateCurrentPeriodRanking(
+    List<UserRankingTemp> calculateCurrentPeriodRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd,
             @Param("now") LocalDateTime now
@@ -135,7 +121,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             ) * 1000
         ) DESC
     """, nativeQuery = true)
-    List<UserRankingProjection> calculateFinalizedPeriodRanking(
+    List<UserRankingTemp> calculateFinalizedPeriodRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd
     );
@@ -176,7 +162,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             END
         ) * 1000) DESC
 """, nativeQuery = true)
-    List<DepartmentRankingProjection> calculateCurrentDepartmentRanking(
+    List<DepartmentRankingTemp> calculateCurrentDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd,
             @Param("now") LocalDateTime now);
@@ -217,7 +203,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             END
         ) * 1000) DESC
 """, nativeQuery = true)
-    List<DepartmentRankingProjection> calculateFinalizedDepartmentRanking(
+    List<DepartmentRankingTemp> calculateFinalizedDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd
     );

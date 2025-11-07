@@ -7,11 +7,11 @@ import lombok.Getter;
 public class DepartmentRankingTemp {
     private Department departmentName;
     private Long totalMillis;
-    private Long rank;
+    private Long ranking;
 
-    public DepartmentRankingTemp(Department departmentName, Long totalMillis, Long rank) {
+    public DepartmentRankingTemp(Department departmentName, Long totalMillis, Long ranking) {
         this.departmentName = departmentName;
         this.totalMillis = totalMillis;
-        this.rank = rank;
+        this.ranking = ranking;
     }
 }
