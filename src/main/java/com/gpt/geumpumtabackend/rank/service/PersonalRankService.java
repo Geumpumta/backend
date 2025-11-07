@@ -83,10 +83,10 @@ public class PersonalRankService {
         return buildPersonalRankingResponse(userRankingTempList, userId);
     }
 
-    private PersonalRankingResponse buildPersonalRankingResponse(List<PersonalRankingTemp> departmentRankingList, Long userId) {
+    private PersonalRankingResponse buildPersonalRankingResponse(List<PersonalRankingTemp> personalRankingList, Long userId) {
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (PersonalRankingTemp temp : departmentRankingList) {
+        for (PersonalRankingTemp temp : personalRankingList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
