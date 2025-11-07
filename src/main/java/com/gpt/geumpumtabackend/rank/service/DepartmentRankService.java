@@ -36,18 +36,7 @@ public class DepartmentRankService {
         LocalDateTime endDay = today.atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
         List<DepartmentRankingTemp> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(startDay, endDay, nowTime);
-        DepartmentRankingEntryResponse myRanking = null;
-        List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
-        User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingTemp temp : departmentRankingList) {
-            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-
-            if(user.getDepartment().equals(temp.getDepartmentName())){
-                myRanking = entry;
-            }
-        }
-        return new DepartmentRankingResponse(topRankings, myRanking);
+        return buildDepartmentRankingResponse(departmentRankingList, userId);
     }
 
     /*
@@ -55,18 +44,7 @@ public class DepartmentRankService {
      */
     public DepartmentRankingResponse getCompletedDailyDepartmentRanking(Long userId, LocalDateTime startDay){
         List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(startDay, RankingType.DAILY);
-        DepartmentRankingEntryResponse myRanking = null;
-        List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
-        User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingTemp temp : departmentRankingList) {
-            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-
-            if(user.getDepartment().equals(temp.getDepartmentName())){
-                myRanking = entry;
-            }
-        }
-        return new DepartmentRankingResponse(topRankings, myRanking);
+        return buildDepartmentRankingResponse(departmentRankingList, userId);
     }
 
      /*
@@ -78,18 +56,7 @@ public class DepartmentRankService {
         LocalDateTime weekEnd = today.with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
         List<DepartmentRankingTemp> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(weekStart, weekEnd, nowTime);
-        DepartmentRankingEntryResponse myRanking = null;
-        List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
-        User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingTemp temp : departmentRankingList) {
-            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-
-            if(user.getDepartment().equals(temp.getDepartmentName())){
-                myRanking = entry;
-            }
-        }
-        return new DepartmentRankingResponse(topRankings, myRanking);
+        return buildDepartmentRankingResponse(departmentRankingList, userId);
     }
 
     /*
@@ -97,18 +64,7 @@ public class DepartmentRankService {
      */
     public DepartmentRankingResponse getCompletedWeeklyDepartmentRanking(Long userId, LocalDateTime weekFirstDay){
         List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(weekFirstDay, RankingType.WEEKLY);
-        DepartmentRankingEntryResponse myRanking = null;
-        List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
-        User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (DepartmentRankingTemp temp : departmentRankingList) {
-            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-
-            if(user.getDepartment().equals(temp.getDepartmentName())){
-                myRanking = entry;
-            }
-        }
-        return new DepartmentRankingResponse(topRankings, myRanking);
+        return buildDepartmentRankingResponse(departmentRankingList, userId);
     }
 
 
@@ -121,18 +77,7 @@ public class DepartmentRankService {
          LocalDateTime endMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);
          LocalDateTime nowTime = LocalDateTime.now();
          List<DepartmentRankingTemp> departmentRankingList = studySessionRepository.calculateCurrentDepartmentRanking(startMonth, endMonth, nowTime);
-         DepartmentRankingEntryResponse myRanking = null;
-         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
-         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-         for (DepartmentRankingTemp temp : departmentRankingList) {
-             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
-             topRankings.add(entry);
-
-             if(user.getDepartment().equals(temp.getDepartmentName())){
-                 myRanking = entry;
-             }
-         }
-         return new DepartmentRankingResponse(topRankings, myRanking);
+         return buildDepartmentRankingResponse(departmentRankingList, userId);
      }
 
 
@@ -140,7 +85,11 @@ public class DepartmentRankService {
     완료된 학과 랭킹 월간 조회
      */
     public DepartmentRankingResponse getCompletedMonthlyDepartmentRanking(Long userId, LocalDateTime monthFirstDay){
-        List<com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(monthFirstDay, RankingType.MONTHLY);
+        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(monthFirstDay, RankingType.MONTHLY);
+        return buildDepartmentRankingResponse(departmentRankingList, userId);
+    }
+
+    private DepartmentRankingResponse buildDepartmentRankingResponse(List<DepartmentRankingTemp> departmentRankingList, Long userId) {
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
@@ -155,3 +104,4 @@ public class DepartmentRankService {
         return new DepartmentRankingResponse(topRankings, myRanking);
     }
 }
+
