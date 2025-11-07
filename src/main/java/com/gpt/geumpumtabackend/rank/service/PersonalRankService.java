@@ -1,7 +1,7 @@
 package com.gpt.geumpumtabackend.rank.service;
 
 import com.gpt.geumpumtabackend.rank.domain.RankingType;
-import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
+import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingEntryResponse;
 import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
@@ -31,36 +31,16 @@ public class PersonalRankService {
         LocalDateTime startToday = today.atStartOfDay();
         LocalDateTime endToday = today.atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startToday, endToday, nowTime);
-        PersonalRankingEntryResponse myRanking = null;
-        List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-
-            if(temp.getUserId().equals(userId)){
-                myRanking = entry;
-            }
-        }
-        return new PersonalRankingResponse(topRankings, myRanking);
+        List<PersonalRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startToday, endToday, nowTime);
+        return buildPersonalRankingResponse(userRankingTempList, userId);
     }
 
     /*
     완료된 일간 랭킹 조회
      */
     public PersonalRankingResponse getCompletedDaily(Long userId, LocalDateTime day) {
-        List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(day, RankingType.DAILY);
-        PersonalRankingEntryResponse myRanking = null;
-        List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-
-            if(temp.getUserId().equals(userId)){
-                myRanking = entry;
-            }
-        }
-        return new PersonalRankingResponse(topRankings, myRanking);
+        List<PersonalRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(day, RankingType.DAILY);
+        return buildPersonalRankingResponse(userRankingTempList, userId);
     }
 
     /*
@@ -71,17 +51,8 @@ public class PersonalRankService {
         LocalDateTime weekStart = today.with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime weekEnd = today.with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(weekStart, weekEnd, nowTime);
-        PersonalRankingEntryResponse myRanking = null;
-        List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-            if(temp.getUserId().equals(userId)){
-                myRanking = entry;
-            }
-        }
-        return new PersonalRankingResponse(topRankings, myRanking);
+        List<PersonalRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(weekStart, weekEnd, nowTime);
+        return buildPersonalRankingResponse(userRankingTempList, userId);
     }
 
     /*
@@ -89,18 +60,8 @@ public class PersonalRankService {
      */
 
     public PersonalRankingResponse getCompletedWeekly(Long userId, LocalDateTime weekFirstDay) {
-        List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(weekFirstDay, RankingType.WEEKLY);
-        PersonalRankingEntryResponse myRanking = null;
-        List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-
-            if(temp.getUserId().equals(userId)){
-                myRanking = entry;
-            }
-        }
-        return new PersonalRankingResponse(topRankings, myRanking);
+        List<PersonalRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(weekFirstDay, RankingType.WEEKLY);
+        return buildPersonalRankingResponse(userRankingTempList, userId);
     }
 
     /*
@@ -111,27 +72,21 @@ public class PersonalRankService {
         LocalDateTime startMonth = today.withDayOfMonth(1).atStartOfDay();
         LocalDateTime endMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startMonth, endMonth, nowTime);
-        PersonalRankingEntryResponse myRanking = null;
-        List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
-            topRankings.add(entry);
-
-            if(temp.getUserId().equals(userId)){
-                myRanking = entry;
-            }
-        }
-        return new PersonalRankingResponse(topRankings, myRanking);
+        List<PersonalRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startMonth, endMonth, nowTime);
+        return buildPersonalRankingResponse(userRankingTempList, userId);
     }
     /*
     완료된 월간 랭킹 조회
      */
     public PersonalRankingResponse getCompletedMonthly(Long userId, LocalDateTime monthFirstDay) {
-        List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(monthFirstDay, RankingType.MONTHLY);
+        List<PersonalRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(monthFirstDay, RankingType.MONTHLY);
+        return buildPersonalRankingResponse(userRankingTempList, userId);
+    }
+
+    private PersonalRankingResponse buildPersonalRankingResponse(List<PersonalRankingTemp> departmentRankingList, Long userId) {
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
+        for (PersonalRankingTemp temp : departmentRankingList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
