@@ -1,5 +1,7 @@
 package com.gpt.geumpumtabackend.rank.service;
 
+import com.gpt.geumpumtabackend.global.exception.BusinessException;
+import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.rank.domain.DepartmentRanking;
 import com.gpt.geumpumtabackend.rank.domain.RankingType;
 import com.gpt.geumpumtabackend.rank.domain.UserRanking;
@@ -10,6 +12,7 @@ import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -75,12 +78,14 @@ public class RankingSchedulerService {
     }
 
 
+    @Transactional
     public void calculateAndSavePersonalRanking(LocalDateTime periodStart, LocalDateTime periodEnd, RankingType rankingType) {
         List<PersonalRankingTemp> userRankingTemps = studySessionRepository.calculateFinalizedPeriodRanking(periodStart, periodEnd);
 
         List<UserRanking> userRankings = userRankingTemps.stream().map(
                 dto -> {
-                    User user = userRepository.getReferenceById(dto.getUserId());
+                    User user = userRepository.findById(dto.getUserId())
+                            .orElseThrow(()-> new BusinessException(ExceptionType.USER_NOT_FOUND));
                     return UserRanking.builder()
                             .user(user)
                             .totalMillis(dto.getTotalMillis())
@@ -93,6 +98,7 @@ public class RankingSchedulerService {
         userRankingRepository.saveAll(userRankings);
     }
 
+    @Transactional
     public void calculateAndSaveDepartmentRanking(LocalDateTime periodStart, LocalDateTime periodEnd, RankingType rankingType) {
         List<DepartmentRankingTemp> departmentRankingTemps = studySessionRepository.calculateFinalizedDepartmentRanking(periodStart, periodEnd);
 
