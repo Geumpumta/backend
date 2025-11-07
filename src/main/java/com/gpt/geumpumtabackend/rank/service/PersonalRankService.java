@@ -26,8 +26,9 @@ public class PersonalRankService {
     현재 진행 중인 세션의 일간 랭킹 조회
      */
     public PersonalRankingResponse getCurrentDaily(Long userId) {
-        LocalDateTime startToday = LocalDate.now().atStartOfDay();
-        LocalDateTime endToday = LocalDate.now().atTime(23, 59, 59);
+        LocalDate today = LocalDate.now();
+        LocalDateTime startToday = today.atStartOfDay();
+        LocalDateTime endToday = today.atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
         List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startToday, endToday, nowTime);
         PersonalRankingEntryResponse myRanking = null;

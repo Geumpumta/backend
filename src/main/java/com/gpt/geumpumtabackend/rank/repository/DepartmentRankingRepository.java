@@ -1,6 +1,7 @@
 package com.gpt.geumpumtabackend.rank.repository;
 
 import com.gpt.geumpumtabackend.rank.domain.DepartmentRanking;
+import com.gpt.geumpumtabackend.rank.domain.RankingType;
 import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,7 +24,8 @@ public interface DepartmentRankingRepository extends JpaRepository<DepartmentRan
                         )
             FROM DepartmentRanking  dr
             WHERE dr.calculatedAt =:period
+            AND dr.rankingType = :rankingType
             ORDER BY dr.rank ASC 
                         """)
-    List<DepartmentRankingTemp> getFinishedDepartmentRanking(@Param("period") LocalDateTime period);
+    List<DepartmentRankingTemp> getFinishedDepartmentRanking(@Param("period") LocalDateTime period, @Param("rankingType") RankingType rankingType);
 }

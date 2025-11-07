@@ -2,6 +2,7 @@ package com.gpt.geumpumtabackend.rank.service;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.rank.domain.RankingType;
 import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.response.DepartmentRankingEntryResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.DepartmentRankingResponse;
@@ -53,7 +54,7 @@ public class DepartmentRankService {
     완료된 학과 랭킹 일간 조회
      */
     public DepartmentRankingResponse getCompletedDailyDepartmentRanking(Long userId, LocalDateTime startDay){
-        List<com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(startDay);
+        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(startDay, RankingType.DAILY);
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
@@ -95,7 +96,7 @@ public class DepartmentRankService {
     완료된 학과 랭킹 주간 조회
      */
     public DepartmentRankingResponse getCompletedWeeklyDepartmentRanking(Long userId, LocalDateTime weekFirstDay){
-        List<com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(weekFirstDay);
+        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(weekFirstDay, RankingType.WEEKLY);
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
@@ -139,7 +140,7 @@ public class DepartmentRankService {
     완료된 학과 랭킹 월간 조회
      */
     public DepartmentRankingResponse getCompletedMonthlyDepartmentRanking(Long userId, LocalDateTime monthFirstDay){
-        List<com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(monthFirstDay);
+        List<com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(monthFirstDay, RankingType.MONTHLY);
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
