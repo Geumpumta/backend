@@ -4,7 +4,7 @@ import com.gpt.geumpumtabackend.rank.domain.DepartmentRanking;
 import com.gpt.geumpumtabackend.rank.domain.RankingType;
 import com.gpt.geumpumtabackend.rank.domain.UserRanking;
 import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
-import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
+import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.rank.repository.DepartmentRankingRepository;
 import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
@@ -74,7 +74,7 @@ public class RankingSchedulerService {
 
 
     public void calculateAndSavePersonalRanking(LocalDateTime periodStart, LocalDateTime periodEnd, RankingType rankingType) {
-        List<UserRankingTemp> userRankingTemps = studySessionRepository.calculateFinalizedPeriodRanking(periodStart, periodEnd);
+        List<PersonalRankingTemp> userRankingTemps = studySessionRepository.calculateFinalizedPeriodRanking(periodStart, periodEnd);
 
         List<UserRanking> userRankings = userRankingTemps.stream().map(
                 dto -> {

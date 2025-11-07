@@ -1,7 +1,7 @@
 package com.gpt.geumpumtabackend.study.repository;
 
 import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
-import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
+import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -70,7 +70,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             END
         ) * 1000) DESC
 """, nativeQuery = true)
-    List<UserRankingTemp> calculateCurrentPeriodRanking(
+    List<PersonalRankingTemp> calculateCurrentPeriodRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd,
             @Param("now") LocalDateTime now
@@ -121,7 +121,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             ) * 1000
         ) DESC
     """, nativeQuery = true)
-    List<UserRankingTemp> calculateFinalizedPeriodRanking(
+    List<PersonalRankingTemp> calculateFinalizedPeriodRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd
     );
