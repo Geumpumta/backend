@@ -108,7 +108,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         FROM study_session s 
         JOIN user u ON s.user_id = u.id
         WHERE s.start_time <= :periodEnd
-        AND (s.end_time > :periodStart OR s.end_time IS NULL)
+        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
         GROUP BY u.id, u.name
         ORDER BY SUM(
             TIMESTAMPDIFF(SECOND,
