@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,8 +49,9 @@ public class RankingSchedulerService {
      */
     @Scheduled(cron = "0 0 0 ? * MON")
     public void weeklyRankingScheduler() {
-        LocalDate lastWeekStartDay = LocalDate.now().minusWeeks(1);
-        LocalDate lastWeekEndDay = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
+        LocalDate lastWeekStartDay = today.minusWeeks(1).with(DayOfWeek.MONDAY);
+        LocalDate lastWeekEndDay = today.minusWeeks(1).with(DayOfWeek.SUNDAY);
 
         LocalDateTime weekStartTime = lastWeekStartDay.atStartOfDay();
         LocalDateTime weekEndTime = lastWeekEndDay.atTime(23, 59, 59);
