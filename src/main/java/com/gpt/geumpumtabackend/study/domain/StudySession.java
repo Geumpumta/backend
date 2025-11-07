@@ -17,17 +17,19 @@ public class StudySession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private LocalDateTime startTime;
 
     private LocalDateTime endTime;
 
     private Long totalMillis;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private StudyStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     public void startStudySession(LocalDateTime startTime, User user) {

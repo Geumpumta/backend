@@ -1,5 +1,7 @@
 package com.gpt.geumpumtabackend.study.repository;
 
+import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
+import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -7,10 +9,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface StudySessionRepository extends JpaRepository<StudySession, Long> {
+
+
 
     Optional<StudySession> findByIdAndUser_Id(Long id, Long userId);
 
@@ -24,4 +29,186 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("userId") Long userId,
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay);
+
+    /*
+    현재 진행중인 기간의 공부 시간 연산
+     */
+    @Query(value = """
+        SELECT u.id as userId, 
+               u.name as username, 
+               SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) as totalMillis,
+               RANK() OVER (ORDER BY SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) DESC) as ranking
+        FROM study_session s 
+        JOIN user u ON s.user_id = u.id
+        WHERE s.start_time <= :periodEnd
+        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        GROUP BY u.id, u.name
+        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+            GREATEST(s.start_time, :periodStart),
+            CASE 
+                WHEN s.end_time IS NULL THEN :now
+                WHEN s.end_time > :periodEnd THEN :periodEnd
+                ELSE s.end_time
+            END
+        ) * 1000) DESC
+""", nativeQuery = true)
+    List<PersonalRankingTemp> calculateCurrentPeriodRanking(
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd,
+            @Param("now") LocalDateTime now
+    );
+
+
+
+
+    /*
+    랭킹 집계 시 공부 시간
+     */
+    @Query(value = """
+        SELECT u.id as userId, 
+               u.name as username, 
+               SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :periodEnd
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) as totalMillis,
+               RANK() OVER (ORDER BY SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :periodEnd
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) DESC) as ranking
+        FROM study_session s 
+        JOIN user u ON s.user_id = u.id
+        WHERE s.start_time <= :periodEnd
+        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        GROUP BY u.id, u.name
+        ORDER BY SUM(
+            TIMESTAMPDIFF(SECOND,
+                GREATEST(s.start_time, :periodStart),
+                CASE
+                    WHEN s.end_time IS NULL THEN :periodEnd
+                    WHEN s.end_time > :periodEnd THEN :periodEnd
+                    ELSE s.end_time
+                END
+            ) * 1000
+        ) DESC
+    """, nativeQuery = true)
+    List<PersonalRankingTemp> calculateFinalizedPeriodRanking(
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd
+    );
+
+    @Query(value = """
+        SELECT u.department as departmentName, 
+               SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) as totalMillis,
+               RANK() OVER (ORDER BY SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) DESC) as ranking
+        FROM study_session s 
+        JOIN user u ON s.user_id = u.id
+        WHERE s.start_time <= :periodEnd AND u.department IS NOT NULL
+        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        GROUP BY u.department
+        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+            GREATEST(s.start_time, :periodStart),
+            CASE 
+                WHEN s.end_time IS NULL THEN :now
+                WHEN s.end_time > :periodEnd THEN :periodEnd
+                ELSE s.end_time
+            END
+        ) * 1000) DESC
+""", nativeQuery = true)
+    List<DepartmentRankingTemp> calculateCurrentDepartmentRanking(
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd,
+            @Param("now") LocalDateTime now);
+
+    @Query(value = """
+        SELECT u.department as departmentName, 
+               SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :periodEnd
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) as totalMillis,
+               RANK() OVER (ORDER BY SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :periodEnd
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) DESC) as ranking
+        FROM study_session s 
+        JOIN user u ON s.user_id = u.id
+        WHERE s.start_time <= :periodEnd AND u.department IS NOT NULL
+        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        GROUP BY u.department
+        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+            GREATEST(s.start_time, :periodStart),
+            CASE 
+                WHEN s.end_time IS NULL THEN :periodEnd
+                WHEN s.end_time > :periodEnd THEN :periodEnd
+                ELSE s.end_time
+            END
+        ) * 1000) DESC
+""", nativeQuery = true)
+    List<DepartmentRankingTemp> calculateFinalizedDepartmentRanking(
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd
+    );
+
+
+
+
 }
