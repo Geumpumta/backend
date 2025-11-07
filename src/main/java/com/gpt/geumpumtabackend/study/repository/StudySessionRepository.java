@@ -4,6 +4,7 @@ import com.gpt.geumpumtabackend.rank.domain.DepartmentRanking;
 import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
+import com.gpt.geumpumtabackend.user.domain.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,20 @@ import java.util.Optional;
 
 @Repository
 public interface StudySessionRepository extends JpaRepository<StudySession, Long> {
+
+    // Interface Projections
+    interface UserRankingProjection {
+        Long getUserId();
+        String getUsername();
+        Long getTotalMillis();
+        Long getRanking();
+    }
+
+    interface DepartmentRankingProjection {
+        Department getDepartment();
+        Long getTotalMillis();
+        Long getRanking();
+    }
 
     Optional<StudySession> findByIdAndUser_Id(Long id, Long userId);
 
@@ -32,50 +47,48 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     /*
     현재 진행중인 기간의 공부 시간 연산
      */
-    @Query("""
-        SELECT new com.gpt.geumpumtabackend.rank.dto.UserRankingTemp(
-            s.user.id,
-            s.user.name,
-            SUM(
-                TIMESTAMPDIFF('SECOND',
-                    GREATEST(s.startTime, :periodStart),
-                    CASE
-                        WHEN s.endTime IS NULL THEN :now
-                        WHEN s.endTime > :periodEnd THEN :periodEnd
-                        ELSE s.endTime
-                    END
-                ) * 1000
-            ), 
-            RANK() OVER (ORDER BY SUM(                                                                                                                                                                     
-              TIMESTAMPDIFF('SECOND',                                                                                                                                                                      
-                  GREATEST(s.startTime, :periodStart),                                                                                                                                                      
-                  CASE                                                                                                                                                                                   
-                      WHEN s.endTime IS NULL THEN :now                                                                                                                                              
-                      WHEN s.endTime > :periodEnd THEN :periodEnd                                                                                                                                              
-                      ELSE s.endTime                                                                                                                                                                     
-                  END                                                                                                                                                                                    
-              ) * 1000                                                                                                                                                                                   
-          ) DESC)  
-        )
-        FROM StudySession s 
-        WHERE s.startTime <= :periodEnd
-        AND (s.endTime >= :periodStart OR s.endTime IS NULL)
-        GROUP BY s.user.id
-        ORDER BY SUM(TIMESTAMPDIFF('SECOND',
-            GREATEST(s.startTime, :periodStart),
+    @Query(value = """
+        SELECT u.id as userId, 
+               u.name as username, 
+               SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) as totalMillis,
+               RANK() OVER (ORDER BY SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) DESC) as ranking
+        FROM study_session s 
+        JOIN user u ON s.user_id = u.id
+        WHERE s.start_time <= :periodEnd
+        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        GROUP BY u.id, u.name
+        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+            GREATEST(s.start_time, :periodStart),
             CASE 
-                WHEN s.endTime IS NULL THEN :now
-                WHEN s.endTime > :periodEnd THEN :periodEnd
-                ELSE s.endTime
+                WHEN s.end_time IS NULL THEN :now
+                WHEN s.end_time > :periodEnd THEN :periodEnd
+                ELSE s.end_time
             END
-        ) * 1000
-    ) DESC
-""")
-          List<UserRankingTemp> calculateCurrentPeriodRanking(
-                  @Param("periodStart") LocalDateTime periodStart,
-                  @Param("periodEnd") LocalDateTime periodEnd,
-                  @Param("now") LocalDateTime now
-          );
+        ) * 1000) DESC
+""", nativeQuery = true)
+    List<UserRankingProjection> calculateCurrentPeriodRanking(
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd,
+            @Param("now") LocalDateTime now
+    );
 
 
 
@@ -83,132 +96,128 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     /*
     랭킹 집계 시 공부 시간
      */
-    @Query("""                                                                                                                                                                                             
-      SELECT new com.gpt.geumpumtabackend.rank.dto.UserRankingTemp(
-          s.user.id,
-          s.user.name,
-          SUM(
-              TIMESTAMPDIFF('SECOND',
-                  GREATEST(s.startTime, :periodStart),
-                  CASE                                                                       
-                      WHEN s.endTime IS NULL THEN :periodEnd                                                                                                                                                
-                      WHEN s.endTime > :periodEnd THEN :periodEnd                                                                                                                                              
-                      ELSE s.endTime                                                                                                                                                                     
-                  END                                                                                                                                                                                    
-              ) * 1000                                                                                                                                                                                   
-          ),                                                                                                                                                                                             
-          RANK() OVER (ORDER BY SUM(                                                                                                                                                                     
-              TIMESTAMPDIFF('SECOND',                                                                                                                                                                      
-                  GREATEST(s.startTime, :periodStart),                                                                                                                                                      
-                  CASE                                                                                                                                                                                   
-                      WHEN s.endTime IS NULL THEN :periodEnd                                                                                                                                                
-                      WHEN s.endTime > :periodEnd THEN :periodEnd                                                                                                                                              
-                      ELSE s.endTime                                                                                                                                                                     
-                  END                                                                                                                                                                                    
-              ) * 1000                                                                                                                                                                                   
-          ) DESC)                                                                                                                                                                                        
-      )                                                                                                                                                                                                  
-      FROM StudySession s                                                                                                                                                                                
-      WHERE s.startTime <= :periodEnd                                                                                                                                                                       
-      AND (s.endTime > :periodStart OR s.endTime IS NULL)                                                                                                                                                   
-      GROUP BY s.user.id                                                                                                                                                                                 
-      ORDER BY SUM(                                                                                                                                                                                      
-          TIMESTAMPDIFF('SECOND',                                                                                                                                                                          
-              GREATEST(s.startTime, :periodStart),                                                                                                                                                          
-              CASE                                                                                                                                                                                       
-                  WHEN s.endTime IS NULL THEN :periodEnd                                                                                                                                                    
-                  WHEN s.endTime > :periodEnd THEN :periodEnd                                                                                                                                                  
-                  ELSE s.endTime                                                                                                                                                                         
-              END                                                                                                                                                                                        
-          ) * 1000                                                                                                                                                                                       
-      ) DESC                                                                                                                                                                                             
-  """)
-    List<UserRankingTemp> calculateFinalizedPeriodRanking(
+    @Query(value = """
+        SELECT u.id as userId, 
+               u.name as username, 
+               SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :periodEnd
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) as totalMillis,
+               RANK() OVER (ORDER BY SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :periodEnd
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) DESC) as ranking
+        FROM study_session s 
+        JOIN user u ON s.user_id = u.id
+        WHERE s.start_time <= :periodEnd
+        AND (s.end_time > :periodStart OR s.end_time IS NULL)
+        GROUP BY u.id, u.name
+        ORDER BY SUM(
+            TIMESTAMPDIFF(SECOND,
+                GREATEST(s.start_time, :periodStart),
+                CASE
+                    WHEN s.end_time IS NULL THEN :periodEnd
+                    WHEN s.end_time > :periodEnd THEN :periodEnd
+                    ELSE s.end_time
+                END
+            ) * 1000
+        ) DESC
+    """, nativeQuery = true)
+    List<UserRankingProjection> calculateFinalizedPeriodRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd
     );
 
-    @Query("""
-        SELECT new com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp(
-            s.user.department,
-            SUM(
-                TIMESTAMPDIFF('SECOND',
-                    GREATEST(s.startTime, :periodStart),
-                    CASE
-                        WHEN s.endTime IS NULL THEN :now
-                        ELSE s.endTime
-                    END
-                ) * 1000
-            ),
-            RANK() OVER (ORDER BY SUM(                                                                                                                                                                     
-              TIMESTAMPDIFF('SECOND',                                                                                                                                                                      
-                  GREATEST(s.startTime, :periodStart),                                                                                                                                                      
-                  CASE                                                                                                                                                                                   
-                      WHEN s.endTime IS NULL THEN :periodEnd                                                                                                                                                
-                      WHEN s.endTime > :periodEnd THEN :periodEnd                                                                                                                                              
-                      ELSE s.endTime                                                                                                                                                                     
-                  END                                                                                                                                                                                    
-              ) * 1000                                                                                                                                                                                   
-          ) DESC)  
-        )
-         FROM StudySession s 
-        WHERE s.startTime <= :periodEnd AND s.user.department IS NOT NULL
-        AND (s.endTime >= :periodStart OR s.endTime IS NULL)
-        GROUP BY s.user.department
-        ORDER BY SUM(TIMESTAMPDIFF('SECOND',
-            GREATEST(s.startTime, :periodStart),
+    @Query(value = """
+        SELECT u.department as department, 
+               SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) as totalMillis,
+               RANK() OVER (ORDER BY SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) DESC) as ranking
+        FROM study_session s 
+        JOIN user u ON s.user_id = u.id
+        WHERE s.start_time <= :periodEnd AND u.department IS NOT NULL
+        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        GROUP BY u.department
+        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+            GREATEST(s.start_time, :periodStart),
             CASE 
-                WHEN s.endTime IS NULL THEN :periodEnd
-                WHEN s.endTime > :periodEnd THEN :periodEnd
-                ELSE s.endTime
+                WHEN s.end_time IS NULL THEN :now
+                WHEN s.end_time > :periodEnd THEN :periodEnd
+                ELSE s.end_time
             END
-        ) * 1000
-    ) DESC
-""")
-    List<DepartmentRankingTemp> calculateCurrentDepartmentRanking(
+        ) * 1000) DESC
+""", nativeQuery = true)
+    List<DepartmentRankingProjection> calculateCurrentDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd,
             @Param("now") LocalDateTime now);
 
-    @Query("""
-        SELECT new com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp(
-            s.user.department,
-            SUM(
-                TIMESTAMPDIFF('SECOND',
-                    GREATEST(s.startTime, :periodStart),
-                    CASE
-                        WHEN s.endTime IS NULL THEN :periodEnd
-                        WHEN s.endTime > :periodEnd THEN :periodEnd
-                        ELSE s.endTime
-                    END
-                ) * 1000
-            ), 
-            RANK() OVER (ORDER BY SUM(                                                                                                                                                                     
-              TIMESTAMPDIFF('SECOND',                                                                                                                                                                      
-                  GREATEST(s.startTime, :periodStart),                                                                                                                                                      
-                  CASE                                                                                                                                                                                   
-                      WHEN s.endTime IS NULL THEN :periodEnd                                                                                                                                                
-                      WHEN s.endTime > :periodEnd THEN :periodEnd                                                                                                                                              
-                      ELSE s.endTime                                                                                                                                                                     
-                  END                                                                                                                                                                                    
-              ) * 1000                                                                                                                                                                                   
-          ) DESC)  
-        )
-         FROM StudySession s 
-        WHERE s.startTime <= :periodEnd AND s.user.department IS NOT NULL
-        AND (s.endTime >= :periodStart OR s.endTime IS NULL)
-        GROUP BY s.user.department
-        ORDER BY SUM(TIMESTAMPDIFF('SECOND',
-            GREATEST(s.startTime, :periodStart),
+    @Query(value = """
+        SELECT u.department as department, 
+               SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :periodEnd
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) as totalMillis,
+               RANK() OVER (ORDER BY SUM(
+                   TIMESTAMPDIFF(SECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN :periodEnd
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) * 1000
+               ) DESC) as ranking
+        FROM study_session s 
+        JOIN user u ON s.user_id = u.id
+        WHERE s.start_time <= :periodEnd AND u.department IS NOT NULL
+        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        GROUP BY u.department
+        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+            GREATEST(s.start_time, :periodStart),
             CASE 
-                WHEN s.endTime IS NULL THEN :periodEnd
-                WHEN s.endTime > :periodEnd THEN :periodEnd
-                ELSE s.endTime
+                WHEN s.end_time IS NULL THEN :periodEnd
+                WHEN s.end_time > :periodEnd THEN :periodEnd
+                ELSE s.end_time
             END
-        ) * 1000
-    ) DESC
-""")
-    List<DepartmentRankingTemp> calculateFinalizedDepartmentRanking(
+        ) * 1000) DESC
+""", nativeQuery = true)
+    List<DepartmentRankingProjection> calculateFinalizedDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd
     );

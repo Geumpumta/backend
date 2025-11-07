@@ -5,6 +5,7 @@ import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingEntryResponse;
 import com.gpt.geumpumtabackend.rank.dto.UserRankingTemp;
 import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
+import com.gpt.geumpumtabackend.study.repository.StudySessionRepository.UserRankingProjection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,11 +30,11 @@ public class PersonalRankService {
         LocalDateTime startToday = LocalDate.now().atStartOfDay();
         LocalDateTime endToday = LocalDate.now().atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startToday, endToday, nowTime);
+        List<StudySessionRepository.UserRankingProjection> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startToday, endToday, nowTime);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
+        for (UserRankingProjection temp : userRankingTempList) {
+            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.from(temp);
             topRankings.add(entry);
 
             if(temp.getUserId().equals(userId)){
@@ -69,11 +70,11 @@ public class PersonalRankService {
         LocalDateTime weekStart = today.with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime weekEnd = today.with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(weekStart, weekEnd, nowTime);
+        List<UserRankingProjection> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(weekStart, weekEnd, nowTime);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
+        for (UserRankingProjection temp : userRankingTempList) {
+            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.from(temp);
             topRankings.add(entry);
             if(temp.getUserId().equals(userId)){
                 myRanking = entry;
@@ -109,11 +110,11 @@ public class PersonalRankService {
         LocalDateTime startMonth = today.withDayOfMonth(1).atStartOfDay();
         LocalDateTime endMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);
         LocalDateTime nowTime = LocalDateTime.now();
-        List<UserRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startMonth, endMonth, nowTime);
+        List<UserRankingProjection> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startMonth, endMonth, nowTime);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (UserRankingTemp temp : userRankingTempList) {
-            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
+        for (UserRankingProjection temp : userRankingTempList) {
+            PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.from(temp);
             topRankings.add(entry);
 
             if(temp.getUserId().equals(userId)){

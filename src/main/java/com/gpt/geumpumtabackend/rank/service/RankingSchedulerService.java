@@ -13,7 +13,8 @@ import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.gpt.geumpumtabackend.study.repository.StudySessionRepository.UserRankingProjection;
+import com.gpt.geumpumtabackend.study.repository.StudySessionRepository.DepartmentRankingProjection;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -75,7 +76,7 @@ public class RankingSchedulerService {
 
 
     public void calculateAndSavePersonalRanking(LocalDateTime periodStart, LocalDateTime periodEnd, RankingType rankingType) {
-        List<UserRankingTemp> userRankingTemps = studySessionRepository.calculateFinalizedPeriodRanking(periodStart, periodEnd);
+        List<UserRankingProjection> userRankingTemps = studySessionRepository.calculateFinalizedPeriodRanking(periodStart, periodEnd);
 
         List<UserRanking> userRankings = userRankingTemps.stream().map(
                 dto -> {
@@ -83,7 +84,7 @@ public class RankingSchedulerService {
                     return UserRanking.builder()
                             .user(user)
                             .totalMillis(dto.getTotalMillis())
-                            .rank(dto.getRank())
+                            .rank(dto.getRanking())
                             .rankingType(rankingType)
                             .calculatedAt(periodStart)
                             .build();
@@ -93,13 +94,13 @@ public class RankingSchedulerService {
     }
 
     public void calculateAndSaveDepartmentRanking(LocalDateTime periodStart, LocalDateTime periodEnd, RankingType rankingType) {
-        List<DepartmentRankingTemp> departmentRankingTemps = studySessionRepository.calculateFinalizedDepartmentRanking(periodStart, periodEnd);
+        List<DepartmentRankingProjection> departmentRankingTemps = studySessionRepository.calculateFinalizedDepartmentRanking(periodStart, periodEnd);
 
         List<DepartmentRanking> departmentRankings = departmentRankingTemps.stream().map(
                 dto -> {
                     return DepartmentRanking.builder()
-                            .department(dto.getDepartmentName())
-                            .rank(dto.getRank())
+                            .department(dto.getDepartment())
+                            .rank(dto.getRanking())
                             .totalMillis(dto.getTotalMillis())
                             .rankingType(rankingType)
                             .calculatedAt(periodStart)
