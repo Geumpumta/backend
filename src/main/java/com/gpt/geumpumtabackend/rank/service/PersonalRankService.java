@@ -52,7 +52,7 @@ public class PersonalRankService {
         List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(day, RankingType.DAILY);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (com.gpt.geumpumtabackend.rank.dto.UserRankingTemp temp : userRankingTempList) {
+        for (UserRankingTemp temp : userRankingTempList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
@@ -92,7 +92,7 @@ public class PersonalRankService {
         List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(weekFirstDay, RankingType.WEEKLY);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (com.gpt.geumpumtabackend.rank.dto.UserRankingTemp temp : userRankingTempList) {
+        for (UserRankingTemp temp : userRankingTempList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
@@ -131,7 +131,7 @@ public class PersonalRankService {
         List<com.gpt.geumpumtabackend.rank.dto.UserRankingTemp> userRankingTempList = userRankingRepository.getFinishedPersonalRanking(monthFirstDay, RankingType.MONTHLY);
         PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
-        for (com.gpt.geumpumtabackend.rank.dto.UserRankingTemp temp : userRankingTempList) {
+        for (UserRankingTemp temp : userRankingTempList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
 

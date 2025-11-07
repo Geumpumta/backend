@@ -58,7 +58,7 @@ public class DepartmentRankService {
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp temp : departmentRankingList) {
+        for (DepartmentRankingTemp temp : departmentRankingList) {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
@@ -100,7 +100,7 @@ public class DepartmentRankService {
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp temp : departmentRankingList) {
+        for (DepartmentRankingTemp temp : departmentRankingList) {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
@@ -144,7 +144,7 @@ public class DepartmentRankService {
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        for (com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp temp : departmentRankingList) {
+        for (DepartmentRankingTemp temp : departmentRankingList) {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
