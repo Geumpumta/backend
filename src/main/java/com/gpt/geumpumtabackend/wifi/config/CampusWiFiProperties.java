@@ -1,57 +1,48 @@
 package com.gpt.geumpumtabackend.wifi.config;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.util.SubnetUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.bind.ConstructorBinding;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
-@Configuration
 @ConfigurationProperties(prefix = "campus.wifi")
-@Data
-@NoArgsConstructor
 @Slf4j
-public class CampusWiFiProperties {
-    
-    private List<WiFiNetwork> networks = new ArrayList<>();
-    private ValidationConfig validation = new ValidationConfig();
-    
-
-    @Data
-    @NoArgsConstructor
-    public static class WiFiNetwork {
-        private String name;                    // "중앙도서관"
-        private String ssid;                    // "KIT-WiFi"
-        private List<String> bssids = new ArrayList<>();  // MAC 주소들
-        private List<String> ipRanges = new ArrayList<>(); // IP 대역들
-        private Boolean active = true;          // 활성화 상태
-        private String description;             // 설명
+public record CampusWiFiProperties(
+        List<WiFiNetwork> networks,
+        ValidationConfig validation) {
         
+    public CampusWiFiProperties {
+        // 기본값 설정
+        if (networks == null) {
+            networks = List.of();
+        }
+        if (validation == null) {
+            validation = new ValidationConfig(60, 32);
+        }
+    }
 
+    public record WiFiNetwork(String name,
+                               String ssid, 
+                               List<String> bssids,
+                               List<String> ipRanges,
+                               Boolean active,
+                               String description) {
 
         public boolean isValidSSID(String ssid) {
             return this.ssid != null && this.ssid.equals(ssid);
         }
-        
 
         public boolean isValidBSSID(String bssid) {
-            if (bssids.isEmpty()) {
-                return true; // BSSID 제한 없음
-            }
             return bssids.contains(bssid);
         }
-        
 
         public boolean isValidIP(String ipAddress) {
             return ipRanges.stream()
                 .anyMatch(range -> isIpInRange(ipAddress, range));
         }
-        
 
         private boolean isIpInRange(String ipAddress, String cidr) {
             try {
@@ -66,10 +57,10 @@ public class CampusWiFiProperties {
     }
     
 
-    @Getter
-    @NoArgsConstructor
-    public static class ValidationConfig {
-        private Integer cacheTtlMinutes = 60;        // 캐시 유지 시간 (1시간)
-        private Integer maxSsidLength = 32;          // SSID 최대 길이
+
+
+    public record ValidationConfig(Integer cacheTtlMinutes,
+                                   Integer maxSsidLength) {
+
     }
 }
