@@ -31,7 +31,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("endOfDay") LocalDateTime endOfDay);
 
     @Query(value = "SELECT s FROM StudySession s " +
-            "WHERE s.heartBeatAt < :threshold")
+            "WHERE s.status = 'STARTED' AND s.heartBeatAt < :threshold")
     List<StudySession> findAllZombieSession(@Param("threshold") LocalDateTime threshold);
 
     /*
