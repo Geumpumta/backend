@@ -3,6 +3,7 @@ package com.gpt.geumpumtabackend.study.controller;
 import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
+import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyReconnectRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
@@ -57,12 +58,13 @@ public class StudySessionController {
     }
 
     /*
-    와이파이 끊겼을 시
+    하트비트 수신
      */
-    @PostMapping("/reconnect")
+    @PostMapping("/heart-beat")
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<StudyStartResponse>> reconnect(@Valid @RequestBody StudyReconnectRequest request, Long userId){
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.reconnectStudySession(request, userId)));
+    public ResponseEntity<ResponseBody<Void>> processHeartBeat(@Valid @RequestBody HeartBeatRequest heartBeatRequest, Long userId){
+        studySessionService.updateHeartBeat(heartBeatRequest, userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
 }

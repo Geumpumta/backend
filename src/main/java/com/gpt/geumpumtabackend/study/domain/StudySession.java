@@ -32,6 +32,9 @@ public class StudySession {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+
+    private LocalDateTime heartBeatAt;
+
     public void startStudySession(LocalDateTime startTime, User user) {
         this.startTime = startTime;
         this.user = user;
@@ -42,5 +45,9 @@ public class StudySession {
         this.endTime = endTime;
         status = StudyStatus.FINISHED;
         this.totalMillis = Duration.between(this.startTime, this.endTime).toMillis();
+    }
+
+    public void updateHeartBeatAt(LocalDateTime heartBeatAt) {
+        this.heartBeatAt = heartBeatAt;
     }
 }
