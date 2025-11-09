@@ -60,9 +60,9 @@ public class CampusWiFiValidationService {
 
 
     private boolean isInCampusNetwork(String ssid, String bssid, String ipAddress) {
-        List<CampusWiFiProperties.WiFiNetwork> activeNetworks = wifiProperties.getNetworks()
+        List<CampusWiFiProperties.WiFiNetwork> activeNetworks = wifiProperties.networks()
             .stream()
-            .filter(CampusWiFiProperties.WiFiNetwork::getActive)
+            .filter(CampusWiFiProperties.WiFiNetwork::active)
             .toList();
 
         for (CampusWiFiProperties.WiFiNetwork network : activeNetworks) {
@@ -88,7 +88,7 @@ public class CampusWiFiValidationService {
 
     private void cacheValidationResult(String ssid, String ipAddress, boolean isValid) {
         String cacheKey = buildCacheKey(ssid, ipAddress);
-        Duration ttl = Duration.ofMinutes(wifiProperties.getValidation().getCacheTtlMinutes());
+        Duration ttl = Duration.ofMinutes(wifiProperties.validation().cacheTtlMinutes());
         redisTemplate.opsForValue().set(cacheKey, isValid, ttl);
     }
 }
