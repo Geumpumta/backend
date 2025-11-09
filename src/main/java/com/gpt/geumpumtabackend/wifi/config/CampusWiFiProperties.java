@@ -69,7 +69,6 @@ public class CampusWiFiProperties {
     @Getter
     @NoArgsConstructor
     public static class ValidationConfig {
-        private Boolean allowUnknownBssid = true;    // 미등록 BSSID 허용
         private Integer cacheTtlMinutes = 60;        // 캐시 유지 시간 (1시간)
         private Integer maxSsidLength = 32;          // SSID 최대 길이
     }
