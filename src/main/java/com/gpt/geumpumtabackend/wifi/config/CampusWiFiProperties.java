@@ -66,7 +66,7 @@ public class CampusWiFiProperties {
     }
     
 
-    @Data
+    @Getter
     @NoArgsConstructor
     public static class ValidationConfig {
         private Boolean allowUnknownBssid = true;    // 미등록 BSSID 허용
