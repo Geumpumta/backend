@@ -10,6 +10,7 @@ import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.rank.repository.DepartmentRankingRepository;
 import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
+import com.gpt.geumpumtabackend.user.domain.Department;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -21,6 +22,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -82,12 +85,21 @@ public class RankingSchedulerService {
     public void calculateAndSavePersonalRanking(LocalDateTime periodStart, LocalDateTime periodEnd, RankingType rankingType) {
         List<PersonalRankingTemp> userRankingTemps = studySessionRepository.calculateFinalizedPeriodRanking(periodStart, periodEnd);
 
+
+        List<Long> userIds = userRankingTemps.stream()
+                .map(PersonalRankingTemp::getUserId)
+                .toList();
+        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
         List<UserRanking> userRankings = userRankingTemps.stream().map(
                 dto -> {
-                    User user = userRepository.findById(dto.getUserId())
-                            .orElseThrow(()-> new BusinessException(ExceptionType.USER_NOT_FOUND));
+                    User user = userMap.get(dto.getUserId());
+                    if (user == null) {
+                        throw new BusinessException(ExceptionType.USER_NOT_FOUND);
+                    }
                     return UserRanking.builder()
-                            .user(user)
+                            .user(user)  // 영속성 컨텍스트에서 관리되는 실제 User 엔티티
                             .totalMillis(dto.getTotalMillis())
                             .rank(dto.getRanking())
                             .rankingType(rankingType)
@@ -105,7 +117,7 @@ public class RankingSchedulerService {
         List<DepartmentRanking> departmentRankings = departmentRankingTemps.stream().map(
                 dto -> {
                     return DepartmentRanking.builder()
-                            .department(dto.getDepartmentName())
+                            .department(Department.valueOf(dto.getDepartmentName()))  // String → Department 변환
                             .rank(dto.getRanking())
                             .totalMillis(dto.getTotalMillis())
                             .rankingType(rankingType)
