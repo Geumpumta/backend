@@ -3,6 +3,7 @@ package com.gpt.geumpumtabackend.study.controller;
 import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
+import com.gpt.geumpumtabackend.study.api.StudySessionApi;
 import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/study")
 @RequiredArgsConstructor
 @Slf4j
-public class StudySessionController {
+public class StudySessionController implements StudySessionApi {
 
     private final StudySessionService studySessionService;
 

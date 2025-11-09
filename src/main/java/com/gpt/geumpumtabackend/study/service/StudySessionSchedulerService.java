@@ -1,7 +1,5 @@
 package com.gpt.geumpumtabackend.study.service;
 
-import com.gpt.geumpumtabackend.global.exception.BusinessException;
-import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,13 +26,17 @@ public class StudySessionSchedulerService {
         LocalDateTime threshold = now.minusSeconds(90);
         List<StudySession> zombieSessions = studySessionRepository.findAllZombieSession(threshold);
 
+        List<StudySession> zombieSession = new ArrayList<>();
         zombieSessions.forEach(studySession -> {
             try {
                 studySession.endStudySession(now);
+                zombieSession.add(studySession);
             } catch (Exception e) {
-                throw new BusinessException(ExceptionType.ZOMBIE_SCHEDULER_ERROR);
+               log.error("Failed to end zombie session: {}", studySession.getId(), e);
             }
         });
-        studySessionRepository.saveAll(zombieSessions);
+        if (!zombieSession.isEmpty()) {
+            studySessionRepository.saveAll(zombieSession);
+        }
     }
 }
