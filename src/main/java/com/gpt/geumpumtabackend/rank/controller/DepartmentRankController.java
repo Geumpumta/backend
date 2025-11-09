@@ -3,6 +3,7 @@ package com.gpt.geumpumtabackend.rank.controller;
 import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
+import com.gpt.geumpumtabackend.rank.api.DepartmentRankApi;
 import com.gpt.geumpumtabackend.rank.dto.response.DepartmentRankingResponse;
 import com.gpt.geumpumtabackend.rank.service.DepartmentRankService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/v1/rank/department")
 @RequiredArgsConstructor
-public class DepartmentRankController {
+public class DepartmentRankController implements DepartmentRankApi {
 
     private final DepartmentRankService departmentRankService;
 
