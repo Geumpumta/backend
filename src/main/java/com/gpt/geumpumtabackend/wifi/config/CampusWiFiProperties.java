@@ -2,6 +2,7 @@ package com.gpt.geumpumtabackend.wifi.config;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.util.SubnetUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,7 @@ import java.util.List;
 @ConfigurationProperties(prefix = "campus.wifi")
 @Data
 @NoArgsConstructor
+@Slf4j
 public class CampusWiFiProperties {
     
     private List<WiFiNetwork> networks = new ArrayList<>();
@@ -57,6 +59,7 @@ public class CampusWiFiProperties {
                 SubnetUtils.SubnetInfo subnetInfo = subnet.getInfo();
                 return subnetInfo.isInRange(ipAddress);
             } catch (Exception e) {
+                log.warn("Invalid CIDR format or IP address: cidr={}, ip={}", cidr, ipAddress, e);
                 return false;
             }
         }
