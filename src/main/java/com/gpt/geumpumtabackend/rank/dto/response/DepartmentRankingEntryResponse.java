@@ -5,7 +5,7 @@ import com.gpt.geumpumtabackend.user.domain.Department;
 
 
 public record DepartmentRankingEntryResponse(
-        Department departmentName,
+        String departmentName,
         Long totalMillis,
         Long rank
 ) {

@@ -37,9 +37,13 @@ public enum ExceptionType {
     CANT_SEND_MAIL(INTERNAL_SERVER_ERROR, "M001", "인증코드 전송에 실패했습니다."),
 
     // Study
-    STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다.")
+    STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다."),
+    ZOMBIE_SCHEDULER_ERROR(INTERNAL_SERVER_ERROR,"ST001","좀비 스케줄러 에러가 발생했습니다."),
 
-
+    // WiFi
+    WIFI_NOT_CAMPUS_NETWORK(FORBIDDEN, "W001", "캠퍼스 네트워크가 아닙니다"),
+    WIFI_VALIDATION_ERROR(INTERNAL_SERVER_ERROR, "W002", "Wi-Fi 검증 중 오류가 발생했습니다"),
+    WIFI_INVALID_FORMAT(BAD_REQUEST, "W003", "Wi-Fi 정보 형식이 올바르지 않습니다")
 
     ;
 
