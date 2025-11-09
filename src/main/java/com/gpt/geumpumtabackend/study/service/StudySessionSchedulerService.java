@@ -1,5 +1,7 @@
 package com.gpt.geumpumtabackend.study.service;
 
+import com.gpt.geumpumtabackend.global.exception.BusinessException;
+import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +31,7 @@ public class StudySessionSchedulerService {
             try {
                 studySession.endStudySession(now);
             } catch (Exception e) {
-                log.error("Failed to end zombie session: {}", studySession.getId(), e);
+                throw new BusinessException(ExceptionType.ZOMBIE_SCHEDULER_ERROR);
             }
         });
         studySessionRepository.saveAll(zombieSessions);
