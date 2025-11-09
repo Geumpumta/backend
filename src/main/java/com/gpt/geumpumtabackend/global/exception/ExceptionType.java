@@ -38,7 +38,6 @@ public enum ExceptionType {
 
     // Study
     STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다."),
-    ZOMBIE_SCHEDULER_ERROR(INTERNAL_SERVER_ERROR,"ST001","좀비 스케줄러 에러가 발생했습니다."),
 
     // WiFi
     WIFI_NOT_CAMPUS_NETWORK(FORBIDDEN, "W001", "캠퍼스 네트워크가 아닙니다"),
