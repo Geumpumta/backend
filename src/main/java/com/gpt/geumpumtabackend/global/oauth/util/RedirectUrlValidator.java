@@ -7,7 +7,8 @@ public class RedirectUrlValidator {
     private static final Set<String> ALLOWED_PREFIXES = Set.of(
             "http://localhost:5173",
             "http://localhost:8080",
-            "exp://"
+            "exp://",
+            "geumpumta://"
 
     );
 
