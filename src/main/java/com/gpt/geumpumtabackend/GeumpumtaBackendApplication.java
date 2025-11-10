@@ -1,6 +1,7 @@
 package com.gpt.geumpumtabackend;
 
 import com.gpt.geumpumtabackend.global.oauth.user.KakaoProperties;
+import com.gpt.geumpumtabackend.wifi.config.CampusWiFiProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
@@ -10,7 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @SpringBootApplication
 @EnableJpaAuditing
 @ConfigurationPropertiesScan
-@EnableConfigurationProperties({KakaoProperties.class})
+@EnableConfigurationProperties({KakaoProperties.class, CampusWiFiProperties.class})
 public class GeumpumtaBackendApplication {
 
     public static void main(String[] args) {

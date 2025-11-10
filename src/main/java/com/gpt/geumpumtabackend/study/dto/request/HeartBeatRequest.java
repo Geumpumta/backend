@@ -3,11 +3,9 @@ package com.gpt.geumpumtabackend.study.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDateTime;
-
-public record StudyStartRequest(
-        @NotNull(message = "startTime은 필수입니다")
-        LocalDateTime startTime,
+public record HeartBeatRequest(
+        @NotNull(message = "sessionId는 필수입니다")
+        Long sessionId,
         
         @NotBlank(message = "SSID는 필수입니다")
         String ssid,
@@ -16,8 +14,6 @@ public record StudyStartRequest(
         
         @NotBlank(message = "IP 주소는 필수입니다")
         String ipAddress
-){
+) {
 
 }
-
-

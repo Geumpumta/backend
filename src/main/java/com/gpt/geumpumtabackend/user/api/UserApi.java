@@ -11,6 +11,7 @@ import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
+import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -46,6 +48,27 @@ public interface UserApi {
     @PreAuthorize("isAuthenticated() and hasRole('GUEST')")
     public ResponseEntity<ResponseBody<TokenResponse>> completeRegistration(
             @RequestBody @Valid CompleteRegistrationRequest request,
+            @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
+            summary =  "사용자의 정보를 반환하는 api",
+            description = "USER, ADMIN 권한을 가진 사용자는 자신의 정보를 확인합니다."
+    )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = UserProfileResponse.class)))
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(
+                    response = UserProfileResponse.class,
+                    description = "사용자 정보 반환 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @GetMapping("/profile")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<UserProfileResponse>> getMyProfile(
             @Parameter(hidden = true) Long userId
     );
 }
