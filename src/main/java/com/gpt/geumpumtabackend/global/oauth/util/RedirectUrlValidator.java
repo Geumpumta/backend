@@ -8,7 +8,7 @@ public class RedirectUrlValidator {
             "http://localhost:5173",
             "http://localhost:8080",
             "exp://",
-            "geumpumta://"
+            "geumpumta://oauth/callback"
 
     );
 
