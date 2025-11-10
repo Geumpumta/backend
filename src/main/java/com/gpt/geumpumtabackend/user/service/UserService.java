@@ -10,6 +10,7 @@ import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
+import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -60,5 +61,12 @@ public class UserService {
         JwtUserClaim jwtUserClaim = JwtUserClaim.create(user);
         Token token = jwtHandler.createTokens(jwtUserClaim);
         return TokenResponse.to(token);
+    }
+
+    public UserProfileResponse getUserProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
+
+        return UserProfileResponse.from(user);
     }
 }
