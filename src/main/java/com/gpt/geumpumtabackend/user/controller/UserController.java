@@ -7,6 +7,7 @@ import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.api.UserApi;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
+import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,5 +38,16 @@ public class UserController implements UserApi {
     ){
         TokenResponse response = userService.completeRegistration(request, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
+    }
+
+    @GetMapping("/profile")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<UserProfileResponse>> getMyProfile(
+            Long userId
+    ){
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
+                userService.getUserProfile(userId)
+        ));
     }
 }
