@@ -22,7 +22,7 @@ public record UserProfileResponse(
                 user.getNickname(),
                 user.getPicture(), user.getProvider().toString(),
                 user.getStudentId(),
-                user.getDepartment().getKoreanName()
+                user.getDepartment() != null ? user.getDepartment().getKoreanName() : null
         );
     }
 }
