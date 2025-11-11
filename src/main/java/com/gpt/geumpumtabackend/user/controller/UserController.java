@@ -42,7 +42,7 @@ public class UserController implements UserApi {
 
     @GetMapping("/profile")
     @AssignUserId
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResponseBody<UserProfileResponse>> getMyProfile(
             Long userId
     ){
