@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -103,7 +104,8 @@ public interface StudySessionApi {
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(
             @Valid @RequestBody StudyStartRequest request,
-            @Parameter(hidden = true) Long userId
+            @Parameter(hidden = true) Long userId,
+            HttpServletRequest httpServletRequest
     );
 
     @Operation(
@@ -168,6 +170,6 @@ public interface StudySessionApi {
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<Void>> processHeartBeat(
             @Valid @RequestBody HeartBeatRequest heartBeatRequest,
-            @Parameter(hidden = true) Long userId
-    );
+            @Parameter(hidden = true) Long userId,
+            HttpServletRequest httpServletRequest);
 }

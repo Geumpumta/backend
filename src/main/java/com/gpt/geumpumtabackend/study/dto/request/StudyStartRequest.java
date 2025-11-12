@@ -11,13 +11,11 @@ public record StudyStartRequest(
         
         @NotBlank(message = "SSID는 필수입니다")
         String ssid,
-        
-        String bssid,  // 선택적 (null 가능)
-        
-        @NotBlank(message = "IP 주소는 필수입니다")
-        String ipAddress
-){
 
+        @NotBlank(message = "BSSID는 필수입니다")
+        String bssid
+
+){
 }
 
 
