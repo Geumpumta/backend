@@ -5,10 +5,21 @@ import jakarta.servlet.http.HttpServletRequest;
 public class IpUtil {
 
     public static String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-FORWARDED-FOR");
+        String ip = request.getHeader("X-Real-IP");
 
-        if(isUnknown(ip))
-            ip = request.getHeader("X-Real-IP");
+        if(isUnknown(ip)) {
+            String xForwardedFor = request.getHeader("X-Forwarded-For");
+            if(!isUnknown(xForwardedFor)) {
+                String[] candidates =xForwardedFor.split(",");
+                for (int i = candidates.length - 1; i >= 0; i--) {
+                    String candidate = candidates[i].trim();
+                    if (!isUnknown(candidate)) {
+                        ip = candidate;
+                        break;
+                    }
+                }
+            }
+        }
 
         if(isUnknown(ip)){
             ip = request.getRemoteAddr();
