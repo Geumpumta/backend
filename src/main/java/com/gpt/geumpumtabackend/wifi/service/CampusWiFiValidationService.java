@@ -1,7 +1,9 @@
 package com.gpt.geumpumtabackend.wifi.service;
 
+import com.gpt.geumpumtabackend.global.wifi.IpUtil;
 import com.gpt.geumpumtabackend.wifi.config.CampusWiFiProperties;
 import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -23,9 +25,13 @@ public class CampusWiFiValidationService {
     private static final String WIFI_CACHE_KEY_PREFIX = "campus_wifi_validation:";
     
 
-    public WiFiValidationResult validateCampusWiFi(String ssid, String bssid, String ipAddress) {
+    public WiFiValidationResult validateCampusWiFi(String ssid, String bssid, HttpServletRequest request) {
 
         try {
+            // 서버에서 클라이언트 IP 추출
+            String ipAddress = IpUtil.getClientIp(request);
+            log.info("Wi-Fi validation request - SSID: {}, BSSID: {}, IP: {}", ssid, bssid, ipAddress);
+
             // 캠퍼스 내부인지 확인
             boolean isInCampus = isInCampusNetwork(ssid, bssid, ipAddress);
 
@@ -38,33 +44,46 @@ public class CampusWiFiValidationService {
             }
 
         } catch (Exception e) {
+            log.error("Wi-Fi validation error", e);
             return WiFiValidationResult.error("Wi-Fi 검증 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
     
 
-    public WiFiValidationResult validateFromCache(String ssid, String bssid, String ipAddress) {
-
-        // IP 주소와 SSID를 통해 키를 생성 후  Redis에서 조회
-        String cacheKey = buildCacheKey(ssid, ipAddress);
-        Boolean cachedResult = (Boolean) redisTemplate.opsForValue().get(cacheKey);
-            
-        if (cachedResult != null) {
-            return cachedResult
-                    ? WiFiValidationResult.valid("캠퍼스 네트워크입니다 (캐시)")
-                    : WiFiValidationResult.invalid("캠퍼스 네트워크가 아닙니다 (캐시)");
+    public WiFiValidationResult validateFromCache(String ssid, String bssid, HttpServletRequest request) {
+        try {
+            // 서버에서 클라이언트 IP 추출
+            String ipAddress = IpUtil.getClientIp(request);
+            log.info("Wi-Fi validation cache request - SSID: {}, BSSID: {}, IP: {}", ssid, bssid, ipAddress);
+            // IP 주소와 SSID를 통해 키를 생성 후 Redis에서 조회
+            String cacheKey = buildCacheKey(ssid, ipAddress);
+            Boolean cachedResult = (Boolean) redisTemplate.opsForValue().get(cacheKey);
+                
+            if (cachedResult != null) {
+                log.debug("Wi-Fi validation cache hit - SSID: {}, IP: {}, Result: {}", ssid, ipAddress, cachedResult);
+                return cachedResult
+                        ? WiFiValidationResult.valid("캠퍼스 네트워크입니다 (캐시)")
+                        : WiFiValidationResult.invalid("캠퍼스 네트워크가 아닙니다 (캐시)");
             }
-        // 캐시에 없으면 전체 검증 수행
-        return validateCampusWiFi(ssid, bssid, ipAddress);
+            
+            // 캐시에 없으면 전체 검증 수행
+            log.debug("Wi-Fi validation cache miss - performing full validation");
+            return validateCampusWiFi(ssid, bssid, request);
+            
+        } catch (Exception e) {
+            log.error("Wi-Fi cache validation error", e);
+            return WiFiValidationResult.error("Wi-Fi 검증 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
 
     private boolean isInCampusNetwork(String ssid, String bssid, String ipAddress) {
+
+        // 설정 파일 Wi-fi 목록 불러오기
         List<CampusWiFiProperties.WiFiNetwork> activeNetworks = wifiProperties.networks()
             .stream()
             .filter(CampusWiFiProperties.WiFiNetwork::active)
             .toList();
-
         for (CampusWiFiProperties.WiFiNetwork network : activeNetworks) {
             // 1. SSID 체크
             if (!network.isValidSSID(ssid)) {
