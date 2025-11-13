@@ -9,8 +9,11 @@ public record StudyStartRequest(
         @NotNull(message = "startTime은 필수입니다")
         LocalDateTime startTime,
         
-        @NotBlank(message = "SSID는 필수입니다")
-        String ssid,
+        @NotNull(message = "Gateway IP는 필수입니다.")
+        Integer gatewayIp,
+
+        @NotNull(message = "IP 주소는 필수입니다.")
+        Integer ipAddress,
 
         @NotBlank(message = "BSSID는 필수입니다")
         String bssid

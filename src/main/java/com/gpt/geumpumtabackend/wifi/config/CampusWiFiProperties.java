@@ -20,19 +20,19 @@ public record CampusWiFiProperties(
             networks = List.of();
         }
         if (validation == null) {
-            validation = new ValidationConfig(60, 32);
+            validation = new ValidationConfig(60);
         }
     }
 
     public record WiFiNetwork(String name,
-                               String ssid, 
+                               String gatewayIp,
                                List<String> bssids,
                                List<String> ipRanges,
                                Boolean active,
                                String description) {
 
-        public boolean isValidSSID(String ssid) {
-            return this.ssid != null && this.ssid.equals(ssid);
+        public boolean isValidGatewayIP(Integer gatewayIp) {
+            return this.gatewayIp.equals(gatewayIp.toString());
         }
 
         public boolean isValidBSSID(String bssid) {
@@ -59,8 +59,7 @@ public record CampusWiFiProperties(
 
 
 
-    public record ValidationConfig(Integer cacheTtlMinutes,
-                                   Integer maxSsidLength) {
+    public record ValidationConfig(Integer cacheTtlMinutes) {
 
     }
 }

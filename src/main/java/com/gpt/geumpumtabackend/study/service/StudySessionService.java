@@ -2,7 +2,6 @@ package com.gpt.geumpumtabackend.study.service;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
-import com.gpt.geumpumtabackend.global.wifi.IpUtil;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
@@ -50,7 +49,7 @@ public class StudySessionService {
     public StudyStartResponse startStudySession(StudyStartRequest request, Long userId, HttpServletRequest httpServletRequest) {
         // Wi-Fi 검증
         WiFiValidationResult validationResult = wifiValidationService.validateFromCache(
-            request.ssid(), request.bssid(), httpServletRequest
+            request.gatewayIp(), request.bssid(), httpServletRequest
         );
         
         if (!validationResult.isValid()) {
@@ -88,7 +87,7 @@ public class StudySessionService {
 
         // Wi-Fi 검증 (캐시 우선 사용)
         WiFiValidationResult validationResult = wifiValidationService.validateFromCache(
-            heartBeatRequest.ssid(), heartBeatRequest.bssid(), httpServletRequest
+            heartBeatRequest.gatewayIp(), heartBeatRequest.bssid(), httpServletRequest
         );
         
         if (!validationResult.isValid()) {
