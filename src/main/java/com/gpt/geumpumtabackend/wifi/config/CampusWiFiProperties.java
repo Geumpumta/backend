@@ -31,8 +31,8 @@ public record CampusWiFiProperties(
                                Boolean active,
                                String description) {
 
-        public boolean isValidGatewayIP(Integer gatewayIp) {
-            return this.gatewayIp.equals(gatewayIp.toString());
+        public boolean isValidGatewayIP(String gatewayIp) {
+            return this.gatewayIp.equals(gatewayIp);
         }
 
         public boolean isValidBSSID(String bssid) {

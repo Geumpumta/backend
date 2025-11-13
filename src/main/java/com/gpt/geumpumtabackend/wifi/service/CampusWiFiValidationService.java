@@ -25,7 +25,7 @@ public class CampusWiFiValidationService {
     private static final String WIFI_CACHE_KEY_PREFIX = "campus_wifi_validation:";
     
 
-    public WiFiValidationResult validateCampusWiFi(Integer gatewayIp, String bssid, HttpServletRequest request) {
+    public WiFiValidationResult validateCampusWiFi(String gatewayIp, String bssid, HttpServletRequest request) {
 
         try {
             // 서버에서 클라이언트 IP 추출
@@ -50,12 +50,12 @@ public class CampusWiFiValidationService {
     }
     
 
-    public WiFiValidationResult validateFromCache(Integer gatewayIp, String bssid, HttpServletRequest request) {
+    public WiFiValidationResult validateFromCache(String gatewayIp, String bssid, HttpServletRequest request) {
         try {
             // 서버에서 클라이언트 IP 추출
             String ipAddress = IpUtil.getClientIp(request);
             // Gateway IP와 클라이언트 IP를 통해 키를 생성 후 Redis에서 조회
-            String cacheKey = buildCacheKey(gatewayIp.toString(), ipAddress);
+            String cacheKey = buildCacheKey(gatewayIp, ipAddress);
             Boolean cachedResult = (Boolean) redisTemplate.opsForValue().get(cacheKey);
                 
             if (cachedResult != null) {
@@ -73,7 +73,7 @@ public class CampusWiFiValidationService {
     }
 
 
-    private boolean isInCampusNetwork(Integer gatewayIp, String bssid, String ipAddress) {
+    private boolean isInCampusNetwork(String gatewayIp, String bssid, String ipAddress) {
 
         // 설정 파일 Wi-fi 목록 불러오기
         List<CampusWiFiProperties.WiFiNetwork> activeNetworks = wifiProperties.networks()
@@ -101,8 +101,8 @@ public class CampusWiFiValidationService {
     }
     
 
-    private void cacheValidationResult(Integer gatewayIp, String ipAddress, boolean isValid) {
-        String cacheKey = buildCacheKey(gatewayIp.toString(), ipAddress);
+    private void cacheValidationResult(String gatewayIp, String ipAddress, boolean isValid) {
+        String cacheKey = buildCacheKey(gatewayIp, ipAddress);
         Duration ttl = Duration.ofMinutes(wifiProperties.validation().cacheTtlMinutes());
         redisTemplate.opsForValue().set(cacheKey, isValid, ttl);
     }
