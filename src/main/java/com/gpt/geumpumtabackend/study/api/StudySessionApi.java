@@ -73,7 +73,7 @@ public interface StudySessionApi {
             새로운 학습 세션을 시작합니다. 캠퍼스 Wi-Fi 검증이 필수입니다.
             
             🔐 **Wi-Fi 검증 과정:**
-            1. SSID 검증 - 허용된 캠퍼스 Wi-Fi인지 확인
+            1. gatewayIp 검증 - 허용된 캠퍼스 Wi-Fi인지 확인
             2. BSSID 검증 - 특정 액세스포인트 확인 (선택사항)
             3. IP 대역 검증 - 캠퍼스 IP 범위 내인지 확인
             
