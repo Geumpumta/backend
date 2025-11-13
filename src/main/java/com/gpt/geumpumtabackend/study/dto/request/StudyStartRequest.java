@@ -9,6 +9,7 @@ public record StudyStartRequest(
         @NotNull(message = "startTime은 필수입니다")
         LocalDateTime startTime,
         
+
         @NotNull(message = "Gateway IP는 필수입니다.")
         Integer gatewayIp,
 
