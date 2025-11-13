@@ -30,7 +30,9 @@ public class CampusWiFiValidationService {
         try {
             // 서버에서 클라이언트 IP 추출
             String ipAddress = IpUtil.getClientIp(request);
+
             log.info("Wi-Fi validation request - Gateway IP: {}, BSSID: {}, Client IP: {}", gatewayIp, bssid, ipAddress);
+
 
             // 캠퍼스 내부인지 확인
             boolean isInCampus = isInCampusNetwork(gatewayIp, bssid, ipAddress);
@@ -65,9 +67,11 @@ public class CampusWiFiValidationService {
             }
             
             // 캐시에 없으면 전체 검증 수행
+
             return validateCampusWiFi(gatewayIp, bssid, request);
             
         } catch (Exception e) {
+
             return WiFiValidationResult.error("Wi-Fi 검증 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
