@@ -3,7 +3,7 @@ package com.gpt.geumpumtabackend.wifi.config;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.net.util.SubnetUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.bind.ConstructorBinding;
+
 
 import java.util.List;
 
@@ -33,7 +33,6 @@ public record CampusWiFiProperties(
 
         public boolean isValidGatewayIP(String gatewayIp) {
             return this.gatewayIp != null && this.gatewayIp.equals(gatewayIp);
-        }
         }
 
         public boolean isValidBSSID(String bssid) {
