@@ -25,17 +25,14 @@ public class CampusWiFiValidationService {
     private static final String WIFI_CACHE_KEY_PREFIX = "campus_wifi_validation:";
     
 
-    public WiFiValidationResult validateCampusWiFi(String gatewayIp, String bssid, HttpServletRequest request) {
+    public WiFiValidationResult validateCampusWiFi(String gatewayIp, HttpServletRequest request) {
 
         try {
             // 서버에서 클라이언트 IP 추출
             String ipAddress = IpUtil.getClientIp(request);
 
-            log.info("Wi-Fi validation request - Gateway IP: {}, BSSID: {}, Client IP: {}", gatewayIp, bssid, ipAddress);
-
-
             // 캠퍼스 내부인지 확인
-            boolean isInCampus = isInCampusNetwork(gatewayIp, bssid, ipAddress);
+            boolean isInCampus = isInCampusNetwork(gatewayIp, ipAddress);
 
             if (isInCampus) {
                 cacheValidationResult(gatewayIp, ipAddress, true);
@@ -52,7 +49,7 @@ public class CampusWiFiValidationService {
     }
     
 
-    public WiFiValidationResult validateFromCache(String gatewayIp, String bssid, HttpServletRequest request) {
+    public WiFiValidationResult validateFromCache(String gatewayIp, HttpServletRequest request) {
         try {
             // 서버에서 클라이언트 IP 추출
             String ipAddress = IpUtil.getClientIp(request);
@@ -68,7 +65,7 @@ public class CampusWiFiValidationService {
             
             // 캐시에 없으면 전체 검증 수행
 
-            return validateCampusWiFi(gatewayIp, bssid, request);
+            return validateCampusWiFi(gatewayIp, request);
             
         } catch (Exception e) {
 
@@ -77,7 +74,7 @@ public class CampusWiFiValidationService {
     }
 
 
-    private boolean isInCampusNetwork(String gatewayIp, String bssid, String ipAddress) {
+    private boolean isInCampusNetwork(String gatewayIp, String ipAddress) {
 
         // 설정 파일 Wi-fi 목록 불러오기
         List<CampusWiFiProperties.WiFiNetwork> activeNetworks = wifiProperties.networks()
@@ -87,9 +84,6 @@ public class CampusWiFiValidationService {
         for (CampusWiFiProperties.WiFiNetwork network : activeNetworks) {
             // 1. Gateway IP 체크 (SSID 대신 사용)
             if (!network.isValidGatewayIP(gatewayIp)) {
-                continue;
-            }
-            if (bssid != null && !bssid.isEmpty() && !network.isValidBSSID(bssid)) {
                 continue;
             }
             if (network.isValidIP(ipAddress)) {
