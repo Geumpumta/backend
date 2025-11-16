@@ -26,7 +26,6 @@ public record CampusWiFiProperties(
 
     public record WiFiNetwork(String name,
                                String gatewayIp,
-                               List<String> bssids,
                                List<String> ipRanges,
                                Boolean active,
                                String description) {
@@ -35,9 +34,6 @@ public record CampusWiFiProperties(
             return this.gatewayIp != null && this.gatewayIp.equals(gatewayIp);
         }
 
-        public boolean isValidBSSID(String bssid) {
-            return bssids.contains(bssid);
-        }
 
         public boolean isValidIP(String ipAddress) {
             return ipRanges.stream()

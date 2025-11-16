@@ -44,7 +44,7 @@ public class WiFiValidationResult {
 
     public enum ValidationStatus {
         VALID,      // 유효함
-        INVALID,    // 무효함 (SSID/BSSID/IP 문제)
+        INVALID,    // 무효함 (IP 대역 문제)
         ERROR       // 시스템 오류
     }
 }
