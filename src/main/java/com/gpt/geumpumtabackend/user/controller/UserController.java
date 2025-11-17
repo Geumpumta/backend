@@ -58,7 +58,7 @@ public class UserController implements UserApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<NicknameVerifyResponse>> verifyNickname(
-            @RequestParam @Valid NicknameVerifyRequest nickname,
+            @Valid NicknameVerifyRequest nickname,
             Long userId
     ){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
