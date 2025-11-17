@@ -47,7 +47,7 @@ public interface StatisticsApi {
     @GetMapping("/day")
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getDailyStatistics(
+    public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getMyDailyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @Parameter(hidden = true) Long userId
@@ -71,7 +71,7 @@ public interface StatisticsApi {
     @GetMapping("/week")
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getWeeklyStatistics(
+    public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getMyWeeklyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @Parameter(hidden = true) Long userId
@@ -95,7 +95,7 @@ public interface StatisticsApi {
     @GetMapping("/month")
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMonthlyStatistics(
+    public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMyMonthlyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @Parameter(hidden = true) Long userId
@@ -110,7 +110,106 @@ public interface StatisticsApi {
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
                     response = GrassStatisticsResponse.class,
+                    description = "잔디 요청 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @GetMapping("/grass")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getMyGrassStatistics(
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
+            summary =  "다른 사용자의 일간 통계 요청 api",
+            description = "USER 이상의 권한을 가진 사용자는 다른 사용자의 일간 통계를 요청합니다."
+
+    )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = DailyStatisticsResponse.class)))
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(
+                    response = DailyStatisticsResponse.class,
                     description = "일간 통계 요청 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @GetMapping("/day")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getDailyStatistics(
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam Long targetUserId,
+            Long userId
+    );
+
+    @Operation(
+            summary =  "다른 사용자의 주간 통계 요청 api",
+            description = "USER 이상의 권한을 가진 사용자는 다른 사용자의 주간 통계를 요청합니다."
+
+    )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = WeeklyStatisticsResponse.class)))
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(
+                    response = WeeklyStatisticsResponse.class,
+                    description = "주간 통계 요청 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @GetMapping("/week")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getWeeklyStatistics(
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam Long targetUserId,
+            Long userId
+    );
+
+    @Operation(
+            summary =  "다른 사용자의 월간 통계 요청 api",
+            description = "USER 이상의 권한을 가진 사용자는 다른 사용자의 월간 통계를 요청합니다."
+
+    )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = MonthlyStatisticsResponse.class)))
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(
+                    response = MonthlyStatisticsResponse.class,
+                    description = "월간 통계 요청 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @GetMapping("/month")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMonthlyStatistics(
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam Long targetUserId,
+            Long userId
+    );
+
+    @Operation(
+            summary =  "다른 사용자의 잔디 요청 api",
+            description = "USER 이상의 권한을 가진 사용자는 다른 사용자의 잔디를 요청합니다."
+
+    )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = GrassStatisticsResponse.class)))
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(
+                    response = GrassStatisticsResponse.class,
+                    description = "잔디 요청 완료"),
             errors = {
                     @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
                     @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
@@ -122,6 +221,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getGrassStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @Parameter(hidden = true) Long userId
+            @RequestParam Long targetUserId,
+            Long userId
     );
 }
