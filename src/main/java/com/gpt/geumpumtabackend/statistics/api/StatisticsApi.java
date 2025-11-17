@@ -49,7 +49,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getDailyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Long targetUserId,
+            @RequestParam(required = false) Long targetUserId,
             @Parameter(hidden = true) Long userId
     );
 
@@ -74,7 +74,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getWeeklyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Long targetUserId,
+            @RequestParam(required = false) Long targetUserId,
             @Parameter(hidden = true) Long userId
     );
 
@@ -99,7 +99,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMonthlyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Long targetUserId,
+            @RequestParam(required = false) Long targetUserId,
             @Parameter(hidden = true) Long userId
     );
 
@@ -124,7 +124,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getGrassStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Long targetUserId,
+            @RequestParam(required = false) Long targetUserId,
             @Parameter(hidden = true) Long userId
     );
 }
