@@ -72,7 +72,7 @@ public class UserService {
         return UserProfileResponse.from(user);
     }
 
-    public boolean isNicknameExist(NicknameVerifyRequest request, Long userId) {
+    public boolean isNicknameAvailable(NicknameVerifyRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
 

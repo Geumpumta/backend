@@ -62,7 +62,7 @@ public class UserController implements UserApi {
             Long userId
     ){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                NicknameVerifyResponse.of(userService.isNicknameExist(nickname, userId))
+                NicknameVerifyResponse.of(userService.isNicknameAvailable(nickname, userId))
         ));
     }
 
