@@ -1,5 +1,7 @@
 package com.gpt.geumpumtabackend.statistics.service;
 
+import com.gpt.geumpumtabackend.global.exception.BusinessException;
+import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.statistics.dto.DayMaxFocusAndFullTimeStatistics;
 import com.gpt.geumpumtabackend.statistics.dto.MonthlyStatistics;
 import com.gpt.geumpumtabackend.statistics.dto.TwoHourSlotStatistics;
@@ -9,6 +11,7 @@ import com.gpt.geumpumtabackend.statistics.dto.response.GrassStatisticsResponse;
 import com.gpt.geumpumtabackend.statistics.dto.response.MonthlyStatisticsResponse;
 import com.gpt.geumpumtabackend.statistics.dto.response.WeeklyStatisticsResponse;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
+import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +29,7 @@ import java.util.List;
 public class StatisticsService {
 
     private final StudySessionRepository studySessionRepository;
+    private final UserRepository userRepository;
     private final ZoneId zone = ZoneId.of("Asia/Seoul");
 
     /**
@@ -36,12 +40,17 @@ public class StatisticsService {
      */
     public DailyStatisticsResponse getDailyStatistics(
             LocalDate date,
+            Long targetUserId,
             Long userId
     ){
+        userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+        userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDateTime dayStart = date.atStartOfDay(zone).toLocalDateTime();
         LocalDateTime dayEnd   = dayStart.plusDays(1);
-        List<TwoHourSlotStatistics> stats = getTwoHourSlots(dayStart, dayEnd, userId);
-        DayMaxFocusAndFullTimeStatistics dayMaxFocusAndFullTime = getDayMaxFocusStatistics(dayStart, dayEnd, userId);
+        List<TwoHourSlotStatistics> stats = getTwoHourSlots(dayStart, dayEnd, targetUserId);
+        DayMaxFocusAndFullTimeStatistics dayMaxFocusAndFullTime = getDayMaxFocusStatistics(dayStart, dayEnd, targetUserId);
         return DailyStatisticsResponse.from(stats, dayMaxFocusAndFullTime);
     }
 
@@ -53,10 +62,15 @@ public class StatisticsService {
      */
     public WeeklyStatisticsResponse getWeeklyStatistics(
             LocalDate date,
+            Long targetUserId,
             Long userId
     ){
+        userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+        userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDateTime weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay(zone).toLocalDateTime();
-        return WeeklyStatisticsResponse.from(getWeeklyStatistics(weekStart, userId));
+        return WeeklyStatisticsResponse.from(getWeeklyStatistics(weekStart, targetUserId));
     }
 
     /**
@@ -67,11 +81,16 @@ public class StatisticsService {
      */
     public MonthlyStatisticsResponse getMonthlyStatistics(
             LocalDate date,
+            Long targetUserId,
             Long userId
     ){
+        userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+        userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDate firstDayOfMonth = date.withDayOfMonth(1);
         LocalDateTime monthStart = firstDayOfMonth.atStartOfDay(zone).toLocalDateTime();
-        return MonthlyStatisticsResponse.from(getMonthlyStatistics(monthStart, userId));
+        return MonthlyStatisticsResponse.from(getMonthlyStatistics(monthStart, targetUserId));
     }
 
     /**
@@ -82,42 +101,47 @@ public class StatisticsService {
      */
     public GrassStatisticsResponse getGrassStatistics(
             LocalDate date,
+            Long targetUserId,
             Long userId
     ){
+        userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+        userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDate firstDayOfMonth = date.minusMonths(3).withDayOfMonth(1);
         LocalDate endOfMonth = date.plusMonths(1).withDayOfMonth(1);
-        return GrassStatisticsResponse.from(studySessionRepository.getGrassStatistics(firstDayOfMonth, endOfMonth, userId));
+        return GrassStatisticsResponse.from(studySessionRepository.getGrassStatistics(firstDayOfMonth, endOfMonth, targetUserId));
     }
 
     public List<TwoHourSlotStatistics> getTwoHourSlots(
             LocalDateTime dayStart,
             LocalDateTime dayEnd,
-            Long userId
+            Long targetUserId
     ){
-        return studySessionRepository.getTwoHourSlotStats(dayStart, dayEnd, userId);
+        return studySessionRepository.getTwoHourSlotStats(dayStart, dayEnd, targetUserId);
     }
 
     public DayMaxFocusAndFullTimeStatistics getDayMaxFocusStatistics(
             LocalDateTime dayStart,
             LocalDateTime dayEnd,
-            Long userId
+            Long targetUserId
     ){
-        return studySessionRepository.getDayMaxFocusAndFullTime(dayStart, dayEnd, userId);
+        return studySessionRepository.getDayMaxFocusAndFullTime(dayStart, dayEnd, targetUserId);
     }
 
     public WeeklyStatistics getWeeklyStatistics(
             LocalDateTime weekStart,
-            Long userId
+            Long targetUserId
     ){
-        return studySessionRepository.getWeeklyStatistics(weekStart, userId);
+        return studySessionRepository.getWeeklyStatistics(weekStart, targetUserId);
     }
 
 
     public MonthlyStatistics getMonthlyStatistics(
             LocalDateTime monthStart,
-            Long userId
+            Long targetUserId
     ){
-        return studySessionRepository.getMonthlyStatistics(monthStart, userId);
+        return studySessionRepository.getMonthlyStatistics(monthStart, targetUserId);
     }
 
 }

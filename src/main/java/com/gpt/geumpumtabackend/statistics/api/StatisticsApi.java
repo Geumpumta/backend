@@ -28,7 +28,6 @@ import java.time.LocalDate;
 
 @Tag(name = "통계 API", description = "통계 관련 API")
 public interface StatisticsApi {
-
     @Operation(
             summary =  "일간 통계 요청 api",
             description = "USER 이상의 권한을 가진 사용자는 일간 통계를 요청합니다."
@@ -50,6 +49,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getDailyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long targetUserId,
             @Parameter(hidden = true) Long userId
     );
 
@@ -74,6 +74,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getWeeklyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long targetUserId,
             @Parameter(hidden = true) Long userId
     );
 
@@ -98,6 +99,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMonthlyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long targetUserId,
             @Parameter(hidden = true) Long userId
     );
 
@@ -110,7 +112,7 @@ public interface StatisticsApi {
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
                     response = GrassStatisticsResponse.class,
-                    description = "일간 통계 요청 완료"),
+                    description = "잔디 요청 완료"),
             errors = {
                     @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
                     @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
@@ -122,6 +124,7 @@ public interface StatisticsApi {
     public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getGrassStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long targetUserId,
             @Parameter(hidden = true) Long userId
     );
 }
