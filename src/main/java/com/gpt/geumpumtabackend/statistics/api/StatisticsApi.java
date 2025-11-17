@@ -147,7 +147,7 @@ public interface StatisticsApi {
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam Long targetUserId,
-            Long userId
+            @Parameter(hidden = true) Long userId
     );
 
     @Operation(
@@ -172,7 +172,7 @@ public interface StatisticsApi {
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam Long targetUserId,
-            Long userId
+            @Parameter(hidden = true) Long userId
     );
 
     @Operation(
@@ -197,7 +197,7 @@ public interface StatisticsApi {
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam Long targetUserId,
-            Long userId
+            @Parameter(hidden = true) Long userId
     );
 
     @Operation(
@@ -222,6 +222,6 @@ public interface StatisticsApi {
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam Long targetUserId,
-            Long userId
+            @Parameter(hidden = true) Long userId
     );
 }
