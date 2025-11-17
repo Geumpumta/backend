@@ -7,6 +7,9 @@ import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.api.UserApi;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
+import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
+import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
+import com.gpt.geumpumtabackend.user.dto.response.NicknameVerifyResponse;
 import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.service.UserService;
 import jakarta.validation.Valid;
@@ -49,5 +52,28 @@ public class UserController implements UserApi {
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
                 userService.getUserProfile(userId)
         ));
+    }
+
+    @GetMapping("/nickname/verify")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<NicknameVerifyResponse>> verifyNickname(
+            @RequestParam @Valid NicknameVerifyRequest nickname,
+            Long userId
+    ){
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
+                NicknameVerifyResponse.of(userService.isNicknameExist(nickname, userId))
+        ));
+    }
+
+    @PostMapping("/profile")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<Void>> updateProfile(
+            @RequestBody @Valid ProfileUpdateRequest request,
+            Long userId
+    ){
+        userService.updateUserProfile(request, userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
 }

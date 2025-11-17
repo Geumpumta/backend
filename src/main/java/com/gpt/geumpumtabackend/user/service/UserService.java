@@ -10,6 +10,8 @@ import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
+import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
+import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
 import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -68,5 +70,20 @@ public class UserService {
                 .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
 
         return UserProfileResponse.from(user);
+    }
+
+    public boolean isNicknameExist(NicknameVerifyRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
+
+        return !userRepository.existsByNickname(request.nickname());
+    }
+
+    @Transactional
+    public void updateUserProfile(ProfileUpdateRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
+
+        user.updateProfile(request.ImageUrl(), request.publicId(), request.nickname());
     }
 }

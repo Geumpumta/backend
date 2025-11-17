@@ -41,6 +41,8 @@ public class User extends BaseEntity {
 
     private String providerId;
 
+    private String publicId;
+
     @Column(unique = true)
     private String studentId;
 
@@ -66,6 +68,12 @@ public class User extends BaseEntity {
     }
 
     public void setInitialNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateProfile(String imageUrl, String publicId, String nickname) {
+        this.picture = imageUrl;
+        this.publicId = publicId;
         this.nickname = nickname;
     }
 
