@@ -8,6 +8,7 @@ spring:
       - security/application-mail.yml
       - security/application-swagger.yml
       - security/application-wifi.yml
+      - security/application-cloudinary.yml
 
   datasource:
     url: ${geumpumta.mysql.url}
