@@ -84,6 +84,6 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
 
-        user.updateProfile(request.ImageUrl(), request.publicId(), request.nickname());
+        user.updateProfile(request.imageUrl(), request.publicId(), request.nickname());
     }
 }
