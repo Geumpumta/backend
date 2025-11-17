@@ -42,7 +42,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     @Query(value = """
         SELECT u.id as userId, 
                u.name as username, 
-               SUM(
+               CAST(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -51,7 +51,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) as totalMillis,
+               )AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
@@ -75,6 +75,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                 ELSE s.end_time
             END
         ) * 1000) DESC
+        LIMIT 100
 """, nativeQuery = true)
     List<PersonalRankingTemp> calculateCurrentPeriodRanking(
             @Param("periodStart") LocalDateTime periodStart,
@@ -91,7 +92,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     @Query(value = """
         SELECT u.id as userId, 
                u.name as username, 
-               SUM(
+               CAST(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -100,7 +101,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) as totalMillis,
+               ) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
@@ -126,6 +127,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                 END
             ) * 1000
         ) DESC
+        LIMIT 100
     """, nativeQuery = true)
     List<PersonalRankingTemp> calculateFinalizedPeriodRanking(
             @Param("periodStart") LocalDateTime periodStart,
@@ -134,7 +136,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
 
     @Query(value = """
         SELECT u.department as departmentName, 
-               SUM(
+               CAST(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -143,7 +145,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) as totalMillis,
+               ) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
@@ -175,7 +177,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
 
     @Query(value = """
         SELECT u.department as departmentName, 
-               SUM(
+               CAST(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -184,7 +186,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) as totalMillis,
+               ) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
