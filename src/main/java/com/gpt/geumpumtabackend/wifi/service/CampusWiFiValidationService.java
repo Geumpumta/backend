@@ -54,9 +54,16 @@ public class CampusWiFiValidationService {
             // 서버에서 클라이언트 IP 추출
             String ipAddress = IpUtil.getClientIp(request);
             // Gateway IP와 클라이언트 IP를 통해 키를 생성 후 Redis에서 조회
+            log.info("Gateway IP: {}, Client IP: {}", gatewayIp, ipAddress);
             String cacheKey = buildCacheKey(gatewayIp, ipAddress);
-            Boolean cachedResult = (Boolean) redisTemplate.opsForValue().get(cacheKey);
-                
+            Object cachedValue = redisTemplate.opsForValue().get(cacheKey);
+            Boolean cachedResult = null;
+            if (cachedValue instanceof Boolean) {
+                cachedResult = (Boolean) cachedValue;
+            } else if (cachedValue instanceof String) {
+                cachedResult = Boolean.parseBoolean((String) cachedValue);
+            }
+
             if (cachedResult != null) {
                 return cachedResult
                         ? WiFiValidationResult.valid("캠퍼스 네트워크입니다 (캐시)")
