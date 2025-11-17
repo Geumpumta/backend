@@ -28,64 +28,6 @@ public class StatisticsController implements StatisticsApi {
     private final StatisticsService statisticsService;
 
     /**
-     * 자신의 일간 통계 조회
-     * @param date
-     * @param userId
-     * @return
-     */
-    @GetMapping("/day")
-    @AssignUserId
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getMyDailyStatistics(
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            Long userId
-    ) {
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                statisticsService.getDailyStatistics(date, userId, userId))
-        );
-    }
-
-    @GetMapping("/week")
-    @AssignUserId
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getMyWeeklyStatistics(
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            Long userId
-    ) {
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                statisticsService.getWeeklyStatistics(date, userId, userId))
-        );
-    }
-
-    @GetMapping("/month")
-    @AssignUserId
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMyMonthlyStatistics(
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            Long userId
-    ){
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                statisticsService.getMonthlyStatistics(date, userId, userId)
-        ));
-    }
-
-    @GetMapping("/grass")
-    @AssignUserId
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getMyGrassStatistics(
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            Long userId
-    ){
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                statisticsService.getGrassStatistics(date, userId, userId)
-        ));
-    }
-
-    /**
      * 다른 사용자의 일간 통계 조회
      * @param date
      * @param targetUserId
@@ -98,11 +40,13 @@ public class StatisticsController implements StatisticsApi {
     public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getDailyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Long targetUserId,
+            @RequestParam(required = false) Long targetUserId,
             Long userId
     ) {
+        Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
+
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                statisticsService.getDailyStatistics(date, targetUserId, userId))
+                statisticsService.getDailyStatistics(date, effectiveTargetId, userId))
         );
     }
 
@@ -112,11 +56,13 @@ public class StatisticsController implements StatisticsApi {
     public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getWeeklyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Long targetUserId,
+            @RequestParam(required = false) Long targetUserId,
             Long userId
     ) {
+        Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
+
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                statisticsService.getWeeklyStatistics(date, targetUserId, userId))
+                statisticsService.getWeeklyStatistics(date, effectiveTargetId, userId))
         );
     }
 
@@ -126,11 +72,13 @@ public class StatisticsController implements StatisticsApi {
     public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMonthlyStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Long targetUserId,
+            @RequestParam(required = false) Long targetUserId,
             Long userId
     ){
+        Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
+
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                statisticsService.getMonthlyStatistics(date, targetUserId, userId)
+                statisticsService.getMonthlyStatistics(date, effectiveTargetId, userId)
         ));
     }
 
@@ -140,11 +88,13 @@ public class StatisticsController implements StatisticsApi {
     public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getGrassStatistics(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam Long targetUserId,
+            @RequestParam(required = false) Long targetUserId,
             Long userId
     ){
+        Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
+
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
-                statisticsService.getGrassStatistics(date, targetUserId, userId)
+                statisticsService.getGrassStatistics(date, effectiveTargetId, userId)
         ));
     }
 }
