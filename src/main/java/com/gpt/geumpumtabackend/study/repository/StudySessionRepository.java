@@ -135,7 +135,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     );
 
     @Query(value = """
-        SELECT u.department as departmentName, 
+        SELECT u.department as department, 
                CAST(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
@@ -176,7 +176,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("now") LocalDateTime now);
 
     @Query(value = """
-        SELECT u.department as departmentName, 
+        SELECT u.department as department, 
                CAST(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
