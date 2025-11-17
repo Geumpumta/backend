@@ -9,8 +9,12 @@ import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiResponses;
 import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiSuccessResponse;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
+import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
+import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
+import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
+import com.gpt.geumpumtabackend.user.dto.response.NicknameVerifyResponse;
 import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,6 +28,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "사용자 API", description = "사용자 관련 API")
 public interface UserApi {
@@ -69,6 +74,47 @@ public interface UserApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<UserProfileResponse>> getMyProfile(
+            @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
+            summary =  "닉네임 검증을 위한 api",
+            description = "사용 가능한 닉네임인지 검증합니다."
+    )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = NicknameVerifyResponse.class)))
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(
+                    response = NicknameVerifyResponse.class,
+                    description = "닉네임 검증 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @GetMapping("/nickname/verify")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<NicknameVerifyResponse>> verifyNickname(
+            @RequestParam @Valid NicknameVerifyRequest request,
+            @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
+            summary =  "프로필 수정을 위한 api",
+            description = "프로필 수정을 진행합니다."
+    )
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(description = "프로필 수정 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @PostMapping("/profile")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('ROLE')")
+    public ResponseEntity<ResponseBody<Void>> updateProfile(
+            @RequestBody @Valid ProfileUpdateRequest request,
             @Parameter(hidden = true) Long userId
     );
 }
