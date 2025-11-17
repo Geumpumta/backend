@@ -112,7 +112,7 @@ public interface UserApi {
     )
     @PostMapping("/profile")
     @AssignUserId
-    @PreAuthorize("isAuthenticated() and hasRole('ROLE')")
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<Void>> updateProfile(
             @RequestBody @Valid ProfileUpdateRequest request,
             @Parameter(hidden = true) Long userId
