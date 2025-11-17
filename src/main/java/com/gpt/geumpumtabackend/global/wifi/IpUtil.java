@@ -10,23 +10,12 @@ public class IpUtil {
         if(isUnknown(ip)) {
             String xForwardedFor = request.getHeader("X-Forwarded-For");
             if(!isUnknown(xForwardedFor)) {
-                String[] candidates =xForwardedFor.split(",");
-                for (int i = candidates.length - 1; i >= 0; i--) {
-                    String candidate = candidates[i].trim();
-                    if (!isUnknown(candidate)) {
-                        ip = candidate;
-                        break;
-                    }
-                }
+                ip = xForwardedFor.split(",")[0].trim();
             }
         }
 
         if(isUnknown(ip)){
             ip = request.getRemoteAddr();
-        }
-
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
         }
 
         return ip;
