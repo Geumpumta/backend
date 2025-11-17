@@ -45,6 +45,8 @@ public class StatisticsService {
     ){
         userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+        userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDateTime dayStart = date.atStartOfDay(zone).toLocalDateTime();
         LocalDateTime dayEnd   = dayStart.plusDays(1);
         List<TwoHourSlotStatistics> stats = getTwoHourSlots(dayStart, dayEnd, targetUserId);
@@ -65,6 +67,8 @@ public class StatisticsService {
     ){
         userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+        userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDateTime weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay(zone).toLocalDateTime();
         return WeeklyStatisticsResponse.from(getWeeklyStatistics(weekStart, targetUserId));
     }
@@ -81,6 +85,8 @@ public class StatisticsService {
             Long userId
     ){
         userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+        userRepository.findById(targetUserId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDate firstDayOfMonth = date.withDayOfMonth(1);
         LocalDateTime monthStart = firstDayOfMonth.atStartOfDay(zone).toLocalDateTime();
@@ -99,6 +105,8 @@ public class StatisticsService {
             Long userId
     ){
         userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+        userRepository.findById(targetUserId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDate firstDayOfMonth = date.minusMonths(3).withDayOfMonth(1);
         LocalDate endOfMonth = date.plusMonths(1).withDayOfMonth(1);
