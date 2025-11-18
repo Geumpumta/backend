@@ -18,7 +18,7 @@ public record PersonalRankingEntryResponse(
                 userRankingTemp.getRanking(),
                 userRankingTemp.getUsername(),
                 userRankingTemp.getImageUrl(),
-                userRankingTemp.getDepartment()
+                userRankingTemp.getDepartmentKoreanName()
         );
     }
 
