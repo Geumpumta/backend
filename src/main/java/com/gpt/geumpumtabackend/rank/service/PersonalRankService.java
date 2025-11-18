@@ -84,8 +84,9 @@ public class PersonalRankService {
     }
 
     private PersonalRankingResponse buildPersonalRankingResponse(List<PersonalRankingTemp> personalRankingList, Long userId) {
-        PersonalRankingEntryResponse myRanking = null;
         List<PersonalRankingEntryResponse> topRankings = new ArrayList<>();
+        PersonalRankingEntryResponse myRanking = null;
+        
         for (PersonalRankingTemp temp : personalRankingList) {
             PersonalRankingEntryResponse entry = PersonalRankingEntryResponse.of(temp);
             topRankings.add(entry);
@@ -94,6 +95,12 @@ public class PersonalRankService {
                 myRanking = entry;
             }
         }
+        
+        // LEFT JOIN으로 모든 사용자가 포함되므로 이론적으로는 항상 찾아야 하지만, 만약을 위한 fallback
+        if (myRanking == null) {
+            myRanking = new PersonalRankingEntryResponse(userId, 0L, (long) personalRankingList.size() + 1, null);
+        }
+        
         return new PersonalRankingResponse(topRankings, myRanking);
     }
 }

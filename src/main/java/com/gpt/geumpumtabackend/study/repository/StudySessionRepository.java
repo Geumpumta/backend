@@ -42,7 +42,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     @Query(value = """
         SELECT u.id as userId, 
                u.name as username, 
-               CAST(SUM(
+               CAST(COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -51,8 +51,8 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               )AS SIGNED) as totalMillis,
-               RANK() OVER (ORDER BY SUM(
+               ), 0) AS SIGNED) as totalMillis,
+               RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -61,20 +61,20 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) DESC) as ranking
-        FROM study_session s 
-        JOIN user u ON s.user_id = u.id
-        WHERE s.start_time <= :periodEnd
-        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+               ), 0) DESC) as ranking
+        FROM user u 
+        LEFT JOIN study_session s ON u.id = s.user_id 
+            AND s.start_time <= :periodEnd
+            AND (s.end_time >= :periodStart OR s.end_time IS NULL)
         GROUP BY u.id, u.name
-        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
                 WHEN s.end_time IS NULL THEN :now
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
-        ) * 1000) DESC
+        ) * 1000), 0) DESC
         LIMIT 100
 """, nativeQuery = true)
     List<PersonalRankingTemp> calculateCurrentPeriodRanking(
@@ -92,7 +92,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     @Query(value = """
         SELECT u.id as userId, 
                u.name as username, 
-               CAST(SUM(
+               CAST(COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -101,8 +101,8 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) AS SIGNED) as totalMillis,
-               RANK() OVER (ORDER BY SUM(
+               ), 0) AS SIGNED) as totalMillis,
+               RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -111,13 +111,13 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) DESC) as ranking
-        FROM study_session s 
-        JOIN user u ON s.user_id = u.id
-        WHERE s.start_time <= :periodEnd
-        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+               ), 0) DESC) as ranking
+        FROM user u 
+        LEFT JOIN study_session s ON u.id = s.user_id 
+            AND s.start_time <= :periodEnd
+            AND (s.end_time >= :periodStart OR s.end_time IS NULL)
         GROUP BY u.id, u.name
-        ORDER BY SUM(
+        ORDER BY COALESCE(SUM(
             TIMESTAMPDIFF(SECOND,
                 GREATEST(s.start_time, :periodStart),
                 CASE
@@ -126,7 +126,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                     ELSE s.end_time
                 END
             ) * 1000
-        ) DESC
+        ), 0) DESC
         LIMIT 100
     """, nativeQuery = true)
     List<PersonalRankingTemp> calculateFinalizedPeriodRanking(
@@ -136,7 +136,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
 
     @Query(value = """
         SELECT u.department as department, 
-               CAST(SUM(
+               CAST(COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -145,8 +145,8 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) AS SIGNED) as totalMillis,
-               RANK() OVER (ORDER BY SUM(
+               ), 0) AS SIGNED) as totalMillis,
+               RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -155,20 +155,21 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) DESC) as ranking
-        FROM study_session s 
-        JOIN user u ON s.user_id = u.id
-        WHERE s.start_time <= :periodEnd AND u.department IS NOT NULL
-        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+               ), 0) DESC) as ranking
+        FROM user u 
+        LEFT JOIN study_session s ON u.id = s.user_id
+            AND s.start_time <= :periodEnd 
+            AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        WHERE u.department IS NOT NULL
         GROUP BY u.department
-        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
                 WHEN s.end_time IS NULL THEN :now
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
-        ) * 1000) DESC
+        ) * 1000), 0) DESC
 """, nativeQuery = true)
     List<DepartmentRankingTemp> calculateCurrentDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
@@ -177,7 +178,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
 
     @Query(value = """
         SELECT u.department as department, 
-               CAST(SUM(
+               CAST(COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -186,8 +187,8 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) AS SIGNED) as totalMillis,
-               RANK() OVER (ORDER BY SUM(
+               ), 0) AS SIGNED) as totalMillis,
+               RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -196,20 +197,21 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            ELSE s.end_time
                        END
                    ) * 1000
-               ) DESC) as ranking
-        FROM study_session s 
-        JOIN user u ON s.user_id = u.id
-        WHERE s.start_time <= :periodEnd AND u.department IS NOT NULL
-        AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+               ), 0) DESC) as ranking
+        FROM user u 
+        LEFT JOIN study_session s ON u.id = s.user_id
+            AND s.start_time <= :periodEnd 
+            AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        WHERE u.department IS NOT NULL
         GROUP BY u.department
-        ORDER BY SUM(TIMESTAMPDIFF(SECOND,
+        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
                 WHEN s.end_time IS NULL THEN :periodEnd
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
-        ) * 1000) DESC
+        ) * 1000), 0) DESC
 """, nativeQuery = true)
     List<DepartmentRankingTemp> calculateFinalizedDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,

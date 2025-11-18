@@ -97,7 +97,7 @@ public class DepartmentRankService {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
             topRankings.add(entry);
 
-            if(user.getDepartment() != null && user.getDepartment().equals(temp.getDepartmentName())){
+            if(user.getDepartment() != null && user.getDepartment().getKoreanName().equals(temp.getDepartmentName())){
                 myRanking = entry;
             }
         }
