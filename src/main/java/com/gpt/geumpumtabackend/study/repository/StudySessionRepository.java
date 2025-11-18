@@ -139,7 +139,33 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     );
 
     @Query(value = """
-        SELECT u.department as department, 
+        WITH departments(dept) AS (VALUES 
+            ROW('ARCHITECTURE_ENGINEERING'),
+            ROW('ARCHITECTURE'),
+            ROW('CIVIL_ENGINEERING'),
+            ROW('ENVIRONMENTAL_ENGINEERING'),
+            ROW('MECHANICAL_ENGINEERING'),
+            ROW('MECHANICAL_SYSTEMS_ENGINEERING'),
+            ROW('SMART_MOBILITY'),
+            ROW('INDUSTRIAL_ENGINEERING'),
+            ROW('APPLIED_MATH_BIGDATA'),
+            ROW('POLYMER_ENGINEERING'),
+            ROW('MATERIALS_ENGINEERING'),
+            ROW('SEMICONDUCTOR_SYSTEMS'),
+            ROW('ELECTRONIC_SYSTEMS'),
+            ROW('SOFTWARE'),
+            ROW('ARTIFICIAL_INTELLIGENCE'),
+            ROW('COMPUTER_ENGINEERING'),
+            ROW('MATERIALS_DESIGN_ENGINEERING'),
+            ROW('CHEMICAL_ENGINEERING'),
+            ROW('CHEMICAL_BIO_MATERIALS'),
+            ROW('OPTICAL_SYSTEMS'),
+            ROW('BIOMEDICAL_ENGINEERING'),
+            ROW('IT_CONVERGENCE'),
+            ROW('LIBERAL_MAJOR'),
+            ROW('BUSINESS_ADMINISTRATION')
+        )
+        SELECT d.dept as department, 
                CAST(COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
@@ -160,12 +186,12 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                        END
                    ) * 1000
                ), 0) DESC) as ranking
-        FROM user u 
+        FROM departments d
+        LEFT JOIN user u ON d.dept = u.department
         LEFT JOIN study_session s ON u.id = s.user_id
             AND s.start_time <= :periodEnd 
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-        WHERE u.department IS NOT NULL
-        GROUP BY u.department
+        GROUP BY d.dept
         ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
@@ -181,7 +207,33 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("now") LocalDateTime now);
 
     @Query(value = """
-        SELECT u.department as department, 
+        WITH departments(dept) AS (VALUES 
+            ROW('ARCHITECTURE_ENGINEERING'),
+            ROW('ARCHITECTURE'),
+            ROW('CIVIL_ENGINEERING'),
+            ROW('ENVIRONMENTAL_ENGINEERING'),
+            ROW('MECHANICAL_ENGINEERING'),
+            ROW('MECHANICAL_SYSTEMS_ENGINEERING'),
+            ROW('SMART_MOBILITY'),
+            ROW('INDUSTRIAL_ENGINEERING'),
+            ROW('APPLIED_MATH_BIGDATA'),
+            ROW('POLYMER_ENGINEERING'),
+            ROW('MATERIALS_ENGINEERING'),
+            ROW('SEMICONDUCTOR_SYSTEMS'),
+            ROW('ELECTRONIC_SYSTEMS'),
+            ROW('SOFTWARE'),
+            ROW('ARTIFICIAL_INTELLIGENCE'),
+            ROW('COMPUTER_ENGINEERING'),
+            ROW('MATERIALS_DESIGN_ENGINEERING'),
+            ROW('CHEMICAL_ENGINEERING'),
+            ROW('CHEMICAL_BIO_MATERIALS'),
+            ROW('OPTICAL_SYSTEMS'),
+            ROW('BIOMEDICAL_ENGINEERING'),
+            ROW('IT_CONVERGENCE'),
+            ROW('LIBERAL_MAJOR'),
+            ROW('BUSINESS_ADMINISTRATION')
+        )
+        SELECT d.dept as department, 
                CAST(COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
                        GREATEST(s.start_time, :periodStart),
@@ -202,12 +254,12 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                        END
                    ) * 1000
                ), 0) DESC) as ranking
-        FROM user u 
+        FROM departments d
+        LEFT JOIN user u ON d.dept = u.department
         LEFT JOIN study_session s ON u.id = s.user_id
             AND s.start_time <= :periodEnd 
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-        WHERE u.department IS NOT NULL
-        GROUP BY u.department
+        GROUP BY d.dept
         ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
