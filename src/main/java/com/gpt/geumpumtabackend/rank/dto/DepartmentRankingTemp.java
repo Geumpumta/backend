@@ -10,8 +10,8 @@ public class DepartmentRankingTemp {
     private Long ranking;
 
 
-    public DepartmentRankingTemp(Department department, Long totalMillis, Long ranking) {
-        this.departmentName = department.getKoreanName();
+    public DepartmentRankingTemp(String department, Long totalMillis, Long ranking) {
+        this.departmentName = Department.valueOf(department).getKoreanName();
         this.totalMillis = totalMillis;
         this.ranking = ranking;
     }

@@ -16,16 +16,14 @@ public interface DepartmentRankingRepository extends JpaRepository<DepartmentRan
     /*
     끝난 학과
      */
-    @Query("""
-            SELECT new com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp(
-                        dr.department,
-                        dr.totalMillis,
-                        dr.rank
-                        )
-            FROM DepartmentRanking  dr
-            WHERE dr.calculatedAt =:period
-            AND dr.rankingType = :rankingType
-            ORDER BY dr.rank ASC 
-                        """)
+    @Query(value = """
+            SELECT dr.department as department,
+                   dr.total_millis as totalMillis,
+                   dr.ranking as ranking
+            FROM department_ranking dr
+            WHERE dr.calculated_at = :period
+            AND dr.ranking_type = :rankingType
+            ORDER BY dr.ranking ASC 
+            """, nativeQuery = true)
     List<DepartmentRankingTemp> getFinishedDepartmentRanking(@Param("period") LocalDateTime period, @Param("rankingType") RankingType rankingType);
 }
