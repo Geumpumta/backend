@@ -10,6 +10,7 @@ import com.gpt.geumpumtabackend.statistics.dto.response.MonthlyStatisticsRespons
 import com.gpt.geumpumtabackend.statistics.dto.response.WeeklyStatisticsResponse;
 import com.gpt.geumpumtabackend.statistics.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,13 +39,12 @@ public class StatisticsController implements StatisticsApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getDailyStatistics(
+            Long userId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Long targetUserId,
-            Long userId
+            @RequestParam(required = false) Long targetUserId
     ) {
         Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
-
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
                 statisticsService.getDailyStatistics(date, effectiveTargetId, userId))
         );
@@ -54,10 +54,10 @@ public class StatisticsController implements StatisticsApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getWeeklyStatistics(
+            Long userId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Long targetUserId,
-            Long userId
+            @RequestParam(required = false) Long targetUserId
     ) {
         Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
 
@@ -70,10 +70,10 @@ public class StatisticsController implements StatisticsApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMonthlyStatistics(
+            Long userId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Long targetUserId,
-            Long userId
+            @RequestParam(required = false) Long targetUserId
     ){
         Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
 
@@ -86,10 +86,10 @@ public class StatisticsController implements StatisticsApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getGrassStatistics(
+            Long userId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Long targetUserId,
-            Long userId
+            @RequestParam(required = false) Long targetUserId
     ){
         Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
 
