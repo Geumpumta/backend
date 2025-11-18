@@ -47,10 +47,10 @@ public interface StatisticsApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getDailyStatistics(
+            @Parameter(hidden = true) Long userId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Long targetUserId,
-            @Parameter(hidden = true) Long userId
+            @RequestParam(required = false) Long targetUserId
     );
 
     @Operation(
@@ -72,10 +72,10 @@ public interface StatisticsApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getWeeklyStatistics(
+            @Parameter(hidden = true) Long userId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Long targetUserId,
-            @Parameter(hidden = true) Long userId
+            @RequestParam(required = false) Long targetUserId
     );
 
     @Operation(
@@ -97,10 +97,10 @@ public interface StatisticsApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMonthlyStatistics(
+            @Parameter(hidden = true) Long userId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Long targetUserId,
-            @Parameter(hidden = true) Long userId
+            @RequestParam(required = false) Long targetUserId
     );
 
     @Operation(
@@ -122,9 +122,9 @@ public interface StatisticsApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getGrassStatistics(
+            @Parameter(hidden = true) Long userId,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) Long targetUserId,
-            @Parameter(hidden = true) Long userId
+            @RequestParam(required = false) Long targetUserId
     );
 }
