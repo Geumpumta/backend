@@ -10,7 +10,6 @@ import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.service.StudySessionService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,9 +43,8 @@ public class StudySessionController implements StudySessionApi {
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
     public ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(@Valid @RequestBody StudyStartRequest request,
-                                                                              Long userId,
-                                                                              HttpServletRequest httpServletRequest){
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.startStudySession(request, userId, httpServletRequest)));
+                                                                              Long userId){
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.startStudySession(request, userId)));
     }
 
     /*
@@ -66,8 +64,8 @@ public class StudySessionController implements StudySessionApi {
     @PostMapping("/heart-beat")
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<Void>> processHeartBeat(@Valid @RequestBody HeartBeatRequest heartBeatRequest, Long userId, HttpServletRequest httpServletRequest){
-        studySessionService.updateHeartBeat(heartBeatRequest, userId, httpServletRequest);
+    public ResponseEntity<ResponseBody<Void>> processHeartBeat(@Valid @RequestBody HeartBeatRequest heartBeatRequest, Long userId){
+        studySessionService.updateHeartBeat(heartBeatRequest, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
 }

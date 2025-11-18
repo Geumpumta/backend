@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -77,7 +76,7 @@ public interface StudySessionApi {
             2. IP 대역 검증 - 클라이언트 IP가 캠퍼스 범위(172.30.64.0/18) 내인지 확인
             
             💡 **보안 특징:**
-            - 클라이언트 IP는 서버에서 HttpServletRequest로 추출하여 조작 방지
+      
             - Gateway IP는 점-십진 표기법 문자열로 전송 (예: "172.30.64.1")
             
             ✅ **성공 시:**
@@ -107,8 +106,7 @@ public interface StudySessionApi {
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(
             @Valid @RequestBody StudyStartRequest request,
-            @Parameter(hidden = true) Long userId,
-            HttpServletRequest httpServletRequest
+            @Parameter(hidden = true) Long userId
     );
 
     @Operation(
@@ -174,6 +172,5 @@ public interface StudySessionApi {
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<Void>> processHeartBeat(
             @Valid @RequestBody HeartBeatRequest heartBeatRequest,
-            @Parameter(hidden = true) Long userId,
-            HttpServletRequest httpServletRequest);
+            @Parameter(hidden = true) Long userId);
 }
