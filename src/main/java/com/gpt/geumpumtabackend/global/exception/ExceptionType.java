@@ -42,7 +42,13 @@ public enum ExceptionType {
     // WiFi
     WIFI_NOT_CAMPUS_NETWORK(FORBIDDEN, "W001", "캠퍼스 네트워크가 아닙니다"),
     WIFI_VALIDATION_ERROR(INTERNAL_SERVER_ERROR, "W002", "Wi-Fi 검증 중 오류가 발생했습니다"),
-    WIFI_INVALID_FORMAT(BAD_REQUEST, "W003", "Wi-Fi 정보 형식이 올바르지 않습니다")
+    WIFI_INVALID_FORMAT(BAD_REQUEST, "W003", "Wi-Fi 정보 형식이 올바르지 않습니다"),
+
+    // Image
+    INVALID_IMAGE_FILE(FORBIDDEN, "I001", "허용되지 않은 이미지 형식입니다."),
+    IMAGE_SIZE_EXCEEDED(FORBIDDEN, "I002", "이미지 용량이 초과했습니다."),
+    IMAGE_UPLOAD_FAILED(INTERNAL_SERVER_ERROR, "I003", "이미지 업로드에 실패했습니다."),
+
 
     ;
 

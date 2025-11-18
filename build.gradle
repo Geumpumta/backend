@@ -58,6 +58,9 @@ dependencies {
     
     // Apache Commons Net for IP range validation
     implementation 'commons-net:commons-net:3.11.1'
+
+    // Cloudinary
+    implementation 'com.cloudinary:cloudinary-http45:1.39.0'
 }
 
 tasks.named('test') {
