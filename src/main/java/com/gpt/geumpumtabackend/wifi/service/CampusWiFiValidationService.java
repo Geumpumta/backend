@@ -100,6 +100,6 @@ public class CampusWiFiValidationService {
     private void cacheValidationResult(String gatewayIp, String ipAddress, boolean isValid) {
         String cacheKey = buildCacheKey(gatewayIp, ipAddress);
         Duration ttl = Duration.ofMinutes(wifiProperties.validation().cacheTtlMinutes());
-        redisTemplate.opsForValue().set(cacheKey, isValid, ttl);
+        redisTemplate.opsForValue().set(cacheKey, String.valueOf(isValid), ttl);
     }
 }
