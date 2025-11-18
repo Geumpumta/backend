@@ -12,22 +12,25 @@ public class PersonalRankingTemp {
     private String imageUrl;
     private String department;
 
-    public PersonalRankingTemp(Long userId, String username, Long totalMillis, Long ranking, String imageUrl, String department) {
+    // 기본 생성자 - SQL Native Query 결과 순서에 맞춤
+    public PersonalRankingTemp(Long userId, String username, String imageUrl, String department, Long totalMillis, Long ranking) {
         this.userId = userId;
         this.username = username;
         this.totalMillis = totalMillis;
         this.ranking = ranking;
         this.imageUrl = imageUrl;
-        this.department = department;
+        this.department = department; // 원본값 그대로 저장
     }
     
-    // JPQL에서 Department enum을 받는 생성자
-    public PersonalRankingTemp(Long userId, String username, Long totalMillis, Long ranking, String imageUrl, Department department) {
-        this.userId = userId;
-        this.username = username;
-        this.totalMillis = totalMillis;
-        this.ranking = ranking;
-        this.imageUrl = imageUrl;
-        this.department = department != null ? department.getKoreanName() : null;
+    // Department enum 값을 한국어로 변환하는 메서드
+    public String getDepartmentKoreanName() {
+        if (department == null) return null;
+        
+        try {
+            Department dept = Department.valueOf(department);
+            return dept.getKoreanName();
+        } catch (IllegalArgumentException e) {
+            return department; // enum에 없는 값이면 그대로 반환
+        }
     }
 }
