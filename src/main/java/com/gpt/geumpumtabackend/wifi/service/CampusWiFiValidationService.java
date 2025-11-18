@@ -1,9 +1,7 @@
 package com.gpt.geumpumtabackend.wifi.service;
 
-import com.gpt.geumpumtabackend.global.wifi.IpUtil;
 import com.gpt.geumpumtabackend.wifi.config.CampusWiFiProperties;
 import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -25,20 +23,17 @@ public class CampusWiFiValidationService {
     private static final String WIFI_CACHE_KEY_PREFIX = "campus_wifi_validation:";
     
 
-    public WiFiValidationResult validateCampusWiFi(String gatewayIp, HttpServletRequest request) {
+    public WiFiValidationResult validateCampusWiFi(String gatewayIp, String clientIp) {
 
         try {
-            // 서버에서 클라이언트 IP 추출
-            String ipAddress = IpUtil.getClientIp(request);
-
             // 캠퍼스 내부인지 확인
-            boolean isInCampus = isInCampusNetwork(gatewayIp, ipAddress);
+            boolean isInCampus = isInCampusNetwork(gatewayIp, clientIp);
 
             if (isInCampus) {
-                cacheValidationResult(gatewayIp, ipAddress, true);
+                cacheValidationResult(gatewayIp, clientIp, true);
                 return WiFiValidationResult.valid("캠퍼스 네트워크입니다");
             } else {
-                cacheValidationResult(gatewayIp, ipAddress, false);
+                cacheValidationResult(gatewayIp, clientIp, false);
                 return WiFiValidationResult.invalid("캠퍼스 네트워크가 아닙니다");
             }
 
@@ -49,13 +44,11 @@ public class CampusWiFiValidationService {
     }
     
 
-    public WiFiValidationResult validateFromCache(String gatewayIp, HttpServletRequest request) {
+    public WiFiValidationResult validateFromCache(String gatewayIp, String clientIp) {
         try {
-            // 서버에서 클라이언트 IP 추출
-            String ipAddress = IpUtil.getClientIp(request);
             // Gateway IP와 클라이언트 IP를 통해 키를 생성 후 Redis에서 조회
-            log.info("Gateway IP: {}, Client IP: {}", gatewayIp, ipAddress);
-            String cacheKey = buildCacheKey(gatewayIp, ipAddress);
+            log.info("Gateway IP: {}, Client IP: {}", gatewayIp, clientIp);
+            String cacheKey = buildCacheKey(gatewayIp, clientIp);
             Object cachedValue = redisTemplate.opsForValue().get(cacheKey);
             Boolean cachedResult = null;
             if (cachedValue instanceof Boolean) {
@@ -71,11 +64,9 @@ public class CampusWiFiValidationService {
             }
             
             // 캐시에 없으면 전체 검증 수행
-
-            return validateCampusWiFi(gatewayIp, request);
+            return validateCampusWiFi(gatewayIp, clientIp);
             
         } catch (Exception e) {
-
             return WiFiValidationResult.error("Wi-Fi 검증 중 오류가 발생했습니다: " + e.getMessage());
         }
     }

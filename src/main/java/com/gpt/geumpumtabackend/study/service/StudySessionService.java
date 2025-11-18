@@ -2,7 +2,6 @@ package com.gpt.geumpumtabackend.study.service;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
-import com.gpt.geumpumtabackend.global.wifi.IpUtil;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
@@ -15,7 +14,6 @@ import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
 import com.gpt.geumpumtabackend.wifi.service.CampusWiFiValidationService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,10 +45,10 @@ public class StudySessionService {
     공부 시작
      */
     @Transactional
-    public StudyStartResponse startStudySession(StudyStartRequest request, Long userId, HttpServletRequest httpServletRequest) {
+    public StudyStartResponse startStudySession(StudyStartRequest request, Long userId) {
         // Wi-Fi 검증
         WiFiValidationResult validationResult = wifiValidationService.validateFromCache(
-            request.gatewayIp(), httpServletRequest
+            request.gatewayIp(), request.clientIp()
         );
         
         if (!validationResult.isValid()) {
@@ -83,12 +81,12 @@ public class StudySessionService {
     하트비트 처리
      */
     @Transactional
-    public void updateHeartBeat(HeartBeatRequest heartBeatRequest, Long userId, HttpServletRequest httpServletRequest) {
+    public void updateHeartBeat(HeartBeatRequest heartBeatRequest, Long userId) {
         Long sessionId = heartBeatRequest.sessionId();
 
         // Wi-Fi 검증 (캐시 우선 사용)
         WiFiValidationResult validationResult = wifiValidationService.validateFromCache(
-            heartBeatRequest.gatewayIp(), httpServletRequest
+            heartBeatRequest.gatewayIp(), heartBeatRequest.clientIp()
         );
         
         if (!validationResult.isValid()) {
