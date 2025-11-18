@@ -22,7 +22,9 @@ public interface UserRankingRepository extends JpaRepository<UserRanking, Long> 
                     ur.user.id,
                     ur.user.name,
                     ur.totalMillis,
-                    ur.rank)
+                    ur.rank,
+                    ur.user.picture,
+                    ur.user.department)
         FROM UserRanking ur WHERE ur.calculatedAt =:date
          AND ur.rankingType = :rankingType
         ORDER BY ur.rank ASC

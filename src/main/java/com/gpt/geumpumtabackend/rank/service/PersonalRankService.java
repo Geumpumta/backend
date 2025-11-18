@@ -1,11 +1,15 @@
 package com.gpt.geumpumtabackend.rank.service;
 
+import com.gpt.geumpumtabackend.global.exception.BusinessException;
+import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.rank.domain.RankingType;
 import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingEntryResponse;
 import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
+import com.gpt.geumpumtabackend.user.domain.User;
+import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,7 @@ public class PersonalRankService {
 
     private final UserRankingRepository userRankingRepository;
     private final StudySessionRepository studySessionRepository;
+    private final UserRepository userRepository;
     /*
     현재 진행 중인 세션의 일간 랭킹 조회
      */
@@ -98,7 +103,16 @@ public class PersonalRankService {
         
         // LEFT JOIN으로 모든 사용자가 포함되므로 이론적으로는 항상 찾아야 하지만, 만약을 위한 fallback
         if (myRanking == null) {
-            myRanking = new PersonalRankingEntryResponse(userId, 0L, (long) personalRankingList.size() + 1, null);
+            User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+            String departmentName = user.getDepartment() != null ? user.getDepartment().getKoreanName() : null;
+            myRanking = new PersonalRankingEntryResponse(
+                userId, 
+                0L, 
+                (long) personalRankingList.size() + 1, 
+                user.getName(),
+                user.getPicture(),
+                departmentName
+            );
         }
         
         return new PersonalRankingResponse(topRankings, myRanking);
