@@ -4,7 +4,7 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.interfaces.ECPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
@@ -48,13 +49,13 @@ public class AppleClientSecretGenerator {
             JWTClaimsSet claims = new JWTClaimsSet.Builder()
                     .issuer(teamId)
                     .subject(clientId)
-                    .audience("https://appleid.apple.com")
+                    .audience(audience)
                     .issueTime(Date.from(now))
                     .expirationTime(Date.from(now.plusSeconds(60 * 60))) // 1시간짜리 client_secret
                     .build();
 
             SignedJWT signedJWT = new SignedJWT(header, claims);
-            JWSSigner signer = new RSASSASigner(privateKey);
+            JWSSigner signer = new ECDSASigner((ECPrivateKey) privateKey);
             signedJWT.sign(signer);
 
             return signedJWT.serialize();
