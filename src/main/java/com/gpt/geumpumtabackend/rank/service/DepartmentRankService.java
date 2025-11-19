@@ -101,16 +101,7 @@ public class DepartmentRankService {
                 myRanking = entry;
             }
         }
-        
-        // 사용자의 학과를 찾지 못한 경우 0초, 마지막 순위로 설정
-        if (myRanking == null && user.getDepartment() != null) {
-            myRanking = new DepartmentRankingEntryResponse(
-                user.getDepartment().getKoreanName(), 
-                0L, 
-                (long) departmentRankingList.size() + 1
-            );
-        }
-        
+
         return new DepartmentRankingResponse(topRankings, myRanking);
     }
 }
