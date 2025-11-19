@@ -61,6 +61,10 @@ dependencies {
 
     // Cloudinary
     implementation 'com.cloudinary:cloudinary-http45:1.39.0'
+
+    // Jwt
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+
 }
 
 tasks.named('test') {
