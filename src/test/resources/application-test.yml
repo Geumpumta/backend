@@ -91,3 +91,10 @@ geumpumta:
     secret-key: secret-key
     access-token-expire-in: 1209600
     refresh-token-expire-in: 1209600
+
+apple:
+  team-id: dummy-team-id
+  client-id: dummy-client-id
+  key-id: dummy-key-id
+  audience: dummy-audience
+  private-key: dummy-private-key
