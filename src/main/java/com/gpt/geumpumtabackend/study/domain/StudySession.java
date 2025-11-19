@@ -50,4 +50,8 @@ public class StudySession {
     public void updateHeartBeatAt(LocalDateTime heartBeatAt) {
         this.heartBeatAt = heartBeatAt;
     }
+
+    public void endByFocusTimeLimit(long maxFocusTime) {
+        this.totalMillis = maxFocusTime;
+    }
 }

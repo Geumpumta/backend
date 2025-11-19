@@ -9,6 +9,7 @@ import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
+import com.gpt.geumpumtabackend.study.dto.response.HeartBeatResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -148,7 +149,12 @@ public interface StudySessionApi {
             1. Wi-Fi 연결 상태 재검증 (Gateway IP + IP 대역 확인)
             2. 클라이언트 실제 IP 주소 재확인 (서버에서 추출)
             3. 세션의 lastHeartBeatAt 시간 업데이트
-            4. 90초 이상 하트비트 없으면 좀비 세션으로 분류
+            4. 최대 집중시간(3시간) 초과 시 자동 세션 종료
+            5. 90초 이상 하트비트 없으면 좀비 세션으로 분류
+            
+            📊 **응답 정보:**
+            - sessionStatus: ACTIVE(진행중) 또는 FINISHED(종료됨)
+            - 3시간 초과시 자동으로 FINISHED 상태로 변경
             
             🚨 **실패 시 대응:**
             - Wi-Fi 연결 끊김: 재연결 후 다시 `/start` 호출
@@ -156,9 +162,11 @@ public interface StudySessionApi {
             
             """
     )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = HeartBeatResponse.class)))
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
-                    description = "하트비트 전송 성공 - 세션 유지"),
+                    response = HeartBeatResponse.class,
+                    description = "하트비트 전송 성공 - 세션 상태 반환"),
             errors = {
                     @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
                     @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
@@ -170,7 +178,7 @@ public interface StudySessionApi {
     @PostMapping("/heart-beat")
     @AssignUserId  
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    ResponseEntity<ResponseBody<Void>> processHeartBeat(
+    ResponseEntity<ResponseBody<HeartBeatResponse>> processHeartBeat(
             @Valid @RequestBody HeartBeatRequest heartBeatRequest,
             @Parameter(hidden = true) Long userId);
 }

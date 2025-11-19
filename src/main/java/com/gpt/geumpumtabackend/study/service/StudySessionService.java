@@ -2,10 +2,12 @@ package com.gpt.geumpumtabackend.study.service;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.study.domain.SessionStatus;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
+import com.gpt.geumpumtabackend.study.dto.response.HeartBeatResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -30,6 +33,7 @@ public class StudySessionService {
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
     private final CampusWiFiValidationService wifiValidationService;
+    private final long maxFocusTime = 3*60*60*1000L;
 
     /*
     메인 홈
@@ -81,7 +85,7 @@ public class StudySessionService {
     하트비트 처리
      */
     @Transactional
-    public void updateHeartBeat(HeartBeatRequest heartBeatRequest, Long userId) {
+    public HeartBeatResponse updateHeartBeat(HeartBeatRequest heartBeatRequest, Long userId) {
         Long sessionId = heartBeatRequest.sessionId();
 
         // Wi-Fi 검증 (캐시 우선 사용)
@@ -99,8 +103,16 @@ public class StudySessionService {
         StudySession studySession = studySessionRepository.findByIdAndUser_Id(sessionId, userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
         studySession.updateHeartBeatAt(LocalDateTime.now());
-    }
+        Duration studyDuration = Duration.between(studySession.getStartTime(), studySession.getHeartBeatAt());
+        if(studyDuration.toMillis()>=maxFocusTime) {
+            studySession.endStudySession(LocalDateTime.now());
+            studySession.endByFocusTimeLimit(maxFocusTime);
+            return new HeartBeatResponse(SessionStatus.FINISHED);
+        }
+        return new HeartBeatResponse(SessionStatus.ACTIVE);
 
+    }
+    // 하트비트 시간 - 시작 시간 >=4시간 이면 세션 종료, totalMillis = 4시간
     private BusinessException mapWiFiValidationException(WiFiValidationResult result) {
         return switch (result.getStatus()) {
             case INVALID -> new BusinessException(ExceptionType.WIFI_NOT_CAMPUS_NETWORK);
