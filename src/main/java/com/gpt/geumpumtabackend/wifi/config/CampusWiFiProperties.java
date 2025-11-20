@@ -25,13 +25,13 @@ public record CampusWiFiProperties(
     }
 
     public record WiFiNetwork(String name,
-                               String gatewayIp,
+                               List<String> gatewayIps,
                                List<String> ipRanges,
                                Boolean active,
                                String description) {
 
         public boolean isValidGatewayIP(String gatewayIp) {
-            return this.gatewayIp != null && this.gatewayIp.equals(gatewayIp);
+            return this.gatewayIps != null && this.gatewayIps.contains(gatewayIp);
         }
 
 
