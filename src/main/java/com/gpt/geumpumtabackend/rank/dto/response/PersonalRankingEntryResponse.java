@@ -16,7 +16,7 @@ public record PersonalRankingEntryResponse(
                 userRankingTemp.getUserId(),
                 userRankingTemp.getTotalMillis(),
                 userRankingTemp.getRanking(),
-                userRankingTemp.getUsername(),
+                userRankingTemp.getNickname(),
                 userRankingTemp.getImageUrl(),
                 userRankingTemp.getDepartmentKoreanName()
         );

@@ -6,16 +6,16 @@ import lombok.Getter;
 @Getter
 public class PersonalRankingTemp {
     private Long userId;
-    private String username;
+    private String nickname;
     private Long totalMillis;
     private Long ranking;
     private String imageUrl;
     private String department;
 
     // 기본 생성자 - SQL Native Query 결과 순서에 맞춤
-    public PersonalRankingTemp(Long userId, String username, String imageUrl, String department, Long totalMillis, Long ranking) {
+    public PersonalRankingTemp(Long userId, String nickname, String imageUrl, String department, Long totalMillis, Long ranking) {
         this.userId = userId;
-        this.username = username;
+        this.nickname = nickname;
         this.totalMillis = totalMillis;
         this.ranking = ranking;
         this.imageUrl = imageUrl;
