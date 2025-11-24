@@ -48,7 +48,7 @@ public interface DepartmentRankingRepository extends JpaRepository<DepartmentRan
                    RANK() OVER (ORDER BY COALESCE(dr.total_millis, 0) DESC) as ranking
             FROM all_departments d
             LEFT JOIN department_ranking dr ON d.dept = dr.department
-                AND dr.calculated_at = :period
+                AND DATE(dr.calculated_at) = DATE(:period)
                 AND dr.ranking_type = :rankingType
             ORDER BY COALESCE(dr.total_millis, 0) DESC
             """, nativeQuery = true)
