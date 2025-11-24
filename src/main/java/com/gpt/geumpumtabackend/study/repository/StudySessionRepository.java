@@ -41,7 +41,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
      */
     @Query(value = """
         SELECT u.id as userId, 
-               u.name as username,
+               u.nickname as nickname,
                u.picture as imageUrl,
                u.department as department,
                CAST(COALESCE(SUM(
@@ -68,7 +68,8 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         LEFT JOIN study_session s ON u.id = s.user_id 
             AND s.start_time <= :periodEnd
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-        GROUP BY u.id, u.name, u.picture, u.department
+        WHERE u.role = 'USER'
+        GROUP BY u.id, u.nickname, u.picture, u.department
         ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
@@ -93,7 +94,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
      */
     @Query(value = """
         SELECT u.id as userId, 
-               u.name as username,
+               u.nickname as nickname,
                u.picture as imageUrl,
                u.department as department,
                CAST(COALESCE(SUM(
@@ -120,7 +121,8 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         LEFT JOIN study_session s ON u.id = s.user_id 
             AND s.start_time <= :periodEnd
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-        GROUP BY u.id, u.name, u.picture, u.department
+        WHERE u.role = 'USER'
+        GROUP BY u.id, u.nickname, u.picture, u.department
         ORDER BY COALESCE(SUM(
             TIMESTAMPDIFF(SECOND,
                 GREATEST(s.start_time, :periodStart),
@@ -164,7 +166,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         LEFT JOIN study_session s ON u.id = s.user_id
             AND s.start_time <= :periodEnd 
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-        WHERE u.department IS NOT NULL
+        WHERE u.role = 'USER' AND u.department IS NOT NULL
         GROUP BY u.department
         ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
             GREATEST(s.start_time, :periodStart),
@@ -206,7 +208,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         LEFT JOIN study_session s ON u.id = s.user_id
             AND s.start_time <= :periodEnd 
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-        WHERE u.department IS NOT NULL
+        WHERE u.role = 'USER' AND u.department IS NOT NULL
         GROUP BY u.department
         ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
             GREATEST(s.start_time, :periodStart),
