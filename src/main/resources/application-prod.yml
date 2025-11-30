@@ -29,13 +29,13 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
     show-sql: true
     properties:
       hibernate:
         format_sql: false
-        highlight_sql: true
+        highlight_sql: false
         default_batch_fetch_size: 100
   servlet:
     multipart:
@@ -48,11 +48,11 @@ server:
 logging:
   level:
     # ---- HTTP 트래픽 흐름을 살펴봅니다.
-    org.springframework.web: debug
+    org.springframework.web: info
     # ---- Hibernate가 실행할 질의문을 살펴봅니다.
-    org.hibernate.SQL: debug
+    org.hibernate.SQL: warn
     # ---- 질의문에 바인딩되는 파라미터를 살펴봅니다.
-    org.hibernate.orm.jdbc.bind: trace
+    org.hibernate.orm.jdbc.bind: warn
     # ---- 질의문 실행 결과를 살펴봅니다.
-    org.hibernate.orm.jdbc.extract: trace
+    org.hibernate.orm.jdbc.extract: warn
 
