@@ -1,76 +1,36 @@
-name: CD with Docker
+name: Dev - CD (Deploy)
 
 on:
   workflow_run:
-    workflows: [ "Java CI with Gradle" ]
+    workflows: [ "Dev - CI (Build & Push)" ]
     types: [ completed ]
-    branches: [ "dev" ]
 
 permissions:
-  contents: read
-  packages: write
+  packages: read
 
 jobs:
-  build:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev' }}
-    runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
+  deploy:
+    # CI가 성공했을 때만 실행
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: [self-hosted]
+    
+    # [설정] GitHub Environment의 'development' 변수들(32124 포트 등)을 사용
+    environment:
+      name: development
 
     steps:
-      # 도커 이미지 빌드를 위한 빌드 파일 내려 받기
-      - name: Download artifact
+      # CI에서 넘겨준 이미지 태그 파일 다운로드
+      - name: Download Image Tag Artifact
         uses: actions/download-artifact@v4
         with:
-          run-id: ${{ github.event.workflow_run.id }}
+          name: image-tag
           github-token: ${{ secrets.ACTION_TOKEN }}
-          name: build-libs
+          run-id: ${{ github.event.workflow_run.id }}
 
-      # 도커 이미지 빌드를 위한 Docker Buildx 내려 받기
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
-          driver-opts: |
-            network=host
+      - name: Read Image Tag
+        id: get-tag
+        run: echo "IMAGE_TAG=$(head -n 1 image_tag.txt)" >> $GITHUB_OUTPUT
 
-      # 도커 이미지 업로드를 위한 GitHub Container Registry 로그인
-      # https://docs.github.com/ko/packages/working-with-a-github-packages-registry/working-with-the-container-registry
-      - name: Login to Github Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          # 개인 사용자 토큰의 소유자가 변경되면 이 설정 파일을 다시 커밋하여
-          # GitHub Actions 최초 실행 사용자를 변경해야 합니다.
-          username: ${{ github.actor }}
-          password: ${{ secrets.ACTION_TOKEN }}
-
-      # 메타 데이터를 추출해 이미지 태그 및 레이블 생성
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=sha
-
-      - name: Build and Push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    needs: build
-    runs-on: [self-hosted]
-    steps:
-      # Docker 이미지 내려 받기를 위한 GHCR 로그인
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -78,26 +38,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.ACTION_TOKEN }}
 
-      # 이미지 내려 받기
       - name: Pull latest image
-        run: docker pull ${{ needs.build.outputs.image-tag }}
+        run: docker pull ${{ steps.get-tag.outputs.IMAGE_TAG }}
 
-      # 실행 중인 컨테이너 정리 및 기존 이미지 삭제
-      - name: Clean up old container and image
+      - name: Clean up old container
         run: |
           docker rm -f ${{ vars.CONTAINER_NAME }} || true
-          docker images "ghcr.io/${{ github.repository }}" \
-          --format "{{.Repository}}:{{.Tag}}" \
-          | grep -v "${{ needs.build.outputs.image-tag }}" \
-          | xargs -r docker rmi -f || true
+          docker image prune -f 
 
-      # 새로운 이미지로 새로운 컨테이너 생성하여 실행
-      - name: Run New Container
+      - name: Run New Container (Dev)
         run: |
           docker run -d \
             --name ${{ vars.CONTAINER_NAME }} \
             --network ${{ vars.NETWORK_NAME }} \
-            -p ${{ secrets.DEV_WEB_PORT }}:8080 \
+            -p ${{ secrets.WEB_PORT }}:8080 \
             -e SPRING_PROFILES_ACTIVE=dev \
             -e TZ=Asia/Seoul \
-            ${{ needs.build.outputs.image-tag }}
+            ${{ steps.get-tag.outputs.IMAGE_TAG }}
