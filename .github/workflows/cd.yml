@@ -1,10 +1,9 @@
-name: CD with Docker
+name: Prod - CD with Docker
 
 on:
   workflow_run:
-    workflows: [ "Java CI with Gradle" ]
+    workflows: [ "Prod - Java CI with Gradle" ] # Prod CI 파일 이름과 일치해야 함
     types: [ completed ]
-    branches: [ "dev" ]
 
 permissions:
   contents: read
@@ -12,13 +11,13 @@ permissions:
 
 jobs:
   build:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev' }}
+    # Prod 브랜치인 경우에만 실행
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'prod' }}
     runs-on: ubuntu-latest
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
 
     steps:
-      # 도커 이미지 빌드를 위한 빌드 파일 내려 받기
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -26,7 +25,6 @@ jobs:
           github-token: ${{ secrets.ACTION_TOKEN }}
           name: build-libs
 
-      # 도커 이미지 빌드를 위한 Docker Buildx 내려 받기
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -34,18 +32,13 @@ jobs:
           driver-opts: |
             network=host
 
-      # 도커 이미지 업로드를 위한 GitHub Container Registry 로그인
-      # https://docs.github.com/ko/packages/working-with-a-github-packages-registry/working-with-the-container-registry
       - name: Login to Github Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          # 개인 사용자 토큰의 소유자가 변경되면 이 설정 파일을 다시 커밋하여
-          # GitHub Actions 최초 실행 사용자를 변경해야 합니다.
           username: ${{ github.actor }}
           password: ${{ secrets.ACTION_TOKEN }}
 
-      # 메타 데이터를 추출해 이미지 태그 및 레이블 생성
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -69,8 +62,12 @@ jobs:
   deploy:
     needs: build
     runs-on: [self-hosted]
+
+    # [Prod] GitHub Environment 사용
+    environment:
+      name: production
+
     steps:
-      # Docker 이미지 내려 받기를 위한 GHCR 로그인
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
@@ -78,26 +75,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.ACTION_TOKEN }}
 
-      # 이미지 내려 받기
       - name: Pull latest image
         run: docker pull ${{ needs.build.outputs.image-tag }}
 
-      # 실행 중인 컨테이너 정리 및 기존 이미지 삭제
       - name: Clean up old container and image
         run: |
           docker rm -f ${{ vars.CONTAINER_NAME }} || true
-          docker images "ghcr.io/${{ github.repository }}" \
-          --format "{{.Repository}}:{{.Tag}}" \
-          | grep -v "${{ needs.build.outputs.image-tag }}" \
-          | xargs -r docker rmi -f || true
+          docker image prune -f 
 
-      # 새로운 이미지로 새로운 컨테이너 생성하여 실행
-      - name: Run New Container
+      - name: Run New Container (Prod)
         run: |
           docker run -d \
             --name ${{ vars.CONTAINER_NAME }} \
             --network ${{ vars.NETWORK_NAME }} \
-            -p ${{ secrets.DEV_WEB_PORT }}:8080 \
-            -e SPRING_PROFILES_ACTIVE=dev \
+            -p ${{ secrets.WEB_PORT }}:8080 \
+            -e SPRING_PROFILES_ACTIVE=prod \
             -e TZ=Asia/Seoul \
             ${{ needs.build.outputs.image-tag }}
