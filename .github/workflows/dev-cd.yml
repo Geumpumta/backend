@@ -14,7 +14,7 @@ jobs:
     # CI가 성공했을 때만 실행
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted]
-    
+
     # [설정] GitHub Environment의 'development' 변수들(32124 포트 등)을 사용
     environment:
       name: development
