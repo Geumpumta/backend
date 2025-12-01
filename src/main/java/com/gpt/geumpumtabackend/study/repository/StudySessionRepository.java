@@ -45,14 +45,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                u.picture as imageUrl,
                u.department as department,
                CAST(COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :now
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) * 1000
+                   ) / 1000
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
@@ -62,7 +62,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) * 1000
+                   ) 
                ), 0) DESC) as ranking
         FROM user u 
         LEFT JOIN study_session s ON u.id = s.user_id 
@@ -98,14 +98,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                u.picture as imageUrl,
                u.department as department,
                CAST(COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :periodEnd
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) * 1000
+                   ) 
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
@@ -115,7 +115,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) * 1000
+                   ) / 1000
                ), 0) DESC) as ranking
         FROM user u 
         LEFT JOIN study_session s ON u.id = s.user_id 
@@ -143,14 +143,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     @Query(value = """
         SELECT u.department as department, 
                CAST(COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :now
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) * 1000
+                   ) 
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
@@ -160,7 +160,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) * 1000
+                   ) / 1000
                ), 0) DESC) as ranking
         FROM user u
         LEFT JOIN study_session s ON u.id = s.user_id
@@ -185,14 +185,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     @Query(value = """
         SELECT u.department as department, 
                CAST(COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :periodEnd
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) * 1000
+                   ) 
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(SECOND,
@@ -202,7 +202,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) * 1000
+                   ) / 1000
                ), 0) DESC) as ranking
         FROM user u
         LEFT JOIN study_session s ON u.id = s.user_id
