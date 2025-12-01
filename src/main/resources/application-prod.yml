@@ -1,0 +1,58 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+    import:
+      - security/application-database.yml
+      - security/application-security.yml
+      - security/application-mail.yml
+      - security/application-swagger.yml
+      - security/application-wifi.yml
+      - security/application-cloudinary.yml
+
+  datasource:
+    url: ${geumpumta.mysql.url}
+    username: ${geumpumta.mysql.username}
+    password: ${geumpumta.mysql.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      host: ${geumpumta.redis.host}
+      port: ${geumpumta.redis.port}
+      password: ${geumpumta.redis.password}
+      repositories:
+        enabled: false
+
+  mvc:
+    log-request-details: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: false
+        highlight_sql: false
+        default_batch_fetch_size: 100
+  servlet:
+    multipart:
+      max-file-size: 10MB     # 한 파일 최대 크기
+      max-request-size: 100MB  # 전체 요청 최대 크기 (여러 파일 합산)
+
+server:
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    # ---- HTTP 트래픽 흐름을 살펴봅니다.
+    org.springframework.web: info
+    # ---- Hibernate가 실행할 질의문을 살펴봅니다.
+    org.hibernate.SQL: warn
+    # ---- 질의문에 바인딩되는 파라미터를 살펴봅니다.
+    org.hibernate.orm.jdbc.bind: warn
+    # ---- 질의문 실행 결과를 살펴봅니다.
+    org.hibernate.orm.jdbc.extract: warn
+
