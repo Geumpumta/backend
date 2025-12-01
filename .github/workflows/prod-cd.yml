@@ -80,14 +80,14 @@ jobs:
 
       - name: Clean up old container and image
         run: |
-          docker rm -f ${{ vars.CONTAINER_NAME }} || true
+          docker rm -f ${{ secrets.CONTAINER_NAME }} || true
           docker image prune -f 
 
       - name: Run New Container (Prod)
         run: |
           docker run -d \
-            --name ${{ vars.CONTAINER_NAME }} \
-            --network ${{ vars.NETWORK_NAME }} \
+            --name ${{ secrets.CONTAINER_NAME }} \
+            --network ${{ secrets.NETWORK_NAME }} \
             -p ${{ secrets.WEB_PORT }}:8080 \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e TZ=Asia/Seoul \
