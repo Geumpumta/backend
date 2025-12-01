@@ -44,14 +44,14 @@ jobs:
 
       - name: Clean up old container
         run: |
-          docker rm -f ${{ vars.CONTAINER_NAME }} || true
+          docker rm -f ${{ secrets.CONTAINER_NAME }} || true
           docker image prune -f 
 
       - name: Run New Container (Dev)
         run: |
           docker run -d \
-            --name ${{ vars.CONTAINER_NAME }} \
-            --network ${{ vars.NETWORK_NAME }} \
+            --name ${{ secrets.CONTAINER_NAME }} \
+            --network ${{ secrets.NETWORK_NAME }} \
             -p ${{ secrets.WEB_PORT }}:8080 \
             -e SPRING_PROFILES_ACTIVE=dev \
             -e TZ=Asia/Seoul \
