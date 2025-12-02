@@ -89,10 +89,11 @@ public class JwtHandler {
     }
 
     public JwtUserClaim convert(Claims claims) {
+        Boolean withdrawn = claims.get(IS_WITHDRAWN, Boolean.class);
         return new JwtUserClaim(
                 claims.get(USER_ID, Long.class),
                 UserRole.valueOf(claims.get(USER_ROLE, String.class)),
-                claims.get(IS_WITHDRAWN, Boolean.class)
+                withdrawn != null ? withdrawn : false
         );
     }
 
