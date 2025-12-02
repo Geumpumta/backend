@@ -28,7 +28,6 @@ public class TokenProvider implements AuthenticationProvider {
 
     private final JwtHandler jwtHandler;
     private final UserService userService;
-    private final UserRepository userRepository;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
