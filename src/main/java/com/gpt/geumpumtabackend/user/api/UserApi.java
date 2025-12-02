@@ -130,7 +130,7 @@ public interface UserApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<Void>> logout(
-            Long userId
+            @Parameter(hidden = true) Long userId
     );
 
     @Operation(
@@ -148,7 +148,7 @@ public interface UserApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<Void>> withdrawCurrentUser(
-            Long userId
+            @Parameter(hidden = true) Long userId
     );
 
     @Operation(
@@ -169,6 +169,6 @@ public interface UserApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<TokenResponse>> restoreUser(
-            Long userId
+            @Parameter(hidden = true) Long userId
     );
 }
