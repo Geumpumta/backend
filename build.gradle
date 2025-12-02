@@ -64,7 +64,6 @@ dependencies {
 
     // Jwt
     implementation 'com.nimbusds:nimbus-jose-jwt:9.37.4'
-
 }
 
 tasks.named('test') {
