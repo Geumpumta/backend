@@ -99,35 +99,33 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private User getOrSave(OAuth2UserInfo oAuth2UserInfo, String registrationId, String providerId) {
 
-        OAuth2Provider provider;
-        log.info("oauth2UserInfo: {}", oAuth2UserInfo);
-        if(registrationId.equals("google")) {
-            provider = OAuth2Provider.GOOGLE;
-        }
-        else if(registrationId.equals("kakao")) {
-            provider = OAuth2Provider.KAKAO;
-        }
-        else if(registrationId.equals("apple")) {
-            provider = OAuth2Provider.APPLE;
-        }
-        else {
-            provider = null;
-        }
+        OAuth2Provider provider = resolveProvider(registrationId);
 
+        return userRepository.findByProviderAndProviderId(provider, providerId)
+                .orElseGet(() -> createNewUser(oAuth2UserInfo, provider, providerId));
+    }
 
+    private OAuth2Provider resolveProvider(String registrationId) {
+        return switch (registrationId) {
+            case "google" -> OAuth2Provider.GOOGLE;
+            case "kakao"  -> OAuth2Provider.KAKAO;
+            case "apple"  -> OAuth2Provider.APPLE;
+            default       -> throw new IllegalArgumentException("Unsupported provider: " + registrationId);
+        };
+    }
 
-        User user = userRepository.findByEmail(oAuth2UserInfo.email())
-                .orElseGet(() ->
-                        User.builder()
-                                .email(oAuth2UserInfo.email())
-                                .role(UserRole.GUEST)
-                                .name(oAuth2UserInfo.name())
-                                .picture(oAuth2UserInfo.profile())
-                                .provider(provider)
-                                .providerId(providerId)
-                                .build()
-                );
+    private User createNewUser(OAuth2UserInfo info, OAuth2Provider provider, String providerId) {
+        User user = User.builder()
+                .email(info.email())
+                .role(UserRole.GUEST)
+                .name(info.name())
+                .picture(info.profile())
+                .provider(provider)
+                .providerId(providerId)
+                .build();
+
         return userRepository.save(user);
     }
+
 
 }
