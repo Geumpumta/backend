@@ -55,14 +55,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                    ) / 1000
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :now
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) 
+                   ) / 1000
                ), 0) DESC) as ranking
         FROM user u 
         LEFT JOIN study_session s ON u.id = s.user_id 
@@ -70,14 +70,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
         WHERE u.role = 'USER'
         GROUP BY u.id, u.nickname, u.picture, u.department
-        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
+        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(MICROSECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
                 WHEN s.end_time IS NULL THEN :now
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
-        ) * 1000), 0) DESC
+        ) / 1000), 0) DESC
         LIMIT 100
 """, nativeQuery = true)
     List<PersonalRankingTemp> calculateCurrentPeriodRanking(
@@ -108,7 +108,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                    ) 
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :periodEnd
@@ -124,14 +124,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         WHERE u.role = 'USER'
         GROUP BY u.id, u.nickname, u.picture, u.department
         ORDER BY COALESCE(SUM(
-            TIMESTAMPDIFF(SECOND,
+            TIMESTAMPDIFF(MICROSECOND,
                 GREATEST(s.start_time, :periodStart),
                 CASE
                     WHEN s.end_time IS NULL THEN :periodEnd
                     WHEN s.end_time > :periodEnd THEN :periodEnd
                     ELSE s.end_time
                 END
-            ) * 1000
+            ) / 1000
         ), 0) DESC
         LIMIT 100
     """, nativeQuery = true)
@@ -150,10 +150,10 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) 
+                   ) / 1000
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :now
@@ -168,14 +168,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
         WHERE u.role = 'USER' AND u.department IS NOT NULL
         GROUP BY u.department
-        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
+        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(MICROSECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
                 WHEN s.end_time IS NULL THEN :now
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
-        ) * 1000), 0) DESC
+        ) / 1000), 0) DESC
 """, nativeQuery = true)
     List<DepartmentRankingTemp> calculateCurrentDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
@@ -192,10 +192,10 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) 
+                   ) / 1000
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :periodEnd
@@ -210,14 +210,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
         WHERE u.role = 'USER' AND u.department IS NOT NULL
         GROUP BY u.department
-        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
+        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(MICROSECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
                 WHEN s.end_time IS NULL THEN :periodEnd
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
-        ) * 1000), 0) DESC
+        ) / 1000), 0) DESC
 """, nativeQuery = true)
     List<DepartmentRankingTemp> calculateFinalizedDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
