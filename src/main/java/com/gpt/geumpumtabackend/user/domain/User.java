@@ -92,5 +92,6 @@ public class User extends BaseEntity {
         this.email = email;
         this.schoolEmail = schoolEmail;
         this.studentId = studentId;
+        super.restore();
     }
 }
