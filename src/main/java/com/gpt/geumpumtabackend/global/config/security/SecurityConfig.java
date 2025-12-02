@@ -3,6 +3,7 @@ package com.gpt.geumpumtabackend.global.config.security;
 
 
 import com.gpt.geumpumtabackend.global.jwt.JwtAuthenticationFilter;
+import com.gpt.geumpumtabackend.global.oauth.handler.OAuth2AuthenticationFailureHandler;
 import com.gpt.geumpumtabackend.global.oauth.handler.OAuth2AuthenticationSuccessHandler;
 import com.gpt.geumpumtabackend.global.oauth.resolver.CustomAuthorizationRequestResolver;
 import com.gpt.geumpumtabackend.global.oauth.service.CustomOAuth2UserService;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final AuthenticationManager authenticationManager;
     private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
     private final OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> authorizationCodeTokenResponseClient;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
     @Bean
     public SecurityFilterChain filterChainPermitAll(HttpSecurity http) throws Exception {
@@ -58,6 +60,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(ui ->
                                 ui.userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
                 )
                 .addFilterAfter(new JwtAuthenticationFilter(authenticationManager),
                         UsernamePasswordAuthenticationFilter.class);

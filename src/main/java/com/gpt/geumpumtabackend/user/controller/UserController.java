@@ -76,4 +76,33 @@ public class UserController implements UserApi {
         userService.updateUserProfile(request, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
+
+    @DeleteMapping("/logout")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<Void>> logout(
+            Long userId
+    ){
+        userService.logout(userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
+    }
+    @DeleteMapping("/withdraw")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<Void>> withdrawCurrentUser(
+            Long userId
+    ){
+        userService.withdrawUser(userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
+    }
+
+    @PostMapping("/restore")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<TokenResponse>> restoreUser(
+            Long userId
+    ){
+        TokenResponse response = userService.restoreUser(userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
+    }
 }

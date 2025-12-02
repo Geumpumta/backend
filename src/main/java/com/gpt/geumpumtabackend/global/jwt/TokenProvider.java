@@ -2,10 +2,15 @@ package com.gpt.geumpumtabackend.global.jwt;
 
 
 
+import com.gpt.geumpumtabackend.global.exception.BusinessException;
+import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtAccessDeniedException;
+import com.gpt.geumpumtabackend.global.jwt.exception.JwtAuthenticationException;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtTokenExpiredException;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtTokenInvalidException;
+import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
+import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import com.gpt.geumpumtabackend.user.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
@@ -32,14 +37,13 @@ public class TokenProvider implements AuthenticationProvider {
             log.info("null이에요");
             return null;
         }
-        log.info("널이 아니에여ㅛ");
         try {
             JwtUserClaim claims = jwtHandler.parseToken(tokenValue);
-            this.validateFarmerRole(claims);
+            this.validateAdminRole(claims);
             return new JwtAuthentication(claims);
         } catch (ExpiredJwtException e) {
             throw new JwtTokenExpiredException(e);
-        } catch (JwtAccessDeniedException e) {
+        } catch (JwtAuthenticationException e) {
             throw e;
         } catch (Exception e) {
             throw new JwtTokenInvalidException(e);
@@ -51,7 +55,7 @@ public class TokenProvider implements AuthenticationProvider {
         return JwtAuthenticationToken.class.isAssignableFrom(authentication);
     }
 
-    private void validateFarmerRole(JwtUserClaim claims) {
+    private void validateAdminRole(JwtUserClaim claims) {
         Long userId = claims.userId();
 
         // 토큰의 권한은 FARMER지만 DB에 저장된 권한이 FARMER가 아닌 경우 예외 반환

@@ -42,8 +42,9 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         OAuth2UserPrincipal principal = (OAuth2UserPrincipal) authentication.getPrincipal();
         Long userId = principal.getUser().getId();
         UserRole role = principal.getUser().getRole();
+        Boolean isWithdrawn = principal.getUser().getDeletedAt() != null;
 
-        JwtUserClaim jwtUserClaim = new JwtUserClaim(userId,role);
+        JwtUserClaim jwtUserClaim = new JwtUserClaim(userId, role, isWithdrawn);
         Token token = jwtHandler.createTokens(jwtUserClaim);
 
         // 토큰 붙여서 리다이렉트
