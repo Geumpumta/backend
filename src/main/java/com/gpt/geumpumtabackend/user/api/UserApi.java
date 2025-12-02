@@ -25,10 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "사용자 API", description = "사용자 관련 API")
 public interface UserApi {
@@ -116,5 +113,62 @@ public interface UserApi {
     public ResponseEntity<ResponseBody<Void>> updateProfile(
             @RequestBody @Valid ProfileUpdateRequest request,
             @Parameter(hidden = true) Long userId
+    );
+
+    @Operation(
+            summary =  "로그아웃을 위한 api",
+            description = "로그아웃을 진행합니다."
+    )
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(description = "로그아웃 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @DeleteMapping("/logout")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<Void>> logout(
+            Long userId
+    );
+
+    @Operation(
+            summary =  "회원탈퇴를 위한 api",
+            description = "회원탈퇴를 진행합니다."
+    )
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(description = "회원탈퇴 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @DeleteMapping("/withdraw")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<Void>> withdrawCurrentUser(
+            Long userId
+    );
+
+    @Operation(
+            summary =  "회원탈퇴한 계정 복구를 위한 api",
+            description = "회원탈퇴한 계정을 복구합니다."
+    )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = TokenResponse.class)))
+    @SwaggerApiResponses(
+            success = @SwaggerApiSuccessResponse(
+                    response = TokenResponse.class,
+                    description = "계정 복구 완료"),
+            errors = {
+                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
+                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
+            }
+    )
+    @PostMapping("/restore")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<TokenResponse>> restoreUser(
+            Long userId
     );
 }
