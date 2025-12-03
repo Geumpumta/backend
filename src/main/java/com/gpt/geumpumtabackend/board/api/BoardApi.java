@@ -9,8 +9,6 @@ import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiResponses;
 import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiSuccessResponse;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
-import com.gpt.geumpumtabackend.global.response.ResponseUtil;
-import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -55,7 +53,7 @@ public interface BoardApi {
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
                     response = BoardResponse.class,
-                    description = "게시글 목록 조회 성공"),
+                    description = "게시글 상세 조회 성공"),
             errors = {
                     @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
                     @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
@@ -101,7 +99,7 @@ public interface BoardApi {
     )
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
-                    description = "게시글 목록 조회 성공"),
+                    description = "게시글 삭제 성공"),
             errors = {
                     @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
                     @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
