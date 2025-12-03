@@ -30,9 +30,10 @@ public enum ExceptionType {
     // User
     USER_NOT_FOUND(NOT_FOUND, "U001","사용자가 존재하지 않습니다"),
     SCHOOL_EMAIL_ALREADY_REGISTERED(FORBIDDEN, "U002", "학교 이메일이 등록된 상태입니다"),
-    DUPLICATED_SCHOOL_EMAIL(FORBIDDEN, "U003", "이미 사용중인 이메일입니다"),
+    DUPLICATED_SCHOOL_EMAIL(CONFLICT, "U003", "이미 사용중인 이메일입니다"),
     DEPARTMENT_NOT_FOUND(BAD_REQUEST, "U004", "존재하지 않는 학과 명입니다"),
     USER_WITHDRAWN(FORBIDDEN, "U005", "탈퇴한 사용자입니다."),
+    DUPLICATED_STUDENT_ID(CONFLICT, "U006", "이미 사용중인 학번입니다."),
 
     // Mail
     CANT_SEND_MAIL(INTERNAL_SERVER_ERROR, "M001", "인증코드 전송에 실패했습니다."),
@@ -50,6 +51,9 @@ public enum ExceptionType {
     IMAGE_SIZE_EXCEEDED(FORBIDDEN, "I002", "이미지 용량이 초과했습니다."),
     IMAGE_UPLOAD_FAILED(INTERNAL_SERVER_ERROR, "I003", "이미지 업로드에 실패했습니다."),
 
+
+    // board
+    BOARD_NOT_FOUND(BAD_REQUEST, "B001", "존재하지 않는 게시물입니다."),
 
     ;
 
