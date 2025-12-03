@@ -79,7 +79,7 @@ public interface DepartmentRankingRepository extends JpaRepository<DepartmentRan
             )
             SELECT d.dept as department,
                    COALESCE(rr.totalMillis, dr.total_millis, 0) as totalMillis,
-                   COALESCE(rr.ranking, RANK() OVER (ORDER BY COALESCE(dr.total_millis, 0) DESC)) as ranking
+                   RANK() OVER (ORDER BY COALESCE(rr.totalMillis, dr.total_millis, 0) DESC) as ranking
             FROM all_departments d
             LEFT JOIN recalculated_rankings rr ON d.dept = rr.department
             LEFT JOIN department_ranking dr ON d.dept = dr.department
