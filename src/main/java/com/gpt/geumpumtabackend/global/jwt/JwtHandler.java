@@ -27,6 +27,7 @@ public class JwtHandler {
     public static final String USER_ID = "USER_ID";
     public static final String USER_ROLE = "ROLE_USER";
     private static final String KEY_ROLE = "role";
+    private static final String IS_WITHDRAWN = "WITHDRAWN";
     private static final long MILLI_SECOND = 1000L;
 
     public JwtHandler(JwtProperties jwtProperties, RefreshTokenRepository refreshTokenRepository) {
@@ -64,7 +65,8 @@ public class JwtHandler {
     public Map<String, Object> createClaims(JwtUserClaim jwtUserClaim) {
         return Map.of(
                 USER_ID, jwtUserClaim.userId(),
-                USER_ROLE, jwtUserClaim.role()
+                USER_ROLE, jwtUserClaim.role(),
+                IS_WITHDRAWN, jwtUserClaim.withdrawn()
         );
     }
 
@@ -87,9 +89,11 @@ public class JwtHandler {
     }
 
     public JwtUserClaim convert(Claims claims) {
+        Boolean withdrawn = claims.get(IS_WITHDRAWN, Boolean.class);
         return new JwtUserClaim(
                 claims.get(USER_ID, Long.class),
-                UserRole.valueOf(claims.get(USER_ROLE, String.class))
+                UserRole.valueOf(claims.get(USER_ROLE, String.class)),
+                withdrawn != null ? withdrawn : false
         );
     }
 

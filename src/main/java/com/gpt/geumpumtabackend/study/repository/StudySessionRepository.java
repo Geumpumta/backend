@@ -55,14 +55,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                    ) / 1000
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :now
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) 
+                   ) / 1000
                ), 0) DESC) as ranking
         FROM user u 
         LEFT JOIN study_session s ON u.id = s.user_id 
@@ -70,14 +70,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
         WHERE u.role = 'USER'
         GROUP BY u.id, u.nickname, u.picture, u.department
-        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
+        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(MICROSECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
                 WHEN s.end_time IS NULL THEN :now
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
-        ) * 1000), 0) DESC
+        ) / 1000), 0) DESC
         LIMIT 100
 """, nativeQuery = true)
     List<PersonalRankingTemp> calculateCurrentPeriodRanking(
@@ -108,7 +108,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                    ) 
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
+                   TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
                            WHEN s.end_time IS NULL THEN :periodEnd
@@ -124,14 +124,14 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         WHERE u.role = 'USER'
         GROUP BY u.id, u.nickname, u.picture, u.department
         ORDER BY COALESCE(SUM(
-            TIMESTAMPDIFF(SECOND,
+            TIMESTAMPDIFF(MICROSECOND,
                 GREATEST(s.start_time, :periodStart),
                 CASE
                     WHEN s.end_time IS NULL THEN :periodEnd
                     WHEN s.end_time > :periodEnd THEN :periodEnd
                     ELSE s.end_time
                 END
-            ) * 1000
+            ) / 1000
         ), 0) DESC
         LIMIT 100
     """, nativeQuery = true)
@@ -141,84 +141,88 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     );
 
     @Query(value = """
-        SELECT u.department as department, 
-               CAST(COALESCE(SUM(
-                   TIMESTAMPDIFF(MICROSECOND,
-                       GREATEST(s.start_time, :periodStart),
-                       CASE
-                           WHEN s.end_time IS NULL THEN :now
-                           WHEN s.end_time > :periodEnd THEN :periodEnd
-                           ELSE s.end_time
-                       END
-                   ) 
-               ), 0) AS SIGNED) as totalMillis,
-               RANK() OVER (ORDER BY COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
-                       GREATEST(s.start_time, :periodStart),
-                       CASE
-                           WHEN s.end_time IS NULL THEN :now
-                           WHEN s.end_time > :periodEnd THEN :periodEnd
-                           ELSE s.end_time
-                       END
-                   ) / 1000
-               ), 0) DESC) as ranking
-        FROM user u
-        LEFT JOIN study_session s ON u.id = s.user_id
-            AND s.start_time <= :periodEnd 
-            AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-        WHERE u.role = 'USER' AND u.department IS NOT NULL
-        GROUP BY u.department
-        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
-            GREATEST(s.start_time, :periodStart),
-            CASE 
-                WHEN s.end_time IS NULL THEN :now
-                WHEN s.end_time > :periodEnd THEN :periodEnd
-                ELSE s.end_time
-            END
-        ) * 1000), 0) DESC
-""", nativeQuery = true)
+        SELECT 
+            department,
+            CAST(SUM(totalMillis) AS SIGNED) as totalMillis,
+            RANK() OVER (ORDER BY SUM(totalMillis) DESC) as ranking
+        FROM (
+            SELECT 
+                u.department,
+                u.id as userId,
+                COALESCE(SUM(
+                    TIMESTAMPDIFF(MICROSECOND,
+                        GREATEST(s.start_time, :periodStart),
+                        CASE
+                            WHEN s.end_time IS NULL THEN :now
+                            WHEN s.end_time > :periodEnd THEN :periodEnd
+                            ELSE s.end_time
+                        END
+                    ) / 1000
+                ), 0) as totalMillis,
+                ROW_NUMBER() OVER (
+                    PARTITION BY u.department 
+                    ORDER BY COALESCE(SUM(
+                        TIMESTAMPDIFF(MICROSECOND,
+                            GREATEST(s.start_time, :periodStart),
+                            CASE
+                                WHEN s.end_time IS NULL THEN :now
+                                WHEN s.end_time > :periodEnd THEN :periodEnd
+                                ELSE s.end_time
+                            END
+                        ) / 1000
+                    ), 0) DESC
+                ) as deptRank
+            FROM user u
+            LEFT JOIN study_session s ON u.id = s.user_id
+                AND s.start_time <= :periodEnd 
+                AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+            WHERE u.role = 'USER' AND u.department IS NOT NULL
+            GROUP BY u.department, u.id
+        ) ranked_users
+        WHERE deptRank <= 30
+        GROUP BY department
+        ORDER BY SUM(totalMillis) DESC
+        """, nativeQuery = true)
     List<DepartmentRankingTemp> calculateCurrentDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd,
             @Param("now") LocalDateTime now);
 
     @Query(value = """
-        SELECT u.department as department, 
-               CAST(COALESCE(SUM(
-                   TIMESTAMPDIFF(MICROSECOND,
-                       GREATEST(s.start_time, :periodStart),
-                       CASE
-                           WHEN s.end_time IS NULL THEN :periodEnd
-                           WHEN s.end_time > :periodEnd THEN :periodEnd
-                           ELSE s.end_time
-                       END
-                   ) 
-               ), 0) AS SIGNED) as totalMillis,
-               RANK() OVER (ORDER BY COALESCE(SUM(
-                   TIMESTAMPDIFF(SECOND,
-                       GREATEST(s.start_time, :periodStart),
-                       CASE
-                           WHEN s.end_time IS NULL THEN :periodEnd
-                           WHEN s.end_time > :periodEnd THEN :periodEnd
-                           ELSE s.end_time
-                       END
-                   ) / 1000
-               ), 0) DESC) as ranking
-        FROM user u
-        LEFT JOIN study_session s ON u.id = s.user_id
-            AND s.start_time <= :periodEnd 
-            AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-        WHERE u.role = 'USER' AND u.department IS NOT NULL
-        GROUP BY u.department
-        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(SECOND,
-            GREATEST(s.start_time, :periodStart),
-            CASE 
-                WHEN s.end_time IS NULL THEN :periodEnd
-                WHEN s.end_time > :periodEnd THEN :periodEnd
-                ELSE s.end_time
-            END
-        ) * 1000), 0) DESC
-""", nativeQuery = true)
+        SELECT 
+            department,
+            CAST(SUM(totalMillis) AS SIGNED) as totalMillis,
+            RANK() OVER (ORDER BY SUM(totalMillis) DESC) as ranking
+        FROM (
+            SELECT 
+                u.department,
+                u.id as userId,
+                COALESCE(SUM(
+                    TIMESTAMPDIFF(MICROSECOND,
+                        GREATEST(s.start_time, :periodStart),
+                        LEAST(s.end_time, :periodEnd)
+                    ) / 1000
+                ), 0) as totalMillis,
+                ROW_NUMBER() OVER (
+                    PARTITION BY u.department 
+                    ORDER BY COALESCE(SUM(
+                        TIMESTAMPDIFF(MICROSECOND,
+                            GREATEST(s.start_time, :periodStart),
+                            LEAST(s.end_time, :periodEnd)
+                        ) / 1000
+                    ), 0) DESC
+                ) as deptRank
+            FROM user u
+            LEFT JOIN study_session s ON u.id = s.user_id
+                AND s.start_time <= :periodEnd 
+                AND s.end_time >= :periodStart
+            WHERE u.role = 'USER' AND u.department IS NOT NULL
+            GROUP BY u.department, u.id
+        ) ranked_users
+        WHERE deptRank <= 30
+        GROUP BY department
+        ORDER BY SUM(totalMillis) DESC
+        """, nativeQuery = true)
     List<DepartmentRankingTemp> calculateFinalizedDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
             @Param("periodEnd") LocalDateTime periodEnd

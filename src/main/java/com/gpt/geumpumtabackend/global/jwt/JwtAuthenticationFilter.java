@@ -2,6 +2,7 @@ package com.gpt.geumpumtabackend.global.jwt;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtAuthenticationException;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtNotExistException;
 import jakarta.servlet.FilterChain;
@@ -53,6 +54,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String tokenValue = resolveToken(request).orElseThrow(JwtNotExistException::new);
             JwtAuthenticationToken token = new JwtAuthenticationToken(tokenValue); // 인증되지 않은 토큰
             Authentication authentication = this.authenticationManager.authenticate(token); // TokenProvider에게 위임
+            if (authentication instanceof JwtAuthentication jwtAuth) {
+
+                if (jwtAuth.isWithdrawn() && !isRestoreEndpoint(request)) {
+                    throw new JwtAuthenticationException(ExceptionType.USER_WITHDRAWN);
+                }
+            }
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
         } catch (JwtAuthenticationException e) {
@@ -77,4 +84,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.flushBuffer(); // 커밋
         response.getWriter().close();
     }
+
+
+    private boolean isRestoreEndpoint(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
+        return method.equalsIgnoreCase("POST")
+                && uri.equals("/api/v1/user/restore");
+    }
+
 }
