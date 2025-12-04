@@ -9,6 +9,7 @@ import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
+import com.gpt.geumpumtabackend.study.dto.response.HeartBeatResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -147,8 +148,7 @@ public interface StudySessionApi {
             🔄 **동작 원리:**
             1. Wi-Fi 연결 상태 재검증 (Gateway IP + IP 대역 확인)
             2. 클라이언트 실제 IP 주소 재확인 (서버에서 추출)
-            3. 세션의 lastHeartBeatAt 시간 업데이트
-            4. 90초 이상 하트비트 없으면 좀비 세션으로 분류
+            3. 
             
             🚨 **실패 시 대응:**
             - Wi-Fi 연결 끊김: 재연결 후 다시 `/start` 호출
@@ -170,7 +170,7 @@ public interface StudySessionApi {
     @PostMapping("/heart-beat")
     @AssignUserId  
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    ResponseEntity<ResponseBody<Void>> processHeartBeat(
+    ResponseEntity<ResponseBody<HeartBeatResponse>> processHeartBeat(
             @Valid @RequestBody HeartBeatRequest heartBeatRequest,
             @Parameter(hidden = true) Long userId);
 }
