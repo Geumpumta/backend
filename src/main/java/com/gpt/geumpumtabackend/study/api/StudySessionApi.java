@@ -156,6 +156,7 @@ public interface StudySessionApi {
             
             """
     )
+    @ApiResponse(content = @Content(schema = @Schema(implementation = HeartBeatResponse.class)))
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
                     description = "하트비트 전송 성공 - 세션 유지"),
