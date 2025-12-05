@@ -105,7 +105,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) 
+                   ) / 1000
                ), 0) AS SIGNED) as totalMillis,
                RANK() OVER (ORDER BY COALESCE(SUM(
                    TIMESTAMPDIFF(MICROSECOND,
