@@ -55,4 +55,11 @@ logging:
     org.hibernate.orm.jdbc.bind: trace
     # ---- 질의문 실행 결과를 살펴봅니다.
     org.hibernate.orm.jdbc.extract: trace
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health # 프로메테우스와 헬스 체크 허용
+  endpoint:
+    health:
+      show-details: always
