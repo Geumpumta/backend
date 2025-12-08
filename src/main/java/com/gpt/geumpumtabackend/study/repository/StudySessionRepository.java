@@ -97,7 +97,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                u.nickname as nickname,
                u.picture as imageUrl,
                u.department as department,
-               CAST(COALESCE(SUM(
+               CAST(FLOOR(COALESCE(SUM(
                    TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -105,9 +105,9 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) / 1000
-               ), 0) AS SIGNED) as totalMillis,
-               RANK() OVER (ORDER BY COALESCE(SUM(
+                   )
+               ), 0) / 1000) AS SIGNED) as totalMillis,
+               RANK() OVER (ORDER BY FLOOR(COALESCE(SUM(
                    TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
@@ -115,15 +115,15 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
-                   ) / 1000
-               ), 0) DESC) as ranking
+                   )
+               ), 0) / 1000) DESC) as ranking
         FROM user u 
         LEFT JOIN study_session s ON u.id = s.user_id 
             AND s.start_time <= :periodEnd
             AND (s.end_time >= :periodStart OR s.end_time IS NULL)
         WHERE u.role = 'USER'
         GROUP BY u.id, u.nickname, u.picture, u.department
-        ORDER BY COALESCE(SUM(
+        ORDER BY FLOOR(COALESCE(SUM(
             TIMESTAMPDIFF(MICROSECOND,
                 GREATEST(s.start_time, :periodStart),
                 CASE
@@ -131,8 +131,8 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                     WHEN s.end_time > :periodEnd THEN :periodEnd
                     ELSE s.end_time
                 END
-            ) / 1000
-        ), 0) DESC
+            )
+        ), 0) / 1000) DESC
         LIMIT 100
     """, nativeQuery = true)
     List<PersonalRankingTemp> calculateFinalizedPeriodRanking(
