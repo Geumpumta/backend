@@ -38,7 +38,6 @@ public class CampusWiFiValidationService {
             }
 
         } catch (Exception e) {
-            log.error("Wi-Fi validation error", e);
             return WiFiValidationResult.error("Wi-Fi 검증 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
