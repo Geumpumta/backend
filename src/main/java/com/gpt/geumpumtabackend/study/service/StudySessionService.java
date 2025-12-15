@@ -62,7 +62,8 @@ public class StudySessionService {
         StudySession studySession = new StudySession();
         User user = userRepository.findById(userId)
                         .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
-        studySession.startStudySession(request.startTime(), user);
+        LocalDateTime startTime =  LocalDateTime.now();
+        studySession.startStudySession(startTime, user);
         
         StudySession savedSession = studySessionRepository.save(studySession);
         return StudyStartResponse.fromEntity(savedSession);
@@ -72,10 +73,11 @@ public class StudySessionService {
     공부 종료
      */
     @Transactional
-    public void endStudySession(StudyEndRequest request, Long userId) {
-        StudySession studysession = studySessionRepository.findByIdAndUser_Id(request.studySessionId(), userId)
+    public void endStudySession(StudyEndRequest endRequest, Long userId) {
+        StudySession studysession = studySessionRepository.findByIdAndUser_Id(endRequest.studySessionId(), userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
-        studysession.endStudySession(request.endTime());
+        LocalDateTime endTime = LocalDateTime.now();
+        studysession.endStudySession(endTime);
     }
 
 
@@ -92,7 +94,7 @@ public class StudySessionService {
         );
         
         if (!validationResult.isValid()) {
-            log.warn("Heartbeat Wi-Fi validation failed for user {}, session {}: {}", 
+            log.warn("Heartbeat Wi-Fi validation failed for user {}, session {}: {}",
                 userId, sessionId, validationResult.getMessage());
             throw mapWiFiValidationException(validationResult);
         }
