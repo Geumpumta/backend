@@ -1,7 +1,6 @@
 package com.gpt.geumpumtabackend.integration.config;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,10 +13,6 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -53,12 +48,6 @@ public abstract class BaseIntegrationTest {
             .withExposedPorts(6379)
             .withReuse(true);
 
-    static {
-        // Ensure containers are started before Spring context loads
-        mysqlContainer.start();
-        redisContainer.start();
-    }
-
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         // MySQL 설정
@@ -84,26 +73,6 @@ public abstract class BaseIntegrationTest {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    @BeforeEach
-    @Transactional
-    void ensureTablesExist() {
-        // EntityManager 초기화를 강제로 실행하여 Hibernate DDL 실행 보장
-        try {
-            entityManager.createNativeQuery("SELECT 1").getSingleResult();
-            System.out.println("EntityManager initialized - Hibernate DDL should be executed");
-            
-            // 테이블 존재 확인
-            jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user LIMIT 1", Integer.class);
-            System.out.println("User table exists - DDL executed successfully");
-        } catch (Exception e) {
-            System.out.println("Table check failed: " + e.getMessage());
-            throw new RuntimeException("Tables not created properly", e);
-        }
-    }
 
     @AfterEach
     void cleanUp() {
