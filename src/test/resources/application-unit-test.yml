@@ -1,0 +1,42 @@
+spring:
+  config:
+    activate:
+      on-profile: unit-test
+
+  # H2 Database for unit tests
+  datasource:
+    url: jdbc:h2:mem:unit_testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # Redis 완전 비활성화 (단위테스트)
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    open-in-view: false
+
+# JWT 설정 (단위테스트용)
+geumpumta:
+  jwt:
+    secret-key: unit-test-secret-key
+    access-token-expire-in: 1209600
+    refresh-token-expire-in: 1209600
+
+# WiFi 설정 비활성화 (단위테스트에서는 Mock 사용)
+campus-wifi:
+  networks: []
