@@ -58,14 +58,4 @@ public class StudySessionController implements StudySessionApi {
         studySessionService.endStudySession(request, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
-
-    /*
-    하트비트 수신
-     */
-    @PostMapping("/heart-beat")
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    @AssignUserId
-    public ResponseEntity<ResponseBody<HeartBeatResponse>> processHeartBeat(@Valid @RequestBody HeartBeatRequest heartBeatRequest, Long userId){
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.updateHeartBeat(heartBeatRequest, userId)));
-    }
 }

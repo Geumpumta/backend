@@ -6,10 +6,8 @@ import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiResponses;
 import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiSuccessResponse;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
-import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
-import com.gpt.geumpumtabackend.study.dto.response.HeartBeatResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -137,43 +135,4 @@ public interface StudySessionApi {
             @Valid @RequestBody StudyEndRequest request,
             @Parameter(hidden = true) Long userId
     );
-
-    @Operation(
-            summary = "하트비트 전송",
-            description = """
-            학습 중 연결 상태를 유지하기 위한 하트비트를 전송합니다.
-            
-            ⏱️ **전송 주기:** 30초마다 자동 전송 권장
-            
-            🔄 **동작 원리:**
-            1. Wi-Fi 연결 상태 재검증 (Gateway IP + IP 대역 확인)
-            2. 클라이언트 실제 IP 주소 재확인 (서버에서 추출)
-            1. Wi-Fi 연결 상태 재검증 (Gateway IP + IP 대역 확인)
-            2. 클라이언트 실제 IP 주소 재확인 (서버에서 추출)
-            3. 최대 집중 시간(3시간) 초과 여부 확인 및 자동 세션 종료
-            
-            🚨 **실패 시 대응:**
-            - Wi-Fi 연결 끊김: 재연결 후 다시 `/start` 호출
-            - 세션 만료: 새로운 세션 시작 필요
-            
-            """
-    )
-    @ApiResponse(content = @Content(schema = @Schema(implementation = HeartBeatResponse.class)))
-    @SwaggerApiResponses(
-            success = @SwaggerApiSuccessResponse(
-                    description = "하트비트 전송 성공 - 세션 유지"),
-            errors = {
-                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
-                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
-                    @SwaggerApiFailedResponse(ExceptionType.STUDY_SESSION_NOT_FOUND),
-                    @SwaggerApiFailedResponse(ExceptionType.WIFI_NOT_CAMPUS_NETWORK),
-                    @SwaggerApiFailedResponse(ExceptionType.WIFI_VALIDATION_ERROR)
-            }
-    )
-    @PostMapping("/heart-beat")
-    @AssignUserId  
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    ResponseEntity<ResponseBody<HeartBeatResponse>> processHeartBeat(
-            @Valid @RequestBody HeartBeatRequest heartBeatRequest,
-            @Parameter(hidden = true) Long userId);
 }
