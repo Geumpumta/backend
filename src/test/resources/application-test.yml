@@ -4,10 +4,8 @@ spring:
       on-profile: test
 
   datasource:
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    url: jdbc:tc:mysql:8.0:///geumpumta-test
-    username: root
-    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # URL will be dynamically set by BaseIntegrationTest via @DynamicPropertySource
 
   mail:
     host: dummy-naver.com #smtp 서버 주소

@@ -21,6 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Base class for integration tests using TestContainers.
+ *
+ * Configuration approach:
+ * - Uses programmatic TestContainers management (@Container)
+ * - Containers are shared across all test classes (static)
+ * - Container reuse enabled for faster test execution
+ * - @DynamicPropertySource overrides application-test.yml datasource settings
+ */
 @SpringBootTest(
         properties = {
                 "spring.test.database.replace=NONE",
@@ -35,11 +44,20 @@ public abstract class BaseIntegrationTest {
     static final MySQLContainer<?> mysqlContainer = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("test_geumpumta")
             .withUsername("test")
-            .withPassword("test");
+            .withPassword("test")
+            .withReuse(true)
+            .withCommand("--default-authentication-plugin=mysql_native_password");
 
     @Container
     static final GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:7.0-alpine"))
-            .withExposedPorts(6379);
+            .withExposedPorts(6379)
+            .withReuse(true);
+
+    static {
+        // Ensure containers are started before Spring context loads
+        mysqlContainer.start();
+        redisContainer.start();
+    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
