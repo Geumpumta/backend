@@ -12,14 +12,13 @@ public class PersonalRankingTemp {
     private String imageUrl;
     private String department;
 
-    // 기본 생성자 - SQL Native Query 결과 순서에 맞춤
     public PersonalRankingTemp(Long userId, String nickname, String imageUrl, String department, Long totalMillis, Long ranking) {
         this.userId = userId;
         this.nickname = nickname;
-        this.totalMillis = totalMillis;
-        this.ranking = ranking;
         this.imageUrl = imageUrl;
         this.department = department; // 원본값 그대로 저장
+        this.totalMillis = totalMillis;
+        this.ranking = ranking;
     }
     
     // Department enum 값을 한국어로 변환하는 메서드
