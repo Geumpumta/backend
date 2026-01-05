@@ -71,4 +71,7 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+
+    // Mockito inline mock maker를 Java agent로 설정 (Java 21 호환)
+    jvmArgs "-XX:+EnableDynamicAgentLoading"
 }

@@ -95,7 +95,11 @@ public abstract class BaseIntegrationTest {
 
     private void truncateAllTables() {
         try {
-            String dbProductName = jdbcTemplate.getDataSource().getConnection().getMetaData().getDatabaseProductName();
+            // Connection을 try-with-resources로 자동 close
+            String dbProductName;
+            try (var connection = jdbcTemplate.getDataSource().getConnection()) {
+                dbProductName = connection.getMetaData().getDatabaseProductName();
+            }
             boolean isH2 = "H2".equalsIgnoreCase(dbProductName);
 
             // 외래 키 제약 조건 비활성화
@@ -134,7 +138,9 @@ public abstract class BaseIntegrationTest {
     }
 
     private void cleanRedisCache() {
-        // Redis의 모든 캐시 데이터 삭제
-        redisTemplate.getConnectionFactory().getConnection().flushAll();
+        // Redis의 모든 캐시 데이터 삭제 (Connection을 try-with-resources로 자동 close)
+        try (var connection = redisTemplate.getConnectionFactory().getConnection()) {
+            connection.serverCommands().flushAll();
+        }
     }
 }
