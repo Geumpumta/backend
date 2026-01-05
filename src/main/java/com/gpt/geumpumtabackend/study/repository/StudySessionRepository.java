@@ -48,7 +48,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                    TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
-                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
@@ -58,7 +58,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                    TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
-                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
@@ -73,7 +73,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         ORDER BY COALESCE(SUM(TIMESTAMPDIFF(MICROSECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
-                WHEN s.end_time IS NULL THEN :now
+                WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
@@ -153,7 +153,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                     TIMESTAMPDIFF(MICROSECOND,
                         GREATEST(s.start_time, :periodStart),
                         CASE
-                            WHEN s.end_time IS NULL THEN :now
+                            WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                             WHEN s.end_time > :periodEnd THEN :periodEnd
                             ELSE s.end_time
                         END
@@ -165,7 +165,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                         TIMESTAMPDIFF(MICROSECOND,
                             GREATEST(s.start_time, :periodStart),
                             CASE
-                                WHEN s.end_time IS NULL THEN :now
+                                WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                                 WHEN s.end_time > :periodEnd THEN :periodEnd
                                 ELSE s.end_time
                             END
