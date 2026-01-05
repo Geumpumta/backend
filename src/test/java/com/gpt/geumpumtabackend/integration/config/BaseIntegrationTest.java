@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -75,6 +76,7 @@ public abstract class BaseIntegrationTest {
     private RedisTemplate<String, Object> redisTemplate;
 
     @AfterEach
+    @Transactional
     void cleanUp() {
         truncateAllTables();
         cleanRedisCache();
