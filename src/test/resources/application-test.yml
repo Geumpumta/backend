@@ -3,6 +3,12 @@ spring:
     activate:
       on-profile: test
 
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:mysql:8.0:///geumpumta-test
+    username: root
+    password:
+
   mail:
     host: dummy-naver.com #smtp 서버 주소
     port: 123 # 메일 인증서버 포트
@@ -59,28 +65,20 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
-  datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
-  data:
-    redis:
-      host: dummy-redis-host
-      port: 122
-      password: dummy-redis-password
-      repositories:
-        enabled: false
   jpa:
-    generate-ddl: false
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
+    show-sql: false
     open-in-view: false
+
+  data:
+    redis:
+      repositories:
+        enabled: true
 
   sql:
     init:
@@ -98,3 +96,17 @@ apple:
   key-id: dummy-key-id
   audience: dummy-audience
   private-key: dummy-private-key
+
+# 테스트용 WiFi 설정 (prefix 수정: campus.wifi)
+campus:
+  wifi:
+    networks:
+      - name: "kumoh-lab-test"  
+        gateway-ips:
+          - "172.30.64.1"
+        ip-ranges:
+          - "172.30.64.0/18"  # 실제 설정과 동일하게 수정
+        active: true
+        description: "캠퍼스 테스트 네트워크"
+    validation:
+      cache-ttl-minutes: 5  # 테스트용 짧은 TTL
