@@ -23,8 +23,9 @@ import java.util.List;
  * Configuration approach:
  * - Uses programmatic TestContainers management (@Container)
  * - Containers are shared across all test classes (static)
- * - Container reuse enabled for faster test execution
+ * - Container reuse disabled for CI/CD compatibility
  * - @DynamicPropertySource overrides application-test.yml datasource settings
+ * - Ryuk disabled in CI environment (TESTCONTAINERS_RYUK_DISABLED=true)
  */
 @SpringBootTest(
         properties = {
