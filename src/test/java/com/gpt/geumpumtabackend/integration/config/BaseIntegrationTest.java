@@ -41,13 +41,11 @@ public abstract class BaseIntegrationTest {
             .withDatabaseName("test_geumpumta")
             .withUsername("test")
             .withPassword("test")
-            .withReuse(true)
             .withCommand("--default-authentication-plugin=mysql_native_password");
 
     @Container
     static final GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:7.0-alpine"))
-            .withExposedPorts(6379)
-            .withReuse(true);
+            .withExposedPorts(6379);
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
