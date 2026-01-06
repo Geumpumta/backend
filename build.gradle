@@ -74,7 +74,4 @@ tasks.named('test') {
 
     // Mockito inline mock maker를 Java agent로 설정 (Java 21 호환)
     jvmArgs "-XX:+EnableDynamicAgentLoading"
-
-    // TestContainers 설정 (CI 환경 고려)
-    systemProperty 'testcontainers.reuse.enable', System.getProperty('testcontainers.reuse.enable', 'false')
 }

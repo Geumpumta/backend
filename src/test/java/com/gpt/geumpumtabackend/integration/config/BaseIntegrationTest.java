@@ -15,6 +15,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -23,9 +24,9 @@ import java.util.List;
  * Configuration approach:
  * - Uses programmatic TestContainers management (@Container)
  * - Containers are shared across all test classes (static)
- * - Container reuse disabled for CI/CD compatibility
+ * - Container reuse enabled for faster local development
+ * - Startup timeout increased for CI environments (90s for MySQL, 60s for Redis)
  * - @DynamicPropertySource overrides application-test.yml datasource settings
- * - Ryuk disabled in CI environment (TESTCONTAINERS_RYUK_DISABLED=true)
  */
 @SpringBootTest(
         properties = {
@@ -42,11 +43,13 @@ public abstract class BaseIntegrationTest {
             .withDatabaseName("test_geumpumta")
             .withUsername("test")
             .withPassword("test")
-            .withCommand("--default-authentication-plugin=mysql_native_password");
+            .withCommand("--default-authentication-plugin=mysql_native_password")
+            .withStartupTimeout(Duration.ofSeconds(90));
 
     @Container
     static final GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:7.0-alpine"))
-            .withExposedPorts(6379);
+            .withExposedPorts(6379)
+            .withStartupTimeout(Duration.ofSeconds(60));
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
