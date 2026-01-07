@@ -1,4 +1,4 @@
-name: Dev - CI (Test, Build & Push)
+name: Dev - CI (Build & Push)
 
 on:
   push:
@@ -52,8 +52,6 @@ jobs:
           docker pull redis:7.0-alpine
 
       - name: Run tests
-        env:
-          TESTCONTAINERS_REUSE_ENABLE: false
         run: ./gradlew clean test --no-daemon --info
 
       - name: Publish Test Report
