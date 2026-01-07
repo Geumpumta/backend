@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("DepartmentRank Controller 통합 테스트")
 @AutoConfigureMockMvc
-@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_CLASS)
 class DepartmentRankControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
