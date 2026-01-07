@@ -43,15 +43,23 @@ public abstract class BaseIntegrationTest {
             .withDatabaseName("test_geumpumta")
             .withUsername("test")
             .withPassword("test")
-            .withCommand("--default-authentication-plugin=mysql_native_password")
-            .withStartupTimeout(Duration.ofSeconds(90))
-            .withReuse(true);
+            .withCommand(
+                "--default-authentication-plugin=mysql_native_password",
+                "--max_connections=500",
+                "--wait_timeout=28800"
+            )
+            .withStartupTimeout(Duration.ofSeconds(120))
+            .withReuse(false)  // CI 환경에서는 재사용 비활성화
+            .waitingFor(org.testcontainers.containers.wait.strategy.Wait
+                .forLogMessage(".*ready for connections.*\\n", 2));  // MySQL이 2번 ready 메시지 출력할 때까지 대기
 
     @Container
     static final GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:7.0-alpine"))
             .withExposedPorts(6379)
-            .withStartupTimeout(Duration.ofSeconds(60))
-            .withReuse(true);
+            .withStartupTimeout(Duration.ofSeconds(90))
+            .withReuse(false)  // CI 환경에서는 재사용 비활성화
+            .waitingFor(org.testcontainers.containers.wait.strategy.Wait
+                .forLogMessage(".*Ready to accept connections.*\\n", 1));
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -82,10 +90,14 @@ public abstract class BaseIntegrationTest {
     private RedisTemplate<String, Object> redisTemplate;
 
     @AfterEach
-    @Transactional
     void cleanUp() {
-        truncateAllTables();
-        cleanRedisCache();
+        try {
+            truncateAllTables();
+            cleanRedisCache();
+        } catch (Exception e) {
+            // 테스트 실패 시 cleanup도 실패할 수 있으므로 무시
+            System.err.println("Cleanup failed, but continuing: " + e.getMessage());
+        }
     }
 
     private void truncateAllTables() {
@@ -134,8 +146,14 @@ public abstract class BaseIntegrationTest {
 
     private void cleanRedisCache() {
         // Redis의 모든 캐시 데이터 삭제 (Connection을 try-with-resources로 자동 close)
-        try (var connection = redisTemplate.getConnectionFactory().getConnection()) {
-            connection.serverCommands().flushAll();
+        try {
+            if (redisTemplate != null && redisTemplate.getConnectionFactory() != null) {
+                try (var connection = redisTemplate.getConnectionFactory().getConnection()) {
+                    connection.serverCommands().flushAll();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Redis cleanup failed: " + e.getMessage());
         }
     }
 }

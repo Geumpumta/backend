@@ -9,12 +9,13 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      connection-timeout: 10000  # 10초로 단축
+      idle-timeout: 300000       # 5분으로 단축
+      max-lifetime: 600000       # 10분으로 단축
       connection-test-query: SELECT 1
-      validation-timeout: 5000
+      validation-timeout: 3000   # 3초로 단축
       leak-detection-threshold: 60000
+      initialization-fail-timeout: 10000  # 초기화 실패 타임아웃 10초
 
   mail:
     host: dummy-naver.com #smtp 서버 주소
