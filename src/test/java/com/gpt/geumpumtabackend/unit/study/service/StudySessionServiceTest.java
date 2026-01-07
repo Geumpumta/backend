@@ -52,7 +52,7 @@ class StudySessionServiceTest {
 
         @Test
         @DisplayName("Wi-Fi 검증 성공 시 세션이 정상 시작된다")
-        void startStudySession_WiFi검증성공_세션시작성공() {
+        void 검증성공_세션시작성공() {
             // Given
             Long userId = 1L;
             String gatewayIp = "192.168.1.1";
@@ -88,7 +88,7 @@ class StudySessionServiceTest {
 
         @Test
         @DisplayName("Wi-Fi 검증 실패(INVALID) 시 WIFI_NOT_CAMPUS_NETWORK 예외가 발생한다")
-        void startStudySession_WiFi검증실패_INVALID_예외발생() {
+        void 검증실패_INVALID_예외발생() {
             // Given
             Long userId = 1L;
             String gatewayIp = "192.168.10.1";  // 잘못된 게이트웨이
@@ -112,7 +112,7 @@ class StudySessionServiceTest {
 
         @Test
         @DisplayName("Wi-Fi 검증 에러(ERROR) 시 WIFI_VALIDATION_ERROR 예외가 발생한다")
-        void startStudySession_WiFi검증에러_ERROR_예외발생() {
+        void 검증에러_ERROR_예외발생() {
             // Given
             Long userId = 1L;
             String gatewayIp = "192.168.1.1";
@@ -132,7 +132,7 @@ class StudySessionServiceTest {
 
         @Test
         @DisplayName("존재하지 않는 사용자 ID로 세션 시작 시 USER_NOT_FOUND 예외가 발생한다")
-        void startStudySession_존재하지않는사용자_예외발생() {
+        void 존재하지않는사용자_예외발생() {
             // Given
             Long userId = 999L;
             String gatewayIp = "192.168.1.1";
@@ -276,13 +276,5 @@ class StudySessionServiceTest {
         }
         
         return user;
-    }
-
-    private StudySession createTestStudySession(Long id, User user, LocalDateTime startTime) {
-        StudySession session = new StudySession();
-        session.startStudySession(startTime, user);
-        // id는 실제로는 JPA가 설정하지만 테스트를 위해 reflection 사용하거나
-        // 별도의 테스트용 생성자/메서드를 만들어 설정
-        return session;
     }
 }
