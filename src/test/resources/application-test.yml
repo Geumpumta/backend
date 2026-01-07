@@ -6,6 +6,15 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # URL will be dynamically set by BaseIntegrationTest via @DynamicPropertySource
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
 
   mail:
     host: dummy-naver.com #smtp 서버 주소

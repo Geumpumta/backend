@@ -44,12 +44,14 @@ public abstract class BaseIntegrationTest {
             .withUsername("test")
             .withPassword("test")
             .withCommand("--default-authentication-plugin=mysql_native_password")
-            .withStartupTimeout(Duration.ofSeconds(90));
+            .withStartupTimeout(Duration.ofSeconds(90))
+            .withReuse(true);
 
     @Container
     static final GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:7.0-alpine"))
             .withExposedPorts(6379)
-            .withStartupTimeout(Duration.ofSeconds(60));
+            .withStartupTimeout(Duration.ofSeconds(60))
+            .withReuse(true);
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
