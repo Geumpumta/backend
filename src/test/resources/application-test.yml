@@ -93,7 +93,7 @@ spring:
 
 geumpumta:
   jwt:
-    secret-key: secret-key
+    secret-key: test-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long
     access-token-expire-in: 1209600
     refresh-token-expire-in: 1209600
 
@@ -103,6 +103,11 @@ apple:
   key-id: dummy-key-id
   audience: dummy-audience
   private-key: dummy-private-key
+
+cloudinary:
+  cloud-name: test-cloud-name
+  api-key: test-api-key
+  api-secret: test-api-secret
 
 # 테스트용 WiFi 설정 (prefix 수정: campus.wifi)
 campus:

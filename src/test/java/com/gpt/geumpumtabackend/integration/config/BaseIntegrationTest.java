@@ -67,10 +67,12 @@ public abstract class BaseIntegrationTest {
         registry.add("spring.data.redis.password", () -> "");
         
         // WiFi 검증을 위한 테스트 설정
-        registry.add("campus-wifi.networks[0].ssid", () -> "KUMOH_TEST");
-        registry.add("campus-wifi.networks[0].gateway-ip", () -> "192.168.1.1");
-        registry.add("campus-wifi.networks[0].ip-ranges[0]", () -> "192.168.1.0/24");
-        registry.add("campus-wifi.networks[0].active", () -> "true");
+        registry.add("campus.wifi.networks[0].name", () -> "KUMOH_TEST");
+        registry.add("campus.wifi.networks[0].gateway-ips[0]", () -> "172.30.64.1");
+        registry.add("campus.wifi.networks[0].ip-ranges[0]", () -> "172.30.64.0/18");
+        registry.add("campus.wifi.networks[0].active", () -> "true");
+        registry.add("campus.wifi.networks[0].description", () -> "Test Network");
+        registry.add("campus.wifi.validation.cache-ttl-minutes", () -> "5");
     }
 
     @Autowired
