@@ -171,12 +171,12 @@ class  StudySessionControllerIntegrationTest extends BaseIntegrationTest {
         @Test
         @DisplayName("오늘의_공부_기록을_조회한다")
         void 오늘의_공부_기록을_조회한다() throws Exception {
-            // Given - 오늘 공부 기록 생성
-            LocalDateTime today = LocalDateTime.now().withHour(10).withMinute(0);
-            LocalDateTime endTime = today.plusHours(2);
+            // Given - 오늘 공부 기록 생성 (현재 시각 이전으로 설정)
+            LocalDateTime endTime = LocalDateTime.now().minusHours(1);  // 1시간 전에 종료
+            LocalDateTime startTime = endTime.minusHours(2);  // 3시간 전에 시작
 
             StudySession session = new StudySession();
-            session.startStudySession(today, testUser);
+            session.startStudySession(startTime, testUser);
             session.endStudySession(endTime);
             studySessionRepository.save(session);
 
@@ -217,11 +217,11 @@ class  StudySessionControllerIntegrationTest extends BaseIntegrationTest {
                     .build();
             otherUser = userRepository.save(otherUser);
 
-            LocalDateTime today = LocalDateTime.now().withHour(10).withMinute(0);
-            LocalDateTime endTime = today.plusHours(3);
+            LocalDateTime endTime = LocalDateTime.now().minusHours(1);
+            LocalDateTime startTime = endTime.minusHours(3);
 
             StudySession otherSession = new StudySession();
-            otherSession.startStudySession(today, otherUser);
+            otherSession.startStudySession(startTime, otherUser);
             otherSession.endStudySession(endTime);
             studySessionRepository.save(otherSession);
 
