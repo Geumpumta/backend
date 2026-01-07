@@ -20,6 +20,7 @@ jobs:
   test:
     name: Test (Gradle + Testcontainers)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
