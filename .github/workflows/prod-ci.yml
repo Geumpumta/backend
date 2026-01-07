@@ -57,12 +57,6 @@ jobs:
           docker pull mysql:8.0
           docker pull redis:7.0-alpine
 
-      # TestContainers 설정 파일 생성 (컨테이너 재사용 활성화)
-      - name: Setup TestContainers configuration
-        run: |
-          mkdir -p ~/.testcontainers
-          echo "testcontainers.reuse.enable=true" > ~/.testcontainers.properties
-
       - name: Build with Gradle
         run: ./gradlew clean build
 

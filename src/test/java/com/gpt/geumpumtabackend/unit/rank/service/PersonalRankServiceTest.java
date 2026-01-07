@@ -275,7 +275,7 @@ class PersonalRankServiceTest {
             // Given
             Long notInRankingUserId = 999L;
             
-            // 100명의 랭킹 데이터 생성
+            // 3명의 랭킹 데이터 생성
             List<PersonalRankingTemp> largeRankings = List.of(
                 createMockPersonalRankingTemp(1L, "TOP1", "p1.jpg", "SOFTWARE", 1000000L, 1L),
                 createMockPersonalRankingTemp(50L, "MIDDLE", "p50.jpg", "COMPUTER_ENGINEERING", 500000L, 50L),
