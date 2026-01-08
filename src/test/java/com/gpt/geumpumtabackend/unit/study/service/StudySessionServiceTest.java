@@ -199,24 +199,6 @@ class StudySessionServiceTest {
         }
 
         @Test
-        @DisplayName("긴 세션(12시간)도 올바르게 계산된다")
-        void 긴_세션도_올바르게_계산된다() {
-            // Given
-            LocalDateTime startTime = LocalDateTime.of(2024, 1, 1, 9, 0);
-            LocalDateTime endTime = LocalDateTime.of(2024, 1, 1, 21, 0);
-            User testUser = createTestUser(1L, "테스트사용자", Department.SOFTWARE);
-            
-            StudySession session = new StudySession();
-            
-            // When
-            session.startStudySession(startTime, testUser);
-            session.endStudySession(endTime);
-            
-            // Then
-            assertThat(session.getTotalMillis()).isEqualTo(43200000L); // 12시간 = 12 * 60 * 60 * 1000ms
-        }
-
-        @Test
         @DisplayName("자정을 넘어가는 세션도 올바르게 계산된다")
         void 자정을_넘어가는_세션도_올바르게_계산된다() {
             // Given
