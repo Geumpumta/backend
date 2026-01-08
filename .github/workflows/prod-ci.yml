@@ -45,6 +45,18 @@ jobs:
       - name: Add +x permission to gradlew
         run: chmod +x gradlew
 
+      # Docker 환경 확인
+      - name: Docker sanity check
+        run: |
+          docker version
+          docker info
+
+      # TestContainers용 이미지 미리 pull
+      - name: Pre-pull docker images for tests
+        run: |
+          docker pull mysql:8.0
+          docker pull redis:7.0-alpine
+
       - name: Build with Gradle
         run: ./gradlew clean build
 

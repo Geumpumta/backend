@@ -1,0 +1,115 @@
+spring:
+  config:
+    activate:
+      on-profile: unit-test
+
+  # H2 Database for unit tests
+  datasource:
+    url: jdbc:h2:mem:unit_testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # Redis 완전 비활성화 (단위테스트)
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  # Mail 설정 (단위테스트용)
+  mail:
+    host: dummy-naver.com
+    port: 123
+    username: dummyUsername
+    password: dummyPassword
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+          ssl:
+            enable: true
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    open-in-view: false
+
+  # OAuth2 설정 (단위테스트용)
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: unit-test-google-client-id
+            client-secret: unit-test-google-client-secret
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile
+              - email
+            provider: google
+          kakao:
+            client-id: unit-test-kakao-client-id
+            client-secret: unit-test-kakao-client-secret
+            client-name: Kakao
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - account_email
+              - profile_nickname
+              - profile_image
+            provider: kakao
+
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+# JWT 설정 (단위테스트용)
+geumpumta:
+  jwt:
+    secret-key: unit-test-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long
+    access-token-expire-in: 1209600
+    refresh-token-expire-in: 1209600
+
+# Cloudinary 설정 (단위테스트용)
+cloudinary:
+  cloud-name: unit-test-cloud-name
+  api-key: unit-test-api-key
+  api-secret: unit-test-api-secret
+
+# Apple OAuth 설정 (단위테스트용)
+apple:
+  team-id: unit-test-team-id
+  client-id: unit-test-client-id
+  key-id: unit-test-key-id
+  audience: unit-test-audience
+  private-key: unit-test-private-key
+
+# WiFi 설정 비활성화 (단위테스트에서는 Mock 사용)
+campus:
+  wifi:
+    networks: []

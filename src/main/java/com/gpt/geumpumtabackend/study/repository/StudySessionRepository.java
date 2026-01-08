@@ -32,10 +32,6 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay);
 
-    @Query(value = "SELECT s FROM StudySession s " +
-            "WHERE s.status = 'STARTED' AND s.heartBeatAt < :threshold")
-    List<StudySession> findAllZombieSession(@Param("threshold") LocalDateTime threshold);
-
     /*
     현재 진행중인 기간의 공부 시간 연산
      */
@@ -48,7 +44,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                    TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
-                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
@@ -58,7 +54,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                    TIMESTAMPDIFF(MICROSECOND,
                        GREATEST(s.start_time, :periodStart),
                        CASE
-                           WHEN s.end_time IS NULL THEN :now
+                           WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                            WHEN s.end_time > :periodEnd THEN :periodEnd
                            ELSE s.end_time
                        END
@@ -73,7 +69,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
         ORDER BY COALESCE(SUM(TIMESTAMPDIFF(MICROSECOND,
             GREATEST(s.start_time, :periodStart),
             CASE 
-                WHEN s.end_time IS NULL THEN :now
+                WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                 WHEN s.end_time > :periodEnd THEN :periodEnd
                 ELSE s.end_time
             END
@@ -153,7 +149,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                     TIMESTAMPDIFF(MICROSECOND,
                         GREATEST(s.start_time, :periodStart),
                         CASE
-                            WHEN s.end_time IS NULL THEN :now
+                            WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                             WHEN s.end_time > :periodEnd THEN :periodEnd
                             ELSE s.end_time
                         END
@@ -165,7 +161,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                         TIMESTAMPDIFF(MICROSECOND,
                             GREATEST(s.start_time, :periodStart),
                             CASE
-                                WHEN s.end_time IS NULL THEN :now
+                                WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
                                 WHEN s.end_time > :periodEnd THEN :periodEnd
                                 ELSE s.end_time
                             END

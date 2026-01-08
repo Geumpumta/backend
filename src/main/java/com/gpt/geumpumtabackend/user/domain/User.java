@@ -14,7 +14,7 @@ import org.hibernate.annotations.SQLDelete;
 @NoArgsConstructor
 @Getter
 @SQLDelete(sql = """
-    UPDATE user
+    UPDATE `user`
     SET deleted_at = NOW(),
         email       = CONCAT('deleted_', email),
         school_email= CONCAT('deleted_', school_email),

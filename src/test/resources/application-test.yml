@@ -3,6 +3,20 @@ spring:
     activate:
       on-profile: test
 
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # URL will be dynamically set by BaseIntegrationTest via @DynamicPropertySource
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000  # 10초로 단축
+      idle-timeout: 300000       # 5분으로 단축
+      max-lifetime: 600000       # 10분으로 단축
+      connection-test-query: SELECT 1
+      validation-timeout: 3000   # 3초로 단축
+      leak-detection-threshold: 60000
+      initialization-fail-timeout: 10000  # 초기화 실패 타임아웃 10초
+
   mail:
     host: dummy-naver.com #smtp 서버 주소
     port: 123 # 메일 인증서버 포트
@@ -59,28 +73,20 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
-  datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
-  data:
-    redis:
-      host: dummy-redis-host
-      port: 122
-      password: dummy-redis-password
-      repositories:
-        enabled: false
   jpa:
-    generate-ddl: false
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
+    show-sql: false
     open-in-view: false
+
+  data:
+    redis:
+      repositories:
+        enabled: true
 
   sql:
     init:
@@ -88,7 +94,7 @@ spring:
 
 geumpumta:
   jwt:
-    secret-key: secret-key
+    secret-key: test-secret-key-for-jwt-token-generation-must-be-at-least-256-bits-long
     access-token-expire-in: 1209600
     refresh-token-expire-in: 1209600
 
@@ -98,3 +104,22 @@ apple:
   key-id: dummy-key-id
   audience: dummy-audience
   private-key: dummy-private-key
+
+cloudinary:
+  cloud-name: test-cloud-name
+  api-key: test-api-key
+  api-secret: test-api-secret
+
+# 테스트용 WiFi 설정 (prefix 수정: campus.wifi)
+campus:
+  wifi:
+    networks:
+      - name: "kumoh-lab-test"  
+        gateway-ips:
+          - "172.30.64.1"
+        ip-ranges:
+          - "172.30.64.0/18"  # 실제 설정과 동일하게 수정
+        active: true
+        description: "캠퍼스 테스트 네트워크"
+    validation:
+      cache-ttl-minutes: 5  # 테스트용 짧은 TTL

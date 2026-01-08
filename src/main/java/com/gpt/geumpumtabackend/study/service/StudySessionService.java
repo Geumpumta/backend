@@ -1,12 +1,9 @@
 package com.gpt.geumpumtabackend.study.service;
-
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
-import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
-import com.gpt.geumpumtabackend.study.dto.response.HeartBeatResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
@@ -14,13 +11,10 @@ import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
 import com.gpt.geumpumtabackend.wifi.service.CampusWiFiValidationService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -32,7 +26,7 @@ public class StudySessionService {
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
     private final CampusWiFiValidationService wifiValidationService;
-    private static final Integer MAX_FOCUS_TIME = 3;
+
     /*
     메인 홈
      */
@@ -78,38 +72,6 @@ public class StudySessionService {
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
         LocalDateTime endTime = LocalDateTime.now();
         studysession.endStudySession(endTime);
-    }
-
-
-    /*
-    하트비트 처리
-     */
-    @Transactional
-    public HeartBeatResponse updateHeartBeat(HeartBeatRequest heartBeatRequest, Long userId) {
-        Long sessionId = heartBeatRequest.sessionId();
-
-        // Wi-Fi 검증 (캐시 우선 사용)
-        WiFiValidationResult validationResult = wifiValidationService.validateFromCache(
-            heartBeatRequest.gatewayIp(), heartBeatRequest.clientIp()
-        );
-        
-        if (!validationResult.isValid()) {
-            log.warn("Heartbeat Wi-Fi validation failed for user {}, session {}: {}",
-                userId, sessionId, validationResult.getMessage());
-            throw mapWiFiValidationException(validationResult);
-        }
-        
-        // 유효하면 해당 세션의 lastHeartBeatAt 시간을 now()로 갱신한다.
-        StudySession studySession = studySessionRepository.findByIdAndUser_Id(sessionId, userId)
-                .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
-
-        Duration elapsed = Duration.between(studySession.getStartTime(), LocalDateTime.now());
-        if(elapsed.compareTo(Duration.ofHours(MAX_FOCUS_TIME)) >= 0) {
-            studySession.endStudySession(studySession.getStartTime().plusHours(MAX_FOCUS_TIME));
-            return new HeartBeatResponse(false, "최대 집중시간은 3시간입니다.");
-        }
-        studySession.updateHeartBeatAt(LocalDateTime.now());
-        return new HeartBeatResponse(true,"정상 세션");
     }
 
     private BusinessException mapWiFiValidationException(WiFiValidationResult result) {
