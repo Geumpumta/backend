@@ -4,6 +4,7 @@ import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.statistics.dto.*;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
+import com.gpt.geumpumtabackend.study.domain.StudyStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +22,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
 
     Optional<StudySession> findByIdAndUser_Id(Long id, Long userId);
 
+    Optional<StudySession> findByUser_IdAndStatus(Long userId, StudyStatus status);
 
     // 날짜가 오늘이고, userId와 일치하고, endTime이 null이 아닌 것
     @Query(value = "SELECT COALESCE(SUM(s.total_millis), 0) " +
