@@ -67,7 +67,7 @@ class StudySessionServiceTest {
             given(mockSession.getId()).willReturn(100L);
             
             // Mock 설정
-            given(wifiValidationService.validateFromCache(gatewayIp, clientIp))
+            given(wifiValidationService.validateCampusWiFi(gatewayIp, clientIp))
                 .willReturn(WiFiValidationResult.valid("캠퍼스 네트워크입니다"));
             given(userRepository.findById(userId))
                 .willReturn(Optional.of(testUser));
@@ -80,8 +80,8 @@ class StudySessionServiceTest {
             // Then
             assertThat(response).isNotNull();
             assertThat(response.studySessionId()).isEqualTo(100L);
-            
-            verify(wifiValidationService).validateFromCache(gatewayIp, clientIp);
+
+            verify(wifiValidationService).validateCampusWiFi(gatewayIp, clientIp);
             verify(userRepository).findById(userId);
             verify(studySessionRepository).save(any(StudySession.class));
         }
@@ -96,16 +96,16 @@ class StudySessionServiceTest {
             LocalDateTime startTime = LocalDateTime.now();
             
             StudyStartRequest request = new StudyStartRequest(gatewayIp, clientIp);
-            
-            given(wifiValidationService.validateFromCache(gatewayIp, clientIp))
+
+            given(wifiValidationService.validateCampusWiFi(gatewayIp, clientIp))
                 .willReturn(WiFiValidationResult.invalid("캠퍼스 네트워크가 아닙니다"));
 
             // When & Then
             assertThatThrownBy(() -> studySessionService.startStudySession(request, userId))
                 .isInstanceOf(BusinessException.class)
                 .hasFieldOrPropertyWithValue("exceptionType", ExceptionType.WIFI_NOT_CAMPUS_NETWORK);
-            
-            verify(wifiValidationService).validateFromCache(gatewayIp, clientIp);
+
+            verify(wifiValidationService).validateCampusWiFi(gatewayIp, clientIp);
             verify(userRepository, never()).findById(anyLong());
             verify(studySessionRepository, never()).save(any());
         }
@@ -120,8 +120,8 @@ class StudySessionServiceTest {
             LocalDateTime startTime = LocalDateTime.now();
             
             StudyStartRequest request = new StudyStartRequest(gatewayIp, clientIp);
-            
-            given(wifiValidationService.validateFromCache(gatewayIp, clientIp))
+
+            given(wifiValidationService.validateCampusWiFi(gatewayIp, clientIp))
                 .willReturn(WiFiValidationResult.error("Redis 연결 실패"));
 
             // When & Then
@@ -140,8 +140,8 @@ class StudySessionServiceTest {
             LocalDateTime startTime = LocalDateTime.now();
             
             StudyStartRequest request = new StudyStartRequest(gatewayIp, clientIp);
-            
-            given(wifiValidationService.validateFromCache(gatewayIp, clientIp))
+
+            given(wifiValidationService.validateCampusWiFi(gatewayIp, clientIp))
                 .willReturn(WiFiValidationResult.valid("캠퍼스 네트워크입니다"));
             given(userRepository.findById(userId))
                 .willReturn(Optional.empty());
