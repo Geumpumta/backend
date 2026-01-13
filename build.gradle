@@ -57,6 +57,10 @@ dependencies {
     // Apache Commons Net for IP range validation
     implementation 'commons-net:commons-net:3.11.1'
 
+    // Caffeine Cache
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
     // Cloudinary
     implementation 'com.cloudinary:cloudinary-http45:1.39.0'
 

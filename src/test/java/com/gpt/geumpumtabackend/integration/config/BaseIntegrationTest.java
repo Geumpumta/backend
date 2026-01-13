@@ -96,7 +96,6 @@ public abstract class BaseIntegrationTest {
             truncateAllTables();
             cleanRedisCache();
         } catch (Exception e) {
-            // 테스트 실패 시 cleanup도 실패할 수 있으므로 무시
             System.err.println("Cleanup failed, but continuing: " + e.getMessage());
         }
     }
