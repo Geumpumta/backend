@@ -3,6 +3,7 @@ package com.gpt.geumpumtabackend.global.config.security;
 
 
 import com.gpt.geumpumtabackend.global.jwt.JwtAuthenticationFilter;
+import com.gpt.geumpumtabackend.global.oauth.handler.OAuth2AuthenticationFailureHandler;
 import com.gpt.geumpumtabackend.global.oauth.handler.OAuth2AuthenticationSuccessHandler;
 import com.gpt.geumpumtabackend.global.oauth.resolver.CustomAuthorizationRequestResolver;
 import com.gpt.geumpumtabackend.global.oauth.service.CustomOAuth2UserService;
@@ -18,6 +19,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -31,6 +34,8 @@ public class SecurityConfig {
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final AuthenticationManager authenticationManager;
     private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
+    private final OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> authorizationCodeTokenResponseClient;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
     @Bean
     public SecurityFilterChain filterChainPermitAll(HttpSecurity http) throws Exception {
@@ -50,9 +55,12 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(auth ->
                                 auth.authorizationRequestResolver(customAuthorizationRequestResolver))
+                        .tokenEndpoint(token ->
+                                token.accessTokenResponseClient(authorizationCodeTokenResponseClient))
                         .userInfoEndpoint(ui ->
                                 ui.userService(customOAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
                 )
                 .addFilterAfter(new JwtAuthenticationFilter(authenticationManager),
                         UsernamePasswordAuthenticationFilter.class);

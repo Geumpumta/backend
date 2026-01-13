@@ -5,14 +5,25 @@ import lombok.Getter;
 
 @Getter
 public class DepartmentRankingTemp {
-    private String departmentName;
+    private String department; // 원본 enum 값 저장
     private Long totalMillis;
     private Long ranking;
 
-    // JPA 쿼리에서 Department enum을 받기 위한 추가 생성자
-    public DepartmentRankingTemp(Department department, Long totalMillis, Long ranking) {
-        this.departmentName = department.name(); // enum을 String으로 변환
+    public DepartmentRankingTemp(String department, Long totalMillis, Long ranking) {
+        this.department = department; // 원본값 그대로 저장
         this.totalMillis = totalMillis;
         this.ranking = ranking;
+    }
+    
+    // Department enum 값을 한국어로 변환하는 메서드 
+    public String getDepartmentName() {
+        if (department == null) return null;
+        
+        try {
+            Department dept = Department.valueOf(department);
+            return dept.getKoreanName();
+        } catch (IllegalArgumentException e) {
+            return department; // enum에 없는 값이면 그대로 반환
+        }
     }
 }

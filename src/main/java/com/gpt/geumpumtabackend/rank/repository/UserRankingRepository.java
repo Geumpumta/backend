@@ -20,10 +20,13 @@ public interface UserRankingRepository extends JpaRepository<UserRanking, Long> 
     @Query("""
         SELECT new com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp(
                     ur.user.id,
-                    ur.user.name,
+                    ur.user.nickname,
+                    ur.user.picture,
+                    CAST(ur.user.department AS string),
                     ur.totalMillis,
                     ur.rank)
-        FROM UserRanking ur WHERE ur.calculatedAt =:date
+        FROM UserRanking ur 
+        WHERE DATE(ur.calculatedAt) = DATE(:date)
          AND ur.rankingType = :rankingType
         ORDER BY ur.rank ASC
 """)

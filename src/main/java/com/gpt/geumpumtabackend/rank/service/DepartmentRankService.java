@@ -43,7 +43,7 @@ public class DepartmentRankService {
     완료된 학과 랭킹 일간 조회
      */
     public DepartmentRankingResponse getCompletedDailyDepartmentRanking(Long userId, LocalDateTime startDay){
-        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(startDay, RankingType.DAILY);
+        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(startDay, RankingType.DAILY.name());
         return buildDepartmentRankingResponse(departmentRankingList, userId);
     }
 
@@ -63,7 +63,7 @@ public class DepartmentRankService {
     완료된 학과 랭킹 주간 조회
      */
     public DepartmentRankingResponse getCompletedWeeklyDepartmentRanking(Long userId, LocalDateTime weekFirstDay){
-        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(weekFirstDay, RankingType.WEEKLY);
+        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(weekFirstDay, RankingType.WEEKLY.name());
         return buildDepartmentRankingResponse(departmentRankingList, userId);
     }
 
@@ -85,7 +85,7 @@ public class DepartmentRankService {
     완료된 학과 랭킹 월간 조회
      */
     public DepartmentRankingResponse getCompletedMonthlyDepartmentRanking(Long userId, LocalDateTime monthFirstDay){
-        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(monthFirstDay, RankingType.MONTHLY);
+        List<DepartmentRankingTemp> departmentRankingList = departmentRankingRepository.getFinishedDepartmentRanking(monthFirstDay, RankingType.MONTHLY.name());
         return buildDepartmentRankingResponse(departmentRankingList, userId);
     }
 
@@ -93,14 +93,30 @@ public class DepartmentRankService {
         DepartmentRankingEntryResponse myRanking = null;
         List<DepartmentRankingEntryResponse> topRankings = new ArrayList<>();
         User user = userRepository.findById(userId).orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
+
         for (DepartmentRankingTemp temp : departmentRankingList) {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
-            topRankings.add(entry);
 
-            if(user.getDepartment() != null && user.getDepartment().equals(temp.getDepartmentName())){
+            // 공부 시간이 0보다 큰 학과만 topRankings에 추가
+            if (temp.getTotalMillis() != null && temp.getTotalMillis() > 0) {
+                topRankings.add(entry);
+            }
+
+            // 사용자의 학과는 공부 시간 상관없이 찾기 (myRanking용)
+            if(user.getDepartment() != null && user.getDepartment().getKoreanName().equals(temp.getDepartmentName())){
                 myRanking = entry;
             }
         }
+
+        // 사용자의 학과를 찾지 못한 경우 0초, 마지막 순위로 설정
+        if (myRanking == null && user.getDepartment() != null) {
+            myRanking = new DepartmentRankingEntryResponse(
+                user.getDepartment().getKoreanName(),
+                0L,
+                (long) topRankings.size() + 1
+            );
+        }
+
         return new DepartmentRankingResponse(topRankings, myRanking);
     }
 }

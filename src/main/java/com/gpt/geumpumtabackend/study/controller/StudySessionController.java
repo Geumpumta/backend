@@ -4,7 +4,6 @@ import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.study.api.StudySessionApi;
-import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
@@ -42,7 +41,8 @@ public class StudySessionController implements StudySessionApi {
     @PostMapping("/start")
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(@Valid @RequestBody StudyStartRequest request, Long userId){
+    public ResponseEntity<ResponseBody<StudyStartResponse>> startStudySession(@Valid @RequestBody StudyStartRequest request,
+                                                                              Long userId){
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.startStudySession(request, userId)));
     }
 
@@ -54,17 +54,6 @@ public class StudySessionController implements StudySessionApi {
     @AssignUserId
     public ResponseEntity<ResponseBody<Void>> endStudySession(@Valid @RequestBody StudyEndRequest request, Long userId){
         studySessionService.endStudySession(request, userId);
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
-    }
-
-    /*
-    하트비트 수신
-     */
-    @PostMapping("/heart-beat")
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    @AssignUserId
-    public ResponseEntity<ResponseBody<Void>> processHeartBeat(@Valid @RequestBody HeartBeatRequest heartBeatRequest, Long userId){
-        studySessionService.updateHeartBeat(heartBeatRequest, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
 }

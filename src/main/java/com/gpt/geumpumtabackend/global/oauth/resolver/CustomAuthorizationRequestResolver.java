@@ -10,6 +10,10 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Configuration
 public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
@@ -47,8 +51,19 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
         // 인코딩
         String encodedState = StateUtil.encode(rawRedirect);
 
+        String registrationId = original.getAttribute(OAuth2ParameterNames.REGISTRATION_ID);
+
+        Map<String, Object> additional =
+                new LinkedHashMap<>(original.getAdditionalParameters());
+
+        // 3) 애플이면 response_mode=form_post 추가
+        if ("apple".equalsIgnoreCase(registrationId)) {
+            additional.put("response_mode", "form_post");
+        }
+
         return OAuth2AuthorizationRequest.from(original)
                 .state(encodedState)
+                .additionalParameters(additional)  // 🔹 여기에만 response_mode 들어감
                 .build();
     }
 }

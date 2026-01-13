@@ -117,7 +117,7 @@ public class RankingSchedulerService {
         List<DepartmentRanking> departmentRankings = departmentRankingTemps.stream().map(
                 dto -> {
                     return DepartmentRanking.builder()
-                            .department(Department.valueOf(dto.getDepartmentName()))  // String → Department 변환
+                            .department(Department.valueOf(dto.getDepartment()))  // String → Department 변환
                             .rank(dto.getRanking())
                             .totalMillis(dto.getTotalMillis())
                             .rankingType(rankingType)

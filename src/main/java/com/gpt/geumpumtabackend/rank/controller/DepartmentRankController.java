@@ -7,6 +7,7 @@ import com.gpt.geumpumtabackend.rank.api.DepartmentRankApi;
 import com.gpt.geumpumtabackend.rank.dto.response.DepartmentRankingResponse;
 import com.gpt.geumpumtabackend.rank.service.DepartmentRankService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +30,7 @@ public class DepartmentRankController implements DepartmentRankApi {
     @GetMapping("/daily")
     @PreAuthorize("isAuthenticated() AND hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<DepartmentRankingResponse>> getDailyRanking(Long userId, @RequestParam(required = false) LocalDateTime date){
+    public ResponseEntity<ResponseBody<DepartmentRankingResponse>> getDailyRanking(Long userId, @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date){
         DepartmentRankingResponse response;
 
         if (date == null) {
@@ -49,7 +50,7 @@ public class DepartmentRankController implements DepartmentRankApi {
     @GetMapping("/weekly")
     @PreAuthorize("isAuthenticated() AND hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<DepartmentRankingResponse>> getWeeklyRanking(Long userId, @RequestParam(required = false) LocalDateTime date){
+    public ResponseEntity<ResponseBody<DepartmentRankingResponse>> getWeeklyRanking(Long userId, @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date){
         DepartmentRankingResponse response;
 
         if (date == null) {
@@ -68,7 +69,7 @@ public class DepartmentRankController implements DepartmentRankApi {
     @GetMapping("/monthly")
     @PreAuthorize("isAuthenticated() AND hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<DepartmentRankingResponse>> getMonthlyRanking(Long userId, @RequestParam(required = false) LocalDateTime date){
+    public ResponseEntity<ResponseBody<DepartmentRankingResponse>> getMonthlyRanking(Long userId, @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime date){
         DepartmentRankingResponse response;
 
         if (date == null) {

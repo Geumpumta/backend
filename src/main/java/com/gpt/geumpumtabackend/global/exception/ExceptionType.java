@@ -30,20 +30,32 @@ public enum ExceptionType {
     // User
     USER_NOT_FOUND(NOT_FOUND, "U001","사용자가 존재하지 않습니다"),
     SCHOOL_EMAIL_ALREADY_REGISTERED(FORBIDDEN, "U002", "학교 이메일이 등록된 상태입니다"),
-    DUPLICATED_SCHOOL_EMAIL(FORBIDDEN, "U003", "이미 사용중인 이메일입니다"),
+    DUPLICATED_SCHOOL_EMAIL(CONFLICT, "U003", "이미 사용중인 이메일입니다"),
     DEPARTMENT_NOT_FOUND(BAD_REQUEST, "U004", "존재하지 않는 학과 명입니다"),
+    USER_WITHDRAWN(FORBIDDEN, "U005", "탈퇴한 사용자입니다."),
+    DUPLICATED_STUDENT_ID(CONFLICT, "U006", "이미 사용중인 학번입니다."),
 
     // Mail
     CANT_SEND_MAIL(INTERNAL_SERVER_ERROR, "M001", "인증코드 전송에 실패했습니다."),
 
     // Study
     STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다."),
-    INVALID_END_TIME(CONFLICT,"ST002","유효하지 않은 종료시간입니다."),
+    ALREADY_STUDY_SESSION(CONFLICT, "ST002", "세션은 하나만 가능합니다."),
+    INVALID_END_TIME(CONFLICT,"ST003","유효하지 않은 종료시간입니다."),
 
     // WiFi
     WIFI_NOT_CAMPUS_NETWORK(FORBIDDEN, "W001", "캠퍼스 네트워크가 아닙니다"),
     WIFI_VALIDATION_ERROR(INTERNAL_SERVER_ERROR, "W002", "Wi-Fi 검증 중 오류가 발생했습니다"),
-    WIFI_INVALID_FORMAT(BAD_REQUEST, "W003", "Wi-Fi 정보 형식이 올바르지 않습니다")
+    WIFI_INVALID_FORMAT(BAD_REQUEST, "W003", "Wi-Fi 정보 형식이 올바르지 않습니다"),
+
+    // Image
+    INVALID_IMAGE_FILE(FORBIDDEN, "I001", "허용되지 않은 이미지 형식입니다."),
+    IMAGE_SIZE_EXCEEDED(FORBIDDEN, "I002", "이미지 용량이 초과했습니다."),
+    IMAGE_UPLOAD_FAILED(INTERNAL_SERVER_ERROR, "I003", "이미지 업로드에 실패했습니다."),
+
+
+    // board
+    BOARD_NOT_FOUND(BAD_REQUEST, "B001", "존재하지 않는 게시물입니다."),
 
     ;
 

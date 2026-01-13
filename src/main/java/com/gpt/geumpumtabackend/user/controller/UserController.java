@@ -7,6 +7,10 @@ import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.api.UserApi;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
+import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
+import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
+import com.gpt.geumpumtabackend.user.dto.response.NicknameVerifyResponse;
+import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,69 @@ public class UserController implements UserApi {
             Long userId
     ){
         TokenResponse response = userService.completeRegistration(request, userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
+    }
+
+    @GetMapping("/profile")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ResponseBody<UserProfileResponse>> getMyProfile(
+            Long userId
+    ){
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
+                userService.getUserProfile(userId)
+        ));
+    }
+
+    @GetMapping("/nickname/verify")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<NicknameVerifyResponse>> verifyNickname(
+            @Valid NicknameVerifyRequest nickname,
+            Long userId
+    ){
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
+                NicknameVerifyResponse.of(userService.isNicknameAvailable(nickname, userId))
+        ));
+    }
+
+    @PostMapping("/profile")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<Void>> updateProfile(
+            @RequestBody @Valid ProfileUpdateRequest request,
+            Long userId
+    ){
+        userService.updateUserProfile(request, userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
+    }
+
+    @DeleteMapping("/logout")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<Void>> logout(
+            Long userId
+    ){
+        userService.logout(userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
+    }
+    @DeleteMapping("/withdraw")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<Void>> withdrawCurrentUser(
+            Long userId
+    ){
+        userService.withdrawUser(userId);
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
+    }
+
+    @PostMapping("/restore")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<TokenResponse>> restoreUser(
+            Long userId
+    ){
+        TokenResponse response = userService.restoreUser(userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
     }
 }

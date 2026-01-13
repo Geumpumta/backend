@@ -10,13 +10,15 @@ import java.util.Collections;
 
 public record JwtAuthentication(
         Long userId,
-        UserRole role
+        UserRole role,
+        Boolean withdrawn
 ) implements Authentication {
 
     public JwtAuthentication(JwtUserClaim claims) {
         this(
                 claims.userId(),
-                claims.role()
+                claims.role(),
+                claims.withdrawn()
         );
     }
 
@@ -53,5 +55,9 @@ public record JwtAuthentication(
     @Override
     public String getName() {
         return String.valueOf(userId);
+    }
+
+    public boolean isWithdrawn() {
+        return withdrawn;
     }
 }

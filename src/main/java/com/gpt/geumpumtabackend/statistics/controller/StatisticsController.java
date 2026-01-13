@@ -1,0 +1,99 @@
+package com.gpt.geumpumtabackend.statistics.controller;
+
+import com.gpt.geumpumtabackend.global.aop.AssignUserId;
+import com.gpt.geumpumtabackend.global.response.ResponseBody;
+import com.gpt.geumpumtabackend.global.response.ResponseUtil;
+import com.gpt.geumpumtabackend.statistics.api.StatisticsApi;
+import com.gpt.geumpumtabackend.statistics.dto.response.DailyStatisticsResponse;
+import com.gpt.geumpumtabackend.statistics.dto.response.GrassStatisticsResponse;
+import com.gpt.geumpumtabackend.statistics.dto.response.MonthlyStatisticsResponse;
+import com.gpt.geumpumtabackend.statistics.dto.response.WeeklyStatisticsResponse;
+import com.gpt.geumpumtabackend.statistics.service.StatisticsService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/statistics")
+public class StatisticsController implements StatisticsApi {
+
+    private final StatisticsService statisticsService;
+
+    /**
+     * 다른 사용자의 일간 통계 조회
+     * @param date
+     * @param targetUserId
+     * @param userId
+     * @return
+     */
+    @GetMapping("/day")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<DailyStatisticsResponse>> getDailyStatistics(
+            Long userId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long targetUserId
+    ) {
+        Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
+                statisticsService.getDailyStatistics(date, effectiveTargetId, userId))
+        );
+    }
+
+    @GetMapping("/week")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<WeeklyStatisticsResponse>> getWeeklyStatistics(
+            Long userId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long targetUserId
+    ) {
+        Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
+
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
+                statisticsService.getWeeklyStatistics(date, effectiveTargetId, userId))
+        );
+    }
+
+    @GetMapping("/month")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<MonthlyStatisticsResponse>> getMonthlyStatistics(
+            Long userId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long targetUserId
+    ){
+        Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
+
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
+                statisticsService.getMonthlyStatistics(date, effectiveTargetId, userId)
+        ));
+    }
+
+    @GetMapping("/grass")
+    @AssignUserId
+    @PreAuthorize("isAuthenticated() and hasRole('USER')")
+    public ResponseEntity<ResponseBody<GrassStatisticsResponse>> getGrassStatistics(
+            Long userId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long targetUserId
+    ){
+        Long effectiveTargetId = (targetUserId != null) ? targetUserId : userId;
+
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(
+                statisticsService.getGrassStatistics(date, effectiveTargetId, userId)
+        ));
+    }
+}

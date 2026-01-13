@@ -6,7 +6,6 @@ import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiResponses;
 import com.gpt.geumpumtabackend.global.config.swagger.SwaggerApiSuccessResponse;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
-import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
@@ -72,9 +71,12 @@ public interface StudySessionApi {
             새로운 학습 세션을 시작합니다. 캠퍼스 Wi-Fi 검증이 필수입니다.
             
             🔐 **Wi-Fi 검증 과정:**
-            1. SSID 검증 - 허용된 캠퍼스 Wi-Fi인지 확인
-            2. BSSID 검증 - 특정 액세스포인트 확인 (선택사항)
-            3. IP 대역 검증 - 캠퍼스 IP 범위 내인지 확인
+            1. Gateway IP 검증 - 캠퍼스 게이트웨이 IP (172.30.64.1)와 일치하는지 확인
+            2. IP 대역 검증 - 클라이언트 IP가 캠퍼스 범위(172.30.64.0/18) 내인지 확인
+            
+            💡 **보안 특징:**
+      
+            - Gateway IP는 점-십진 표기법 문자열로 전송 (예: "172.30.64.1")
             
             ✅ **성공 시:**
             - 새로운 학습 세션 생성
@@ -131,43 +133,6 @@ public interface StudySessionApi {
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<Void>> endStudySession(
             @Valid @RequestBody StudyEndRequest request,
-            @Parameter(hidden = true) Long userId
-    );
-
-    @Operation(
-            summary = "하트비트 전송",
-            description = """
-            학습 중 연결 상태를 유지하기 위한 하트비트를 전송합니다.
-            
-            ⏱️ **전송 주기:** 30초마다 자동 전송 권장
-            
-            🔄 **동작 원리:**
-            1. Wi-Fi 연결 상태 재검증
-            2. 세션의 lastHeartBeatAt 시간 업데이트
-            3. 90초 이상 하트비트 없으면 좀비 세션으로 분류
-            
-            🚨 **실패 시 대응:**
-            - Wi-Fi 연결 끊김: 재연결 후 다시 `/start` 호출
-            - 세션 만료: 새로운 세션 시작 필요
-            
-            """
-    )
-    @SwaggerApiResponses(
-            success = @SwaggerApiSuccessResponse(
-                    description = "하트비트 전송 성공 - 세션 유지"),
-            errors = {
-                    @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
-                    @SwaggerApiFailedResponse(ExceptionType.USER_NOT_FOUND),
-                    @SwaggerApiFailedResponse(ExceptionType.STUDY_SESSION_NOT_FOUND),
-                    @SwaggerApiFailedResponse(ExceptionType.WIFI_NOT_CAMPUS_NETWORK),
-                    @SwaggerApiFailedResponse(ExceptionType.WIFI_VALIDATION_ERROR)
-            }
-    )
-    @PostMapping("/heart-beat")
-    @AssignUserId  
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    ResponseEntity<ResponseBody<Void>> processHeartBeat(
-            @Valid @RequestBody HeartBeatRequest heartBeatRequest,
             @Parameter(hidden = true) Long userId
     );
 }
