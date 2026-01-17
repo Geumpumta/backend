@@ -55,11 +55,11 @@ public class UserService {
         user.setInitialNickname(nickname);
     }
 
-    // TODO : 데이터 중복 검증 추가하기
     @Transactional
     public TokenResponse completeRegistration(CompleteRegistrationRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
+        validateDuplication(request);
         user.completeRegistration(request);
         generateRandomNickname(user);
 
@@ -67,6 +67,16 @@ public class UserService {
         JwtUserClaim jwtUserClaim = JwtUserClaim.create(user);
         Token token = jwtHandler.createTokens(jwtUserClaim);
         return TokenResponse.to(token);
+    }
+
+    private void validateDuplication(CompleteRegistrationRequest request) {
+        if(userRepository.existsBySchoolEmail((request.email()))){
+            throw new BusinessException(ExceptionType.DUPLICATED_SCHOOL_EMAIL);
+        }
+
+        if(userRepository.existsByStudentId(request.studentId())){
+            throw new BusinessException(ExceptionType.DUPLICATED_STUDENT_ID);
+        }
     }
 
     public UserProfileResponse getUserProfile(Long userId) {
