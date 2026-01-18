@@ -34,8 +34,9 @@ public class StudySessionService {
     public StudySessionResponse getTodayStudySession(Long userId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime now = LocalDateTime.now();
+        boolean isStudying = studySessionRepository.findByUser_IdAndStatus(userId, StudyStatus.STARTED).isPresent();
         Long totalStudySession = studySessionRepository.sumCompletedStudySessionByUserId(userId, startOfDay, now);
-        return StudySessionResponse.of(totalStudySession);
+        return StudySessionResponse.of(totalStudySession,isStudying);
     }
 
     /*

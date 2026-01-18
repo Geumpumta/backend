@@ -84,8 +84,56 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("now") LocalDateTime now
     );
 
-
-
+    /*
+    현재 진행중인 기간의 학과별 공부 시간 연산
+     */
+    @Query(value = """
+        SELECT u.id as userId,
+               u.nickname as nickname,
+               u.picture as imageUrl,
+               u.department as department,
+               CAST(COALESCE(SUM(
+                   TIMESTAMPDIFF(MICROSECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) / 1000
+               ), 0) AS SIGNED) as totalMillis,
+               RANK() OVER (ORDER BY COALESCE(SUM(
+                   TIMESTAMPDIFF(MICROSECOND,
+                       GREATEST(s.start_time, :periodStart),
+                       CASE
+                           WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
+                           WHEN s.end_time > :periodEnd THEN :periodEnd
+                           ELSE s.end_time
+                       END
+                   ) / 1000
+               ), 0) DESC) as ranking
+        FROM user u
+        LEFT JOIN study_session s ON u.id = s.user_id
+            AND s.start_time <= :periodEnd
+            AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+        WHERE u.role = 'USER' AND u.department = :department
+        GROUP BY u.id, u.nickname, u.picture, u.department
+        ORDER BY COALESCE(SUM(TIMESTAMPDIFF(MICROSECOND,
+            GREATEST(s.start_time, :periodStart),
+            CASE
+                WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
+                WHEN s.end_time > :periodEnd THEN :periodEnd
+                ELSE s.end_time
+            END
+        ) / 1000), 0) DESC
+        LIMIT 100
+""", nativeQuery = true)
+    List<PersonalRankingTemp> calculateCurrentPeriodDepartmentRanking(
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd,
+            @Param("now") LocalDateTime now,
+            @Param("department") String department
+    );
 
     /*
     랭킹 집계 시 공부 시간
