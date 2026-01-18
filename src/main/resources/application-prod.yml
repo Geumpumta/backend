@@ -11,7 +11,7 @@ spring:
       - security/application-cloudinary.yml
 
   datasource:
-    url: ${geumpumta.mysql.url}
+    url: ${geumpumta.mysql.url}&rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true
     username: ${geumpumta.mysql.username}
     password: ${geumpumta.mysql.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
