@@ -57,6 +57,13 @@ public enum ExceptionType {
     // board
     BOARD_NOT_FOUND(BAD_REQUEST, "B001", "존재하지 않는 게시물입니다."),
 
+    // Season
+    NO_ACTIVE_SEASON(NOT_FOUND, "SE001", "현재 진행중인 시즌이 없습니다"),
+    SEASON_NOT_FOUND(NOT_FOUND, "SE002", "시즌을 찾을 수 없습니다"),
+    SEASON_NOT_ENDED(BAD_REQUEST, "SE003", "시즌이 아직 종료되지 않았습니다"),
+    SEASON_ALREADY_ENDED(BAD_REQUEST, "SE004", "이미 종료된 시즌입니다"),
+    SEASON_INVALID_DATE_RANGE(BAD_REQUEST, "SE005", "시즌 종료일은 시작일보다 이후여야 합니다"),
+
     ;
 
     private final HttpStatus status;
