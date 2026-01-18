@@ -20,7 +20,27 @@ public class PersonalRankingTemp {
         this.totalMillis = totalMillis;
         this.ranking = ranking;
     }
-    
+
+    // JPQL에서 Department enum을 직접 전달받는 생성자
+    public PersonalRankingTemp(Long userId, String nickname, String imageUrl, Department department, Long totalMillis, Long ranking) {
+        this.userId = userId;
+        this.nickname = nickname;
+        this.imageUrl = imageUrl;
+        this.department = department != null ? department.name() : null;
+        this.totalMillis = totalMillis;
+        this.ranking = ranking;
+    }
+
+    // JPQL 리터럴 0L이 int로 추론될 때를 위한 생성자
+    public PersonalRankingTemp(Long userId, String nickname, String imageUrl, Department department, Long totalMillis, int ranking) {
+        this.userId = userId;
+        this.nickname = nickname;
+        this.imageUrl = imageUrl;
+        this.department = department != null ? department.name() : null;
+        this.totalMillis = totalMillis;
+        this.ranking = (long) ranking;
+    }
+
     // Department enum 값을 한국어로 변환하는 메서드
     public String getDepartmentKoreanName() {
         if (department == null) return null;

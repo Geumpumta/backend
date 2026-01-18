@@ -1,4 +1,4 @@
-package com.gpt.geumpumtabackend.rank.service;
+package com.gpt.geumpumtabackend.rank.scheduler;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
@@ -36,24 +36,18 @@ public class RankingSchedulerService {
     private final UserRepository userRepository;
     private final DepartmentRankingRepository departmentRankingRepository;
 
-    /*
-    일간 랭킹 스케줄러
-     */
-    @Scheduled(cron = "0 0 0 * * *")
+
+    @Scheduled(cron = "5 0 0 * * *")
     public void dailyRankingScheduler() {
-        // 해당 시간이 되면, StudySession에서 진행중인 세션을 종료하고, 모든 세션을 합하여 정렬한 뒤 랭킹에 넣어야함
-        LocalDate yesterDay = LocalDate.now().minusDays(1);
-        LocalDateTime dayStart = yesterDay.atStartOfDay();
-        LocalDateTime dayEnd = yesterDay.atTime(23, 59, 59);
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDateTime dayStart = yesterday.atStartOfDay();
+        LocalDateTime dayEnd = yesterday.atTime(23, 59, 59);
         calculateAndSavePersonalRanking(dayStart, dayEnd, RankingType.DAILY);
         calculateAndSaveDepartmentRanking(dayStart, dayEnd, RankingType.DAILY);
-
     }
 
-    /*
-    주간 랭킹 스케줄러
-     */
-    @Scheduled(cron = "0 0 0 ? * MON")
+
+    @Scheduled(cron = "0 1 0 ? * MON")
     public void weeklyRankingScheduler() {
         LocalDate today = LocalDate.now();
         LocalDate lastWeekStartDay = today.minusWeeks(1).with(DayOfWeek.MONDAY);
@@ -65,10 +59,8 @@ public class RankingSchedulerService {
         calculateAndSaveDepartmentRanking(weekStartTime, weekEndTime, RankingType.WEEKLY);
     }
 
-    /*
-    월간 랭킹 스케줄러
-     */
-    @Scheduled(cron = "0 0 0 1 * ?")
+
+    @Scheduled(cron = "0 2 0 1 * ?")
     public void monthlyRankingScheduler() {
         LocalDate lastMonth = LocalDate.now().minusMonths(1);
         LocalDate monthStart = lastMonth.withDayOfMonth(1);
