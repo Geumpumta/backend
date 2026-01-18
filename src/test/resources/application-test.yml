@@ -3,6 +3,11 @@ spring:
     activate:
       on-profile: test
 
+  # 스케줄링 비활성화 (테스트 환경)
+  task:
+    scheduling:
+      enabled: false
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # URL will be dynamically set by BaseIntegrationTest via @DynamicPropertySource
