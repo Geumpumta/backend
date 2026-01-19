@@ -29,7 +29,7 @@ public class SeasonTransitionScheduler {
         try {
             Season activeSeason = seasonService.getActiveSeasonNoCache();
 
-            if (!today.equals(activeSeason.getEndDate().plusDays(1))) {
+            if (today.isBefore(activeSeason.getEndDate().plusDays(1))) {
                 return;
             }
 
