@@ -17,7 +17,8 @@ public record SeasonRankingResponse(
 ) {
 
     public static SeasonRankingResponse of(Season season, List<PersonalRankingTemp> rankings) {
-        List<PersonalRankingEntryResponse> rankingEntries = rankings.stream()
+        List<PersonalRankingTemp> safeRankings = (rankings == null) ? List.of() : rankings;
+        List<PersonalRankingEntryResponse> rankingEntries = safeRankings.stream()
             .map(PersonalRankingEntryResponse::of)
             .collect(Collectors.toList());
 
