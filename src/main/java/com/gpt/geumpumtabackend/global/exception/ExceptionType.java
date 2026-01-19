@@ -41,6 +41,7 @@ public enum ExceptionType {
     // Study
     STUDY_SESSION_NOT_FOUND(NOT_FOUND,"ST001","해당 공부 세션을 찾을 수 없습니다."),
     ALREADY_STUDY_SESSION(CONFLICT, "ST002", "세션은 하나만 가능합니다."),
+    INVALID_END_TIME(CONFLICT,"ST003","유효하지 않은 종료시간입니다."),
 
     // WiFi
     WIFI_NOT_CAMPUS_NETWORK(FORBIDDEN, "W001", "캠퍼스 네트워크가 아닙니다"),
@@ -55,6 +56,13 @@ public enum ExceptionType {
 
     // board
     BOARD_NOT_FOUND(BAD_REQUEST, "B001", "존재하지 않는 게시물입니다."),
+
+    // Season
+    NO_ACTIVE_SEASON(NOT_FOUND, "SE001", "현재 진행중인 시즌이 없습니다"),
+    SEASON_NOT_FOUND(NOT_FOUND, "SE002", "시즌을 찾을 수 없습니다"),
+    SEASON_NOT_ENDED(BAD_REQUEST, "SE003", "시즌이 아직 종료되지 않았습니다"),
+    SEASON_ALREADY_ENDED(BAD_REQUEST, "SE004", "이미 종료된 시즌입니다"),
+    SEASON_INVALID_DATE_RANGE(BAD_REQUEST, "SE005", "시즌 종료일은 시작일보다 이후여야 합니다"),
 
     ;
 

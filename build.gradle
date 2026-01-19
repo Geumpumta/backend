@@ -67,6 +67,10 @@ dependencies {
     // Jwt
     implementation 'com.nimbusds:nimbus-jose-jwt:9.37.4'
 
+    // Spring Retry
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework:spring-aspects'
+
     // TestContainers
     testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
     testImplementation 'org.testcontainers:mysql:1.19.3'

@@ -3,6 +3,8 @@ spring:
     activate:
       on-profile: test
 
+
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # URL will be dynamically set by BaseIntegrationTest via @DynamicPropertySource
