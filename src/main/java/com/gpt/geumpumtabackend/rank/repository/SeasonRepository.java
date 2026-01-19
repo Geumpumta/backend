@@ -11,12 +11,10 @@ import java.util.Optional;
 public interface SeasonRepository extends JpaRepository<Season, Long> {
 
 
-    @Query("""
-        SELECT s FROM Season s
-        WHERE s.startDate <= :date
-          AND s.endDate >= :date
-        ORDER BY s.createdAt DESC
-        LIMIT 1
-        """)
+    @Query(value = """
+      SELECT *
+      FROM season
+      WHERE start_date <= :date AND end_date >= :date
+    """, nativeQuery = true)
     Optional<Season> findByDateRange(@Param("date") LocalDate date);
 }
