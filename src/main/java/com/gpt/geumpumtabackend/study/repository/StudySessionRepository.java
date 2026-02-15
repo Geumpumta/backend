@@ -34,6 +34,9 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay);
 
+
+    List<StudySession> findAllByStatusAndStartTimeBefore(StudyStatus status, LocalDateTime now);
+
     /*
     현재 진행중인 기간의 공부 시간 연산
      */

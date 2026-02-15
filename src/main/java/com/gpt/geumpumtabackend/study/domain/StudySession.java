@@ -47,4 +47,9 @@ public class StudySession {
         status = StudyStatus.FINISHED;
         this.totalMillis = Duration.between(this.startTime, this.endTime).toMillis();
     }
+    public void endMaxFocusStudySession(LocalDateTime startTime, int maxFocusTime) {
+        this.endTime = startTime.plusHours(maxFocusTime);
+        status = StudyStatus.FINISHED;
+        this.totalMillis = Duration.between(this.startTime, this.endTime).toMillis();
+    }
 }

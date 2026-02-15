@@ -64,6 +64,11 @@ public enum ExceptionType {
     SEASON_ALREADY_ENDED(BAD_REQUEST, "SE004", "이미 종료된 시즌입니다"),
     SEASON_INVALID_DATE_RANGE(BAD_REQUEST, "SE005", "시즌 종료일은 시작일보다 이후여야 합니다"),
 
+    // FCM
+    FCM_SEND_FAILED(INTERNAL_SERVER_ERROR, "F001", "푸시 알림 전송에 실패했습니다."),
+    FCM_INVALID_TOKEN(BAD_REQUEST, "F002", "유효하지 않은 FCM 토큰입니다."),
+    FCM_TOKEN_NOT_FOUND(NOT_FOUND, "F003", "등록된 FCM 토큰이 없습니다."),
+
     ;
 
     private final HttpStatus status;
