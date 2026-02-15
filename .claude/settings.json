@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Glob(**)",
+      "Grep(**)",
+      "Bash(./gradlew clean build)",
+      "Bash(./gradlew test*)",
+      "Bash(./gradlew bootRun*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(ls *)",
+      "Bash(docker-compose up*)",
+      "Bash(docker-compose down*)",
+      "Bash(docker-compose ps*)"
+    ],
+    "deny": [
+      "Edit(src/main/resources/security/**)",
+      "Write(src/main/resources/security/**)",
+      "Read(src/main/resources/security/application-database.yml)",
+      "Read(src/main/resources/security/application-security.yml)",
+      "Read(src/main/resources/security/application-mail.yml)",
+      "Read(src/main/resources/security/application-cloudinary.yml)",
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(git checkout -- *)",
+      "Bash(git clean -f*)",
+      "Bash(rm -rf *)",
+      "Bash(*MYSQL_PASSWORD*)",
+      "Bash(*MYSQL_ROOT_PASSWORD*)",
+      "Bash(*secret*)",
+      "Bash(*credential*)"
+    ]
+  }
+}
