@@ -32,6 +32,9 @@ public class FcmService {
             throw new BusinessException(ExceptionType.FCM_INVALID_TOKEN);
         }
 
+        userRepository.findByFcmToken(fcmToken)
+                .ifPresent(User::clearFcmToken);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
 

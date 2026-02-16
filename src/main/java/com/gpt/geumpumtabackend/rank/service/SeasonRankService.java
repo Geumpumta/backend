@@ -257,7 +257,7 @@ public class SeasonRankService {
             myRanking = new DepartmentRankingEntryResponse(
                 user.getDepartment().getKoreanName(),
                 0L,
-                (long) topRanks.size() + 1
+                (long) rankings.size() + 1
             );
         }
 

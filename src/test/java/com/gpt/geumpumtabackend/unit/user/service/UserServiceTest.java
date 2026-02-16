@@ -298,6 +298,7 @@ class UserServiceTest {
 
             // Then
             verify(refreshTokenRepository).deleteByUserId(userId);
+            verify(fcmService).removeFcmToken(userId);
         }
 
         @Test
@@ -331,6 +332,7 @@ class UserServiceTest {
 
             // Then
             verify(refreshTokenRepository).deleteByUserId(userId);
+            verify(fcmService).removeFcmToken(userId);
             verify(userRepository).deleteById(userId);
         }
     }
