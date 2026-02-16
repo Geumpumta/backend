@@ -2,6 +2,7 @@ package com.gpt.geumpumtabackend.user.repository;
 
 import com.gpt.geumpumtabackend.global.oauth.user.OAuth2Provider;
 import com.gpt.geumpumtabackend.user.domain.User;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -19,4 +20,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByProviderAndProviderIdAndDeletedAtIsNull(OAuth2Provider provider, String providerId);
 
     Optional<User> findByProviderAndProviderId(OAuth2Provider provider, String providerId);
+
+    boolean existsByStudentId(String studentId);
+
+    boolean existsBySchoolEmail(String schoolEmail);
 }

@@ -1,7 +1,7 @@
 package com.gpt.geumpumtabackend.statistics.dto;
 
 public interface WeeklyStatistics {
-    Long getTotalWeekSeconds();
+    Long getTotalWeekMillis();
     Integer getMaxConsecutiveStudyDays();
-    Integer getAverageDailySeconds(); // 7일 평균(초), 소수점 버림
+    Integer getAverageDailyMillis(); // 7일 평균(ms), 소수점 버림
 }
