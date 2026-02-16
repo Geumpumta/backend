@@ -106,7 +106,7 @@ public class StudySessionService {
                 StudyStatus.STARTED, cutoffTime
         );
         for (StudySession expiredSession : expiredSessions) {
-            expiredSession.endMaxFocusStudySession(expiredSession.getStartTime(), maxFocusHours);
+            expiredSession.endMaxFocusStudySession(maxFocusHours);
 
             // FCM 알림 전송
             try {

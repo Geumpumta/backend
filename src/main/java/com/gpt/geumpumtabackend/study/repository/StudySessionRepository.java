@@ -5,6 +5,7 @@ import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.statistics.dto.*;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.domain.StudyStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -35,6 +36,7 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("endOfDay") LocalDateTime endOfDay);
 
 
+    @EntityGraph(attributePaths = {"user"})
     List<StudySession> findAllByStatusAndStartTimeBefore(StudyStatus status, LocalDateTime now);
 
     /*
