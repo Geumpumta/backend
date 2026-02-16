@@ -84,10 +84,6 @@ tasks.named('test') {
     useJUnitPlatform()
 
     // Mockito inline mock maker를 Java agent로 설정 (Java 21 호환)
-    jvmArgs "-XX:+EnableDynamicAgentLoading"
-
-    // Docker 27+ 호환: docker-java 3.4.0의 기본 API 버전(1.32)이 너무 낮아
-    // 최신 Docker 데몬(최소 1.44 요구)에서 거부됨. 테스트 JVM에 직접 설정.
-    systemProperty 'DOCKER_API_VERSION', '1.44'
-    environment 'DOCKER_API_VERSION', '1.44'
+    // Docker 29+ 호환: shaded docker-java의 API 버전을 1.44로 설정
+    jvmArgs "-XX:+EnableDynamicAgentLoading", "-Dapi.version=1.44"
 }
