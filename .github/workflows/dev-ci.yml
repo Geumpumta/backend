@@ -53,6 +53,9 @@ jobs:
           docker pull redis:7.0-alpine
 
       - name: Run tests
+        env:
+          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+          DOCKER_HOST: unix:///var/run/docker.sock
         run: ./gradlew clean test --no-daemon --info
 
       - name: Publish Test Report
