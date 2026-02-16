@@ -1,5 +1,6 @@
 package com.gpt.geumpumtabackend.unit.user.service;
 
+import com.gpt.geumpumtabackend.fcm.service.FcmService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.jwt.JwtHandler;
@@ -46,6 +47,9 @@ class UserServiceTest {
 
     @Mock
     private JwtHandler jwtHandler;
+
+    @Mock
+    private FcmService fcmService;
 
     @InjectMocks
     private UserService userService;
