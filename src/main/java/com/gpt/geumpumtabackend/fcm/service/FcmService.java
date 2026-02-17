@@ -1,9 +1,5 @@
 package com.gpt.geumpumtabackend.fcm.service;
 
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
 import com.gpt.geumpumtabackend.fcm.dto.FcmMessageDto;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
@@ -12,9 +8,6 @@ import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FcmService {
 
     private final UserRepository userRepository;
+    private final FcmMessageSender fcmMessageSender;
 
     @Transactional
     public void registerFcmToken(Long userId, String fcmToken) {
@@ -49,35 +43,6 @@ public class FcmService {
         user.clearFcmToken();
     }
 
-    @Retryable(
-            retryFor = FirebaseMessagingException.class,
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 1000, multiplier = 2)
-    )
-    public void sendMessage(FcmMessageDto messageDto) throws FirebaseMessagingException {
-        Notification notification = Notification.builder()
-                .setTitle(messageDto.getTitle())
-                .setBody(messageDto.getBody())
-                .setImage(messageDto.getImageUrl())
-                .build();
-
-        Message.Builder messageBuilder = Message.builder()
-                .setToken(messageDto.getToken())
-                .setNotification(notification);
-
-        if (messageDto.getData() != null && !messageDto.getData().isEmpty()) {
-            messageBuilder.putAllData(messageDto.getData());
-        }
-
-        FirebaseMessaging.getInstance().send(messageBuilder.build());
-    }
-
-    @Recover
-    public void sendMessageRecover(FirebaseMessagingException e, FcmMessageDto messageDto) {
-        log.error("FCM send failed after 3 retries for token {}", messageDto.getToken(), e);
-        throw new BusinessException(ExceptionType.FCM_SEND_FAILED);
-    }
-
     public void sendMaxFocusNotification(User user, int hours) {
         if (user.getFcmToken() == null || user.getFcmToken().isBlank()) {
             return;
@@ -93,7 +58,7 @@ public class FcmService {
                 ))
                 .build();
         try {
-            sendMessage(messageDto);
+            fcmMessageSender.send(messageDto);
         } catch (Exception e) {
             log.error("Failed to send max focus notification to user {}", user.getId(), e);
         }
