@@ -9,6 +9,7 @@ spring:
       - security/application-swagger.yml
       - security/application-wifi.yml
       - security/application-cloudinary.yml
+      - security/application-fcm.yml
 
   datasource:
     url: ${geumpumta.mysql.url}&rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true
