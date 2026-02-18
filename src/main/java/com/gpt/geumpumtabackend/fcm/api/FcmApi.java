@@ -1,4 +1,4 @@
-﻿package com.gpt.geumpumtabackend.fcm.api;
+package com.gpt.geumpumtabackend.fcm.api;
 
 import com.gpt.geumpumtabackend.fcm.dto.request.FcmTokenRequest;
 import com.gpt.geumpumtabackend.global.aop.AssignUserId;
