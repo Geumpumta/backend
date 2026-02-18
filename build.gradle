@@ -72,14 +72,18 @@ dependencies {
     implementation 'org.springframework:spring-aspects'
 
     // TestContainers
-    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
-    testImplementation 'org.testcontainers:mysql:1.19.3'
-    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+    testImplementation 'org.testcontainers:mysql:1.20.4'
+    testImplementation 'org.testcontainers:testcontainers:1.20.4'
+
+    // FCM
+    implementation 'com.google.firebase:firebase-admin:9.7.1'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 
     // Mockito inline mock maker를 Java agent로 설정 (Java 21 호환)
-    jvmArgs "-XX:+EnableDynamicAgentLoading"
+    // Docker 29+ 호환: shaded docker-java의 API 버전을 1.44로 설정
+    jvmArgs "-XX:+EnableDynamicAgentLoading", "-Dapi.version=1.44"
 }

@@ -1,6 +1,7 @@
 package com.gpt.geumpumtabackend.study.service;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.domain.StudyStatus;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +30,7 @@ public class StudySessionService {
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
     private final CampusWiFiValidationService wifiValidationService;
-
+    private final StudyProperties studyProperties;
     /*
     메인 홈
      */
@@ -91,5 +94,22 @@ public class StudySessionService {
         LocalDateTime startTime = LocalDateTime.now();
         newStudySession.startStudySession(startTime, user);
         return studySessionRepository.save(newStudySession);
+    }
+
+    @Transactional
+    public List<User> endExpiredMaxFocusSessions() {
+        int maxFocusHours = studyProperties.getMaxFocusHours();
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(maxFocusHours);
+
+        List<StudySession> expiredSessions = studySessionRepository.findAllByStatusAndStartTimeBefore(
+                StudyStatus.STARTED, cutoffTime
+        );
+
+        List<User> usersToNotify = new ArrayList<>();
+        for (StudySession expiredSession : expiredSessions) {
+            expiredSession.endMaxFocusStudySession(maxFocusHours);
+            usersToNotify.add(expiredSession.getUser());
+        }
+        return usersToNotify;
     }
 }

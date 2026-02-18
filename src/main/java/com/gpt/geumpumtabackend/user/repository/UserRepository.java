@@ -24,4 +24,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByStudentId(String studentId);
 
     boolean existsBySchoolEmail(String schoolEmail);
+
+    Optional<User> findByFcmToken(String fcmToken);
 }

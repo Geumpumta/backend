@@ -25,17 +25,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "학습 세션 API", description = """
     금오공대 캠퍼스 내에서만 사용할 수 있는 학습 타이머 기능을 제공합니다.
-    
+
 
     📋 **사용 흐름:**
     1. `GET /api/v1/study` - 오늘 총 학습 시간 조회
     2. `POST /api/v1/study/start` - 학습 시작 (Wi-Fi 검증 필수)
     3. `POST /api/v1/study/heart-beat` - 30초마다 연결 상태 확인
     4. `POST /api/v1/study/end` - 학습 종료
-    
+
     ⚠️ **중요사항:**
     - 모든 API는 캠퍼스 Wi-Fi 연결 시에만 작동
     - 하트비트 중단시 90초 후 자동 세션 종료
+
+    ⏰ **최대 집중 시간 자동 종료:**
+    - 3시간 연속 공부 시 서버가 1초 주기로 감지하여 자동 종료합니다.
+    - 종료 시 FCM 푸시 알림(`type: STUDY_SESSION_FORCE_ENDED`)이 전송됩니다. (상세 페이로드는 FCM API 문서 참조)
+    - **클라이언트 필수 구현**: 앱이 포그라운드로 전환될 때마다 `GET /api/v1/study`를 호출하여 `isStudying` 값을 확인하고, `false`이면 타이머 UI를 중지해야 합니다. FCM 알림이 도달하지 않을 수 있으므로 이 폴링이 최종 안전장치입니다.
     """)
 public interface StudySessionApi {
 
@@ -43,7 +48,7 @@ public interface StudySessionApi {
             summary = "오늘의 학습 시간 조회",
             description = """
             사용자의 오늘 하루 총 학습 시간을 조회합니다.
-            
+
             📊 **반환 정보:**
             - 오늘 00:00부터 현재까지의 누적 학습 시간 (밀리초)
             """
@@ -69,19 +74,19 @@ public interface StudySessionApi {
             summary = "학습 세션 시작",
             description = """
             새로운 학습 세션을 시작합니다. 캠퍼스 Wi-Fi 검증이 필수입니다.
-            
+
             🔐 **Wi-Fi 검증 과정:**
             1. Gateway IP 검증 - 캠퍼스 게이트웨이 IP (172.30.64.1)와 일치하는지 확인
             2. IP 대역 검증 - 클라이언트 IP가 캠퍼스 범위(172.30.64.0/18) 내인지 확인
-            
+
             💡 **보안 특징:**
-      
+
             - Gateway IP는 점-십진 표기법 문자열로 전송 (예: "172.30.64.1")
-            
+
             ✅ **성공 시:**
             - 새로운 학습 세션 생성
             - 세션 ID 반환 (하트비트에서 사용)
-            
+
             ❌ **실패 사유:**
             - 캠퍼스 외부에서 접근
             - Wi-Fi 정보 불일치
@@ -112,7 +117,7 @@ public interface StudySessionApi {
             summary = "학습 세션 종료",
             description = """
             현재 진행 중인 학습 세션을 종료합니다.
-            
+
             📊 **종료 시 처리:**
             - 총 학습 시간 계산 및 저장
             - 세션 상태를 FINISHED로 변경

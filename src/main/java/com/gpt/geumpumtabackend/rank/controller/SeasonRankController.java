@@ -4,9 +4,9 @@ import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.rank.api.SeasonRankApi;
+import com.gpt.geumpumtabackend.rank.dto.response.SeasonDepartmentRankingResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.SeasonRankingResponse;
 import com.gpt.geumpumtabackend.rank.service.SeasonRankService;
-import com.gpt.geumpumtabackend.user.domain.Department;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,11 +30,10 @@ public class SeasonRankController implements SeasonRankApi {
     @GetMapping("/current/department")
     @PreAuthorize("isAuthenticated() AND hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<SeasonRankingResponse>> getCurrentSeasonDepartmentRanking(
-            Long userId,
-            @RequestParam Department department
+    public ResponseEntity<ResponseBody<SeasonDepartmentRankingResponse>> getCurrentSeasonDepartmentRanking(
+            Long userId
     ) {
-        SeasonRankingResponse response = seasonRankService.getCurrentSeasonDepartmentRanking(department);
+        SeasonDepartmentRankingResponse response = seasonRankService.getCurrentSeasonDepartmentRanking(userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
     }
 
@@ -52,12 +51,11 @@ public class SeasonRankController implements SeasonRankApi {
     @GetMapping("/{seasonId}/department")
     @PreAuthorize("isAuthenticated() AND hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<SeasonRankingResponse>> getEndedSeasonDepartmentRanking(
+    public ResponseEntity<ResponseBody<SeasonDepartmentRankingResponse>> getEndedSeasonDepartmentRanking(
             Long userId,
-            @PathVariable Long seasonId,
-            @RequestParam Department department
+            @PathVariable Long seasonId
     ) {
-        SeasonRankingResponse response = seasonRankService.getEndedSeasonDepartmentRanking(seasonId, department);
+        SeasonDepartmentRankingResponse response = seasonRankService.getEndedSeasonDepartmentRanking(seasonId, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
     }
 }

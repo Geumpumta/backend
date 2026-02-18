@@ -3,8 +3,12 @@ package com.gpt.geumpumtabackend.rank.service;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.rank.domain.*;
+import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
+import com.gpt.geumpumtabackend.rank.dto.response.DepartmentRankingEntryResponse;
+import com.gpt.geumpumtabackend.rank.dto.response.SeasonDepartmentRankingResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.SeasonRankingResponse;
+import com.gpt.geumpumtabackend.rank.repository.DepartmentRankingRepository;
 import com.gpt.geumpumtabackend.rank.repository.SeasonRankingSnapshotRepository;
 import com.gpt.geumpumtabackend.rank.repository.SeasonRepository;
 import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
@@ -21,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 
 @Service
@@ -31,6 +34,7 @@ import java.util.stream.IntStream;
 public class SeasonRankService {
 
     private final UserRankingRepository userRankingRepository;
+    private final DepartmentRankingRepository departmentRankingRepository;
     private final StudySessionRepository studySessionRepository;
     private final SeasonService seasonService;
     private final SeasonRepository seasonRepository;
@@ -80,48 +84,45 @@ public class SeasonRankService {
     }
 
 
-    public SeasonRankingResponse getCurrentSeasonDepartmentRanking(Department department) {
+    public SeasonDepartmentRankingResponse getCurrentSeasonDepartmentRanking(Long userId) {
         Season activeSeason = seasonService.getActiveSeason();
 
         LocalDate seasonStart = activeSeason.getStartDate();
         LocalDate today = LocalDate.now();
         LocalDate currentMonthStart = today.withDayOfMonth(1);
 
-        List<PersonalRankingTemp> allData = new ArrayList<>();
+        List<DepartmentRankingTemp> allData = new ArrayList<>();
 
         if (currentMonthStart.isAfter(seasonStart)) {
-            List<PersonalRankingTemp> completedMonths = userRankingRepository
-                .calculateSeasonDepartmentRankingFromMonthlyRankings(
+            List<DepartmentRankingTemp> completedMonths = departmentRankingRepository
+                .calculateSeasonFromMonthlyDepartmentRankings(
                     seasonStart.atStartOfDay(),
-                    currentMonthStart.atStartOfDay(),
-                    department
+                    currentMonthStart.atStartOfDay()
                 );
             allData.addAll(completedMonths);
         }
 
         if (today.isAfter(currentMonthStart)) {
-            List<PersonalRankingTemp> currentMonth = userRankingRepository
-                .calculateCurrentMonthDepartmentRankingFromDailyRankings(
+            List<DepartmentRankingTemp> currentMonth = departmentRankingRepository
+                .calculateCurrentMonthFromDailyDepartmentRankings(
                     currentMonthStart.atStartOfDay(),
-                    today.atStartOfDay(),
-                    department
+                    today.atStartOfDay()
                 );
             allData.addAll(currentMonth);
         }
 
         LocalDateTime todayEnd = today.plusDays(1).atStartOfDay();
-        List<PersonalRankingTemp> todayRanking = studySessionRepository
-            .calculateCurrentPeriodDepartmentRanking(
+        List<DepartmentRankingTemp> todayRanking = studySessionRepository
+            .calculateCurrentDepartmentRanking(
                 today.atStartOfDay(),
                 todayEnd,
-                LocalDateTime.now(),
-                department.name()
+                LocalDateTime.now()
             );
         allData.addAll(todayRanking);
 
-        List<PersonalRankingTemp> finalRankings = mergeAndRank(allData);
+        List<DepartmentRankingTemp> finalRankings = mergeAndRankDepartments(allData);
 
-        return SeasonRankingResponse.of(activeSeason, finalRankings);
+        return buildSeasonDepartmentRankingResponse(activeSeason, finalRankings, userId);
     }
 
 
@@ -142,7 +143,7 @@ public class SeasonRankService {
     }
 
 
-    public SeasonRankingResponse getEndedSeasonDepartmentRanking(Long seasonId, Department department) {
+    public SeasonDepartmentRankingResponse getEndedSeasonDepartmentRanking(Long seasonId, Long userId) {
         Season season = seasonRepository.findById(seasonId)
             .orElseThrow(() -> new BusinessException(ExceptionType.SEASON_NOT_FOUND));
 
@@ -150,12 +151,12 @@ public class SeasonRankService {
             throw new BusinessException(ExceptionType.SEASON_NOT_ENDED);
         }
 
-        List<SeasonRankingSnapshot> snapshots = snapshotRepository
-            .findBySeasonIdAndRankTypeAndDepartment(seasonId, RankType.DEPARTMENT, department);
+        List<DepartmentRankingTemp> aggregated = snapshotRepository
+            .aggregateDepartmentRankingBySeasonId(seasonId);
 
-        List<PersonalRankingTemp> rankings = convertSnapshotsToRankings(snapshots);
+        List<DepartmentRankingTemp> finalRankings = mergeAndRankDepartments(aggregated);
 
-        return SeasonRankingResponse.of(season, rankings);
+        return buildSeasonDepartmentRankingResponse(season, finalRankings, userId);
     }
 
 
@@ -190,6 +191,77 @@ public class SeasonRankService {
             })
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
+    }
+
+
+    private List<DepartmentRankingTemp> mergeAndRankDepartments(List<DepartmentRankingTemp> allData) {
+        if (allData.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, Long> mergedMap = new HashMap<>();
+        for (DepartmentRankingTemp data : allData) {
+            mergedMap.merge(data.getDepartment(), data.getTotalMillis(), Long::sum);
+        }
+
+        List<Map.Entry<String, Long>> sorted = mergedMap.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .toList();
+
+        List<DepartmentRankingTemp> result = new ArrayList<>();
+        long currentRank = 1;
+        Long previousMillis = null;
+
+        for (int i = 0; i < sorted.size(); i++) {
+            Map.Entry<String, Long> entry = sorted.get(i);
+
+            if (previousMillis == null || !previousMillis.equals(entry.getValue())) {
+                currentRank = i + 1;
+            }
+
+            result.add(new DepartmentRankingTemp(
+                entry.getKey(),
+                entry.getValue(),
+                currentRank
+            ));
+
+            previousMillis = entry.getValue();
+        }
+
+        return result;
+    }
+
+
+    private SeasonDepartmentRankingResponse buildSeasonDepartmentRankingResponse(
+            Season season, List<DepartmentRankingTemp> rankings, Long userId) {
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
+
+        DepartmentRankingEntryResponse myRanking = null;
+        List<DepartmentRankingEntryResponse> topRanks = new ArrayList<>();
+
+        for (DepartmentRankingTemp temp : rankings) {
+            DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
+
+            if (temp.getTotalMillis() != null && temp.getTotalMillis() > 0) {
+                topRanks.add(entry);
+            }
+
+            if (user.getDepartment() != null && user.getDepartment().getKoreanName().equals(temp.getDepartmentName())) {
+                myRanking = entry;
+            }
+        }
+
+        if (myRanking == null && user.getDepartment() != null) {
+            myRanking = new DepartmentRankingEntryResponse(
+                user.getDepartment().getKoreanName(),
+                0L,
+                (long) rankings.size() + 1
+            );
+        }
+
+        return SeasonDepartmentRankingResponse.of(season, topRanks, myRanking);
     }
 
 

@@ -1,6 +1,7 @@
 package com.gpt.geumpumtabackend.user.service;
 
 
+import com.gpt.geumpumtabackend.fcm.service.FcmService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.jwt.JwtHandler;
@@ -30,6 +31,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtHandler jwtHandler;
+    private final FcmService fcmService;
     private static final Random RANDOM = new Random();
 
     private static final List<String> ADJECTIVES = List.of(
@@ -106,6 +108,7 @@ public class UserService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         refreshTokenRepository.deleteByUserId(userId);
+        fcmService.removeFcmToken(userId);
     }
 
     @Transactional
@@ -114,6 +117,7 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
 
         refreshTokenRepository.deleteByUserId(userId);
+        fcmService.removeFcmToken(userId);
         userRepository.deleteById(userId);
     }
 

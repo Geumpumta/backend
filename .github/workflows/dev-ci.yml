@@ -53,6 +53,10 @@ jobs:
           docker pull redis:7.0-alpine
 
       - name: Run tests
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+          DOCKER_API_VERSION: 1.44
+          TESTCONTAINERS_RYUK_DISABLED: true
         run: ./gradlew clean test --no-daemon --info
 
       - name: Publish Test Report
