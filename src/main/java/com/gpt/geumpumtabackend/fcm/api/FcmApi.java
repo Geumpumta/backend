@@ -23,11 +23,11 @@ import org.springframework.web.bind.annotation.RequestBody;
     ## 클라이언트 호출 가이드 (권장)
 
     1. 앱 시작 또는 로그인 직후
-       - FCM 권한 허용 후 디바이스 토큰 발급 시 `/api/v1/fcm/register` 호출
+       - FCM 권한 허용 후 디바이스 토큰 발급 시 `POST /api/v1/fcm/token` 호출
     2. 토큰 갱신 이벤트(OnNewToken)
-       - 토큰이 변경되면 즉시 `/api/v1/fcm/register` 재호출
+       - 토큰이 변경되면 즉시 `POST /api/v1/fcm/token` 재호출
     3. 로그아웃/알림 비활성화
-       - `/api/v1/fcm/token` (DELETE) 호출하여 서버 토큰 바인딩 정리
+       - `DELETE /api/v1/fcm/token` 호출하여 서버 토큰 바인딩 정리
     4. 계정 탈퇴
        - 즉시 삭제 요청을 보내고, 서버 정리 동작도 함께 기대
 
@@ -78,7 +78,7 @@ import org.springframework.web.bind.annotation.RequestBody;
     3회 재시도 실패 시 `F001 FCM_SEND_FAILED` 오류가 발생하지만, 최대 집중시간 알림의 경우 로그만 남기고 세션 종료에는 영향을 주지 않습니다.
 
     ### 클라이언트 권장 사항
-    - `UNREGISTERED` 발생 시 서버가 토큰을 자동 삭제하므로, 앱 재시작 시 `/api/v1/fcm/register`를 다시 호출하세요.
+    - `UNREGISTERED` 발생 시 서버가 토큰을 자동 삭제하므로, 앱 재시작 시 `POST /api/v1/fcm/token`을 다시 호출하세요.
     """)
 public interface FcmApi {
 
@@ -97,7 +97,7 @@ public interface FcmApi {
                     @SwaggerApiFailedResponse(ExceptionType.FCM_INVALID_TOKEN)
             }
     )
-    @PostMapping("/register")
+    @PostMapping("/token")
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<Void>> registerFcmToken(
