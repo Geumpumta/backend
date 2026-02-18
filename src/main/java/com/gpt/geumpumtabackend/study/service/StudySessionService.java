@@ -1,5 +1,4 @@
 package com.gpt.geumpumtabackend.study.service;
-import com.gpt.geumpumtabackend.fcm.service.FcmService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.study.config.StudyProperties;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,7 +30,6 @@ public class StudySessionService {
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
     private final CampusWiFiValidationService wifiValidationService;
-    private final FcmService fcmService;
     private final StudyProperties studyProperties;
     /*
     메인 홈
@@ -98,23 +97,19 @@ public class StudySessionService {
     }
 
     @Transactional
-    public void finishMaxFocusStudySession() {
+    public List<User> endExpiredMaxFocusSessions() {
         int maxFocusHours = studyProperties.getMaxFocusHours();
         LocalDateTime cutoffTime = LocalDateTime.now().minusHours(maxFocusHours);
 
         List<StudySession> expiredSessions = studySessionRepository.findAllByStatusAndStartTimeBefore(
                 StudyStatus.STARTED, cutoffTime
         );
+
+        List<User> usersToNotify = new ArrayList<>();
         for (StudySession expiredSession : expiredSessions) {
             expiredSession.endMaxFocusStudySession(maxFocusHours);
-
-            // FCM 알림 전송
-            try {
-                fcmService.sendMaxFocusNotification(expiredSession.getUser(), maxFocusHours);
-            } catch (Exception e) {
-                log.error("Failed to send FCM notification for session {}", expiredSession.getId(), e);
-                // 알림 실패해도 세션 종료는 계속 진행
-            }
+            usersToNotify.add(expiredSession.getUser());
         }
+        return usersToNotify;
     }
 }
