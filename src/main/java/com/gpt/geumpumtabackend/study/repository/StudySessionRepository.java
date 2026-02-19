@@ -192,27 +192,41 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
     );
 
     @Query(value = """
-        SELECT 
-            department,
-            CAST(SUM(totalMillis) AS SIGNED) as totalMillis,
-            RANK() OVER (ORDER BY SUM(totalMillis) DESC) as ranking
-        FROM (
-            SELECT 
-                u.department,
-                u.id as userId,
-                COALESCE(SUM(
-                    TIMESTAMPDIFF(MICROSECOND,
-                        GREATEST(s.start_time, :periodStart),
-                        CASE
-                            WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
-                            WHEN s.end_time > :periodEnd THEN :periodEnd
-                            ELSE s.end_time
-                        END
-                    ) / 1000
-                ), 0) as totalMillis,
-                ROW_NUMBER() OVER (
-                    PARTITION BY u.department 
-                    ORDER BY COALESCE(SUM(
+        WITH all_departments AS (
+            SELECT 'ARCHITECTURE_ENGINEERING' as dept
+            UNION ALL SELECT 'ARCHITECTURE'
+            UNION ALL SELECT 'CIVIL_ENGINEERING'
+            UNION ALL SELECT 'ENVIRONMENTAL_ENGINEERING'
+            UNION ALL SELECT 'MECHANICAL_ENGINEERING'
+            UNION ALL SELECT 'MECHANICAL_SYSTEMS_ENGINEERING'
+            UNION ALL SELECT 'SMART_MOBILITY'
+            UNION ALL SELECT 'INDUSTRIAL_ENGINEERING'
+            UNION ALL SELECT 'APPLIED_MATH_BIGDATA'
+            UNION ALL SELECT 'POLYMER_ENGINEERING'
+            UNION ALL SELECT 'MATERIALS_ENGINEERING'
+            UNION ALL SELECT 'SEMICONDUCTOR_SYSTEMS'
+            UNION ALL SELECT 'ELECTRONIC_SYSTEMS'
+            UNION ALL SELECT 'SOFTWARE'
+            UNION ALL SELECT 'ARTIFICIAL_INTELLIGENCE'
+            UNION ALL SELECT 'COMPUTER_ENGINEERING'
+            UNION ALL SELECT 'MATERIALS_DESIGN_ENGINEERING'
+            UNION ALL SELECT 'CHEMICAL_ENGINEERING'
+            UNION ALL SELECT 'CHEMICAL_BIO_MATERIALS'
+            UNION ALL SELECT 'OPTICAL_SYSTEMS'
+            UNION ALL SELECT 'BIOMEDICAL_ENGINEERING'
+            UNION ALL SELECT 'IT_CONVERGENCE'
+            UNION ALL SELECT 'LIBERAL_MAJOR'
+            UNION ALL SELECT 'BUSINESS_ADMINISTRATION'
+        ),
+        dept_rankings AS (
+            SELECT
+                department,
+                CAST(SUM(totalMillis) AS SIGNED) as totalMillis
+            FROM (
+                SELECT
+                    u.department,
+                    u.id as userId,
+                    COALESCE(SUM(
                         TIMESTAMPDIFF(MICROSECOND,
                             GREATEST(s.start_time, :periodStart),
                             CASE
@@ -221,18 +235,36 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
                                 ELSE s.end_time
                             END
                         ) / 1000
-                    ), 0) DESC
-                ) as deptRank
-            FROM user u
-            LEFT JOIN study_session s ON u.id = s.user_id
-                AND s.start_time <= :periodEnd 
-                AND (s.end_time >= :periodStart OR s.end_time IS NULL)
-            WHERE u.role = 'USER' AND u.department IS NOT NULL
-            GROUP BY u.department, u.id
-        ) ranked_users
-        WHERE deptRank <= 30
-        GROUP BY department
-        ORDER BY SUM(totalMillis) DESC
+                    ), 0) as totalMillis,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY u.department
+                        ORDER BY COALESCE(SUM(
+                            TIMESTAMPDIFF(MICROSECOND,
+                                GREATEST(s.start_time, :periodStart),
+                                CASE
+                                    WHEN s.end_time IS NULL THEN LEAST(:now, :periodEnd)
+                                    WHEN s.end_time > :periodEnd THEN :periodEnd
+                                    ELSE s.end_time
+                                END
+                            ) / 1000
+                        ), 0) DESC
+                    ) as deptRank
+                FROM user u
+                LEFT JOIN study_session s ON u.id = s.user_id
+                    AND s.start_time <= :periodEnd
+                    AND (s.end_time >= :periodStart OR s.end_time IS NULL)
+                WHERE u.role = 'USER' AND u.department IS NOT NULL
+                GROUP BY u.department, u.id
+            ) ranked_users
+            WHERE deptRank <= 30
+            GROUP BY department
+        )
+        SELECT d.dept as department,
+               COALESCE(dr.totalMillis, 0) as totalMillis,
+               RANK() OVER (ORDER BY COALESCE(dr.totalMillis, 0) DESC) as ranking
+        FROM all_departments d
+        LEFT JOIN dept_rankings dr ON d.dept = dr.department
+        ORDER BY COALESCE(dr.totalMillis, 0) DESC
         """, nativeQuery = true)
     List<DepartmentRankingTemp> calculateCurrentDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
@@ -240,39 +272,71 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("now") LocalDateTime now);
 
     @Query(value = """
-        SELECT 
-            department,
-            CAST(SUM(totalMillis) AS SIGNED) as totalMillis,
-            RANK() OVER (ORDER BY SUM(totalMillis) DESC) as ranking
-        FROM (
-            SELECT 
-                u.department,
-                u.id as userId,
-                COALESCE(SUM(
-                    TIMESTAMPDIFF(MICROSECOND,
-                        GREATEST(s.start_time, :periodStart),
-                        LEAST(s.end_time, :periodEnd)
-                    ) / 1000
-                ), 0) as totalMillis,
-                ROW_NUMBER() OVER (
-                    PARTITION BY u.department 
-                    ORDER BY COALESCE(SUM(
+        WITH all_departments AS (
+            SELECT 'ARCHITECTURE_ENGINEERING' as dept
+            UNION ALL SELECT 'ARCHITECTURE'
+            UNION ALL SELECT 'CIVIL_ENGINEERING'
+            UNION ALL SELECT 'ENVIRONMENTAL_ENGINEERING'
+            UNION ALL SELECT 'MECHANICAL_ENGINEERING'
+            UNION ALL SELECT 'MECHANICAL_SYSTEMS_ENGINEERING'
+            UNION ALL SELECT 'SMART_MOBILITY'
+            UNION ALL SELECT 'INDUSTRIAL_ENGINEERING'
+            UNION ALL SELECT 'APPLIED_MATH_BIGDATA'
+            UNION ALL SELECT 'POLYMER_ENGINEERING'
+            UNION ALL SELECT 'MATERIALS_ENGINEERING'
+            UNION ALL SELECT 'SEMICONDUCTOR_SYSTEMS'
+            UNION ALL SELECT 'ELECTRONIC_SYSTEMS'
+            UNION ALL SELECT 'SOFTWARE'
+            UNION ALL SELECT 'ARTIFICIAL_INTELLIGENCE'
+            UNION ALL SELECT 'COMPUTER_ENGINEERING'
+            UNION ALL SELECT 'MATERIALS_DESIGN_ENGINEERING'
+            UNION ALL SELECT 'CHEMICAL_ENGINEERING'
+            UNION ALL SELECT 'CHEMICAL_BIO_MATERIALS'
+            UNION ALL SELECT 'OPTICAL_SYSTEMS'
+            UNION ALL SELECT 'BIOMEDICAL_ENGINEERING'
+            UNION ALL SELECT 'IT_CONVERGENCE'
+            UNION ALL SELECT 'LIBERAL_MAJOR'
+            UNION ALL SELECT 'BUSINESS_ADMINISTRATION'
+        ),
+        dept_rankings AS (
+            SELECT
+                department,
+                CAST(SUM(totalMillis) AS SIGNED) as totalMillis
+            FROM (
+                SELECT
+                    u.department,
+                    u.id as userId,
+                    COALESCE(SUM(
                         TIMESTAMPDIFF(MICROSECOND,
                             GREATEST(s.start_time, :periodStart),
                             LEAST(s.end_time, :periodEnd)
                         ) / 1000
-                    ), 0) DESC
-                ) as deptRank
-            FROM user u
-            LEFT JOIN study_session s ON u.id = s.user_id
-                AND s.start_time <= :periodEnd 
-                AND s.end_time >= :periodStart
-            WHERE u.role = 'USER' AND u.department IS NOT NULL
-            GROUP BY u.department, u.id
-        ) ranked_users
-        WHERE deptRank <= 30
-        GROUP BY department
-        ORDER BY SUM(totalMillis) DESC
+                    ), 0) as totalMillis,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY u.department
+                        ORDER BY COALESCE(SUM(
+                            TIMESTAMPDIFF(MICROSECOND,
+                                GREATEST(s.start_time, :periodStart),
+                                LEAST(s.end_time, :periodEnd)
+                            ) / 1000
+                        ), 0) DESC
+                    ) as deptRank
+                FROM user u
+                LEFT JOIN study_session s ON u.id = s.user_id
+                    AND s.start_time <= :periodEnd
+                    AND s.end_time >= :periodStart
+                WHERE u.role = 'USER' AND u.department IS NOT NULL
+                GROUP BY u.department, u.id
+            ) ranked_users
+            WHERE deptRank <= 30
+            GROUP BY department
+        )
+        SELECT d.dept as department,
+               COALESCE(dr.totalMillis, 0) as totalMillis,
+               RANK() OVER (ORDER BY COALESCE(dr.totalMillis, 0) DESC) as ranking
+        FROM all_departments d
+        LEFT JOIN dept_rankings dr ON d.dept = dr.department
+        ORDER BY COALESCE(dr.totalMillis, 0) DESC
         """, nativeQuery = true)
     List<DepartmentRankingTemp> calculateFinalizedDepartmentRanking(
             @Param("periodStart") LocalDateTime periodStart,
