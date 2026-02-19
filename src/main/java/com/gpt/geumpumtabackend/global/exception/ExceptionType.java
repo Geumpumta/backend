@@ -69,6 +69,9 @@ public enum ExceptionType {
     FCM_INVALID_TOKEN(BAD_REQUEST, "F002", "유효하지 않은 FCM 토큰입니다."),
     FCM_TOKEN_NOT_FOUND(NOT_FOUND, "F003", "등록된 FCM 토큰이 없습니다."),
 
+    // Badge
+    BADGE_NOT_FOUND(NOT_FOUND, "BOO1", "배지가 존재하지 않습니다"),
+    BADGE_NOT_OWNED(FORBIDDEN, "B002", "해당 배지를 소유하지 않습니다")
     ;
 
     private final HttpStatus status;
