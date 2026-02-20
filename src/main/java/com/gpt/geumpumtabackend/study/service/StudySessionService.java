@@ -1,6 +1,8 @@
 package com.gpt.geumpumtabackend.study.service;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
+import com.gpt.geumpumtabackend.badge.service.BadgeService;
 import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.domain.StudyStatus;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +34,8 @@ public class StudySessionService {
     private final UserRepository userRepository;
     private final CampusWiFiValidationService wifiValidationService;
     private final StudyProperties studyProperties;
+    private final BadgeService badgeService;
+
     /*
     메인 홈
      */
@@ -56,11 +61,12 @@ public class StudySessionService {
     공부 종료
      */
     @Transactional
-    public void endStudySession(StudyEndRequest endRequest, Long userId) {
+    public List<NewBadgeResponse> endStudySession(StudyEndRequest endRequest, Long userId) {
         StudySession studysession = studySessionRepository.findByIdAndUser_Id(endRequest.studySessionId(), userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
         LocalDateTime endTime = LocalDateTime.now();
         studysession.endStudySession(endTime);
+        return badgeService.grantStudyAchievementBadges(userId);
     }
 
     private BusinessException mapWiFiValidationException(WiFiValidationResult result) {

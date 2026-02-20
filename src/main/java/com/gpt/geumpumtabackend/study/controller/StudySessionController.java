@@ -6,6 +6,7 @@ import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.study.api.StudySessionApi;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
+import com.gpt.geumpumtabackend.study.dto.response.StudyEndResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.service.StudySessionService;
@@ -52,8 +53,10 @@ public class StudySessionController implements StudySessionApi {
     @PostMapping("/end")
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     @AssignUserId
-    public ResponseEntity<ResponseBody<Void>> endStudySession(@Valid @RequestBody StudyEndRequest request, Long userId){
-        studySessionService.endStudySession(request, userId);
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
+    public ResponseEntity<ResponseBody<StudyEndResponse>> endStudySession(@Valid @RequestBody StudyEndRequest request, Long userId){
+        StudyEndResponse response = StudyEndResponse.of(
+                studySessionService.endStudySession(request, userId)
+        );
+        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
     }
 }
