@@ -96,13 +96,9 @@ public class DepartmentRankService {
 
         for (DepartmentRankingTemp temp : departmentRankingList) {
             DepartmentRankingEntryResponse entry = DepartmentRankingEntryResponse.of(temp);
+            topRankings.add(entry);
 
-            // 공부 시간이 0보다 큰 학과만 topRankings에 추가
-            if (temp.getTotalMillis() != null && temp.getTotalMillis() > 0) {
-                topRankings.add(entry);
-            }
-
-            // 사용자의 학과는 공부 시간 상관없이 찾기 (myRanking용)
+            // 사용자의 학과 찾기 (myRanking용)
             if(user.getDepartment() != null && user.getDepartment().getKoreanName().equals(temp.getDepartmentName())){
                 myRanking = entry;
             }

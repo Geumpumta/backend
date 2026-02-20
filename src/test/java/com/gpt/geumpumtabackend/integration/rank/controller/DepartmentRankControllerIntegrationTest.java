@@ -150,8 +150,8 @@ class DepartmentRankControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
-        @DisplayName("아무도_학습하지_않은_날에는_빈_랭킹을_반환한다")
-        void 아무도_학습하지_않은_날에는_빈_랭킹을_반환한다() throws Exception {
+        @DisplayName("아무도_학습하지_않은_날에도_전체_학과가_0시간으로_반환된다")
+        void 아무도_학습하지_않은_날에도_전체_학과가_0시간으로_반환된다() throws Exception {
             // Given - 학습 기록 없음
 
             // When & Then
@@ -160,7 +160,7 @@ class DepartmentRankControllerIntegrationTest extends BaseIntegrationTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value("true"))
-                    .andExpect(jsonPath("$.data.topRanks").isEmpty())
+                    .andExpect(jsonPath("$.data.topRanks", hasSize(24)))
                     .andExpect(jsonPath("$.data.myDepartmentRanking").exists())
                     .andExpect(jsonPath("$.data.myDepartmentRanking.rank").value(1))
                     .andExpect(jsonPath("$.data.myDepartmentRanking.totalMillis").value(0));
