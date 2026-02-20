@@ -71,7 +71,9 @@ public enum ExceptionType {
 
     // Badge
     BADGE_NOT_FOUND(NOT_FOUND, "BOO1", "배지가 존재하지 않습니다"),
-    BADGE_NOT_OWNED(FORBIDDEN, "B002", "해당 배지를 소유하지 않습니다")
+    BADGE_NOT_OWNED(FORBIDDEN, "B002", "해당 배지를 소유하지 않습니다"),
+    BADGE_CODE_ALREADY_EXISTS(CONFLICT, "B003", "이미 존재하는 배지 코드입니다"),
+    BADGE_IN_USE(CONFLICT, "B004", "이미 지급되어 삭제할 수 없는 배지입니다")
     ;
 
     private final HttpStatus status;
