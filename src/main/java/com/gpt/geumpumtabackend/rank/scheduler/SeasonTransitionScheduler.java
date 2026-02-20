@@ -1,5 +1,6 @@
 package com.gpt.geumpumtabackend.rank.scheduler;
 
+import com.gpt.geumpumtabackend.badge.service.BadgeService;
 import com.gpt.geumpumtabackend.rank.domain.Season;
 import com.gpt.geumpumtabackend.rank.service.SeasonService;
 import com.gpt.geumpumtabackend.rank.service.SeasonSnapshotService;
@@ -14,10 +15,11 @@ import java.time.LocalDate;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SeasonTransitionScheduler {
+public class   SeasonTransitionScheduler {
 
     private final SeasonService seasonService;
     private final SeasonSnapshotService snapshotService;
+    private final BadgeService badgeService;
     private final CacheManager cacheManager;
 
 
@@ -46,6 +48,9 @@ public class SeasonTransitionScheduler {
 
             // 스냅샷 생성
             int snapshotCount = snapshotService.createSeasonSnapshot(endedSeasonId);
+            int grantedBadgeCount = badgeService.grantSeasonRankingBadges(endedSeasonId);
+            log.info("[SEASON_TRANSITION] seasonId={}, snapshots={}, rankingBadges={}",
+                    endedSeasonId, snapshotCount, grantedBadgeCount);
         } catch (Exception e) {
             log.error("[SEASON_TRANSITION_ERROR] Failed", e);
             // TODO: 슬랙/이메일 알림
