@@ -8,6 +8,7 @@ import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
+import com.gpt.geumpumtabackend.study.dto.response.StudyEndResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -126,6 +127,7 @@ public interface StudySessionApi {
     )
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
+                    response = StudyEndResponse.class,
                     description = "학습 세션 종료 성공"),
             errors = {
                     @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
@@ -136,7 +138,7 @@ public interface StudySessionApi {
     @PostMapping("/end")
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    ResponseEntity<ResponseBody<Void>> endStudySession(
+    ResponseEntity<ResponseBody<StudyEndResponse>> endStudySession(
             @Valid @RequestBody StudyEndRequest request,
             @Parameter(hidden = true) Long userId
     );
