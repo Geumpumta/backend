@@ -265,6 +265,53 @@ public interface StatisticsRepository extends JpaRepository<StudySession, Long> 
             @Param("userId") Long userId
     );
 
+    @Query(value = """
+        WITH RECURSIVE streak(day_date, day_millis) AS (
+            SELECT DATE(:today) AS day_date,
+                   CAST(COALESCE((
+                       SELECT SUM(GREATEST(
+                           0,
+                           TIMESTAMPDIFF(
+                               MICROSECOND,
+                               GREATEST(s.start_time, DATE(:today)),
+                               LEAST(COALESCE(s.end_time, DATE(:today) + INTERVAL 1 DAY), DATE(:today) + INTERVAL 1 DAY)
+                           ) / 1000
+                       ))
+                       FROM study_session s
+                       WHERE s.user_id = :userId
+                         AND s.start_time < DATE(:today) + INTERVAL 1 DAY
+                         AND s.end_time > DATE(:today)
+                   ), 0) AS SIGNED) AS day_millis
+            UNION ALL
+            SELECT DATE_SUB(streak.day_date, INTERVAL 1 DAY) AS day_date,
+                   CAST(COALESCE((
+                       SELECT SUM(GREATEST(
+                           0,
+                           TIMESTAMPDIFF(
+                               MICROSECOND,
+                               GREATEST(s.start_time, DATE_SUB(streak.day_date, INTERVAL 1 DAY)),
+                               LEAST(COALESCE(s.end_time, DATE_SUB(streak.day_date, INTERVAL 1 DAY) + INTERVAL 1 DAY),
+                                     DATE_SUB(streak.day_date, INTERVAL 1 DAY) + INTERVAL 1 DAY)
+                           ) / 1000
+                       ))
+                       FROM study_session s
+                       WHERE s.user_id = :userId
+                         AND s.start_time < DATE_SUB(streak.day_date, INTERVAL 1 DAY) + INTERVAL 1 DAY
+                         AND s.end_time > DATE_SUB(streak.day_date, INTERVAL 1 DAY)
+                   ), 0) AS SIGNED) AS day_millis
+            FROM streak
+            WHERE streak.day_millis >= :thresholdMillis
+        )
+        SELECT COUNT(*)
+        FROM streak
+        WHERE day_millis >= :thresholdMillis
+        """, nativeQuery = true)
+    Integer countCurrentConsecutiveStudyDays(
+            @Param("userId") Long userId,
+            @Param("today") LocalDate today,
+            @Param("thresholdMillis") Long thresholdMillis
+    );
+
 
 
     @Query(value = """
@@ -283,7 +330,7 @@ public interface StatisticsRepository extends JpaRepository<StudySession, Long> 
              DATE_ADD(d.day_start, INTERVAL 1 DAY),
              DATE_ADD(d.day_end,   INTERVAL 1 DAY)
       FROM days d
-      JOIN bounds b ON d.day_date < b.end_at_exclusive
+      JOIN bounds b ON d.day_date < DATE_SUB(b.end_at_exclusive, INTERVAL 1 DAY)
     ),
     sessions_in_window AS (
       SELECT s.user_id, s.start_time, s.end_time
