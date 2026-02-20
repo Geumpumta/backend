@@ -35,6 +35,13 @@ public interface StudySessionRepository extends JpaRepository<StudySession, Long
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay);
 
+    @Query(value = "SELECT COALESCE(SUM(s.total_millis), 0) " +
+            "FROM study_session s " +
+            "WHERE s.user_id = :userId " +
+            "AND s.end_time IS NOT NULL", nativeQuery = true)
+    Long sumTotalStudyMillisByUserId(@Param("userId") Long userId);
+
+
 
     @EntityGraph(attributePaths = {"user"})
     List<StudySession> findAllByStatusAndStartTimeBefore(StudyStatus status, LocalDateTime now);
