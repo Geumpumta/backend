@@ -55,7 +55,7 @@ public enum ExceptionType {
 
 
     // board
-    BOARD_NOT_FOUND(BAD_REQUEST, "B001", "존재하지 않는 게시물입니다."),
+    BOARD_NOT_FOUND(BAD_REQUEST, "BD001", "존재하지 않는 게시물입니다."),
 
     // Season
     NO_ACTIVE_SEASON(NOT_FOUND, "SE001", "현재 진행중인 시즌이 없습니다"),
@@ -70,7 +70,7 @@ public enum ExceptionType {
     FCM_TOKEN_NOT_FOUND(NOT_FOUND, "F003", "등록된 FCM 토큰이 없습니다."),
 
     // Badge
-    BADGE_NOT_FOUND(NOT_FOUND, "BOO1", "배지가 존재하지 않습니다"),
+    BADGE_NOT_FOUND(NOT_FOUND, "B001", "배지가 존재하지 않습니다"),
     BADGE_NOT_OWNED(FORBIDDEN, "B002", "해당 배지를 소유하지 않습니다"),
     BADGE_CODE_ALREADY_EXISTS(CONFLICT, "B003", "이미 존재하는 배지 코드입니다"),
     BADGE_IN_USE(CONFLICT, "B004", "이미 지급되어 삭제할 수 없는 배지입니다")
