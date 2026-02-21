@@ -1,8 +1,6 @@
 package com.gpt.geumpumtabackend.study.service;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
-import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
-import com.gpt.geumpumtabackend.badge.service.BadgeService;
 import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.domain.StudyStatus;
@@ -10,6 +8,7 @@ import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
+import com.gpt.geumpumtabackend.study.event.StudySessionEndedEvent;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
@@ -17,6 +16,7 @@ import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
 import com.gpt.geumpumtabackend.wifi.service.CampusWiFiValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -33,7 +33,7 @@ public class StudySessionService {
     private final UserRepository userRepository;
     private final CampusWiFiValidationService wifiValidationService;
     private final StudyProperties studyProperties;
-    private final BadgeService badgeService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /*
     메인 홈
@@ -60,18 +60,12 @@ public class StudySessionService {
     공부 종료
      */
     @Transactional
-    public List<NewBadgeResponse> endStudySession(StudyEndRequest endRequest, Long userId) {
+    public void endStudySession(StudyEndRequest endRequest, Long userId) {
         StudySession studysession = studySessionRepository.findByIdAndUser_Id(endRequest.studySessionId(), userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
         LocalDateTime endTime = LocalDateTime.now();
         studysession.endStudySession(endTime);
-
-        try {
-            return badgeService.grantStudyAchievementBadges(userId);
-        } catch (Exception e) {
-            log.warn("배지 지급 실패 - userId={}", userId, e);
-            return List.of();
-        }
+        eventPublisher.publishEvent(new StudySessionEndedEvent(userId));
     }
 
     private BusinessException mapWiFiValidationException(WiFiValidationResult result) {
