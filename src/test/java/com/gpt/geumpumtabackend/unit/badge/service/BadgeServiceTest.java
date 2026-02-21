@@ -205,7 +205,7 @@ class BadgeServiceTest {
         Badge badge = createBadge("WELCOME_001", BadgeType.WELCOME, 10L);
 
         when(userRepository.existsById(userId)).thenReturn(true);
-        when(badgeRepository.findByBadgeType(BadgeType.WELCOME)).thenReturn(badge);
+        when(badgeRepository.findByBadgeType(BadgeType.WELCOME)).thenReturn(Optional.of(badge));
         when(userBadgeRepository.existsByUserIdAndBadgeId(userId, badge.getId())).thenReturn(false);
         when(userBadgeRepository.save(any(UserBadge.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -276,7 +276,7 @@ class BadgeServiceTest {
         Badge badge = createBadge("WELCOME_001", BadgeType.WELCOME, 10L);
         User user = mock(User.class);
 
-        when(badgeRepository.findByCode("WELCOME_001")).thenReturn(badge);
+        when(badgeRepository.findByCode("WELCOME_001")).thenReturn(Optional.of(badge));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(userBadgeRepository.existsByUserIdAndBadgeId(userId, badge.getId())).thenReturn(true);
 

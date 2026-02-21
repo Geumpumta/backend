@@ -106,10 +106,8 @@ public class BadgeService {
 
     @Transactional
     public RepresentativeBadgeResponse setRepresentativeBadge(RepresentativeBadgeRequest request, Long userId) {
-        Badge badge = badgeRepository.findByCode(request.badgeCode());
-        if (badge == null) {
-            throw new BusinessException(ExceptionType.BADGE_NOT_FOUND);
-        }
+        Badge badge = badgeRepository.findByCode(request.badgeCode())
+                .orElseThrow(() -> new BusinessException(ExceptionType.BADGE_NOT_FOUND));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
 
@@ -124,10 +122,8 @@ public class BadgeService {
     public NewBadgeResponse grantWelcomeBadge(Long userId) {
         validateUserExists(userId);
 
-        Badge badge = badgeRepository.findByBadgeType(BadgeType.WELCOME);
-        if (badge == null) {
-            throw new BusinessException(ExceptionType.BADGE_NOT_FOUND);
-        }
+        Badge badge = badgeRepository.findByBadgeType(BadgeType.WELCOME)
+                .orElseThrow(() -> new BusinessException(ExceptionType.BADGE_NOT_FOUND));
         if (userBadgeRepository.existsByUserIdAndBadgeId(userId, badge.getId())) {
             return NewBadgeResponse.from(badge);
         }
