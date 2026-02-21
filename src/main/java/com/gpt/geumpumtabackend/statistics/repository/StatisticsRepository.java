@@ -266,45 +266,79 @@ public interface StatisticsRepository extends JpaRepository<StudySession, Long> 
     );
 
     @Query(value = """
-        WITH RECURSIVE streak(day_date, day_millis) AS (
-            SELECT DATE(:today) AS day_date,
-                   CAST(COALESCE((
-                       SELECT SUM(GREATEST(
-                           0,
-                           TIMESTAMPDIFF(
-                               MICROSECOND,
-                               GREATEST(s.start_time, DATE(:today)),
-                               LEAST(COALESCE(s.end_time, DATE(:today) + INTERVAL 1 DAY), DATE(:today) + INTERVAL 1 DAY)
-                           ) / 1000
-                       ))
-                       FROM study_session s
-                       WHERE s.user_id = :userId
-                         AND s.start_time < DATE(:today) + INTERVAL 1 DAY
-                         AND s.end_time > DATE(:today)
-                   ), 0) AS SIGNED) AS day_millis
-            UNION ALL
-            SELECT DATE_SUB(streak.day_date, INTERVAL 1 DAY) AS day_date,
-                   CAST(COALESCE((
-                       SELECT SUM(GREATEST(
-                           0,
-                           TIMESTAMPDIFF(
-                               MICROSECOND,
-                               GREATEST(s.start_time, DATE_SUB(streak.day_date, INTERVAL 1 DAY)),
-                               LEAST(COALESCE(s.end_time, DATE_SUB(streak.day_date, INTERVAL 1 DAY) + INTERVAL 1 DAY),
-                                     DATE_SUB(streak.day_date, INTERVAL 1 DAY) + INTERVAL 1 DAY)
-                           ) / 1000
-                       ))
-                       FROM study_session s
-                       WHERE s.user_id = :userId
-                         AND s.start_time < DATE_SUB(streak.day_date, INTERVAL 1 DAY) + INTERVAL 1 DAY
-                         AND s.end_time > DATE_SUB(streak.day_date, INTERVAL 1 DAY)
-                   ), 0) AS SIGNED) AS day_millis
-            FROM streak
-            WHERE streak.day_millis >= :thresholdMillis
+        WITH RECURSIVE
+        bounds AS (
+          SELECT DATE_SUB(DATE(:today), INTERVAL 364 DAY) AS start_date,
+                 DATE(:today) AS end_date
+        ),
+        days AS (
+          SELECT b.start_date AS day_date,
+                 CAST(b.start_date AS DATETIME) AS day_start,
+                 CAST(DATE_ADD(b.start_date, INTERVAL 1 DAY) AS DATETIME) AS day_end
+          FROM bounds b
+          UNION ALL
+          SELECT DATE_ADD(d.day_date, INTERVAL 1 DAY),
+                 DATE_ADD(d.day_start, INTERVAL 1 DAY),
+                 DATE_ADD(d.day_end, INTERVAL 1 DAY)
+          FROM days d
+          JOIN bounds b ON d.day_date < b.end_date
+        ),
+        sessions_in_window AS (
+          SELECT s.start_time,
+                 COALESCE(s.end_time, CAST(DATE_ADD(DATE(:today), INTERVAL 1 DAY) AS DATETIME)) AS end_time
+          FROM study_session s
+          JOIN bounds b
+            ON s.user_id = :userId
+           AND s.start_time < CAST(DATE_ADD(b.end_date, INTERVAL 1 DAY) AS DATETIME)
+           AND COALESCE(s.end_time, CAST(DATE_ADD(DATE(:today), INTERVAL 1 DAY) AS DATETIME)) > CAST(b.start_date AS DATETIME)
+        ),
+        day_overlap AS (
+          SELECT d.day_date,
+                 GREATEST(s.start_time, d.day_start) AS seg_start,
+                 LEAST(s.end_time, d.day_end) AS seg_end
+          FROM days d
+          JOIN sessions_in_window s
+            ON s.start_time < d.day_end
+           AND s.end_time > d.day_start
+        ),
+        per_day AS (
+          SELECT d.day_date,
+                 CAST(COALESCE(SUM(
+                   GREATEST(TIMESTAMPDIFF(MICROSECOND, o.seg_start, o.seg_end), 0)
+                 ) / 1000, 0) AS SIGNED) AS day_millis
+          FROM days d
+          LEFT JOIN day_overlap o ON o.day_date = d.day_date
+          GROUP BY d.day_date
+        ),
+        qualified AS (
+          SELECT day_date
+          FROM per_day
+          WHERE day_millis >= :thresholdMillis
+        ),
+        numbered AS (
+          SELECT day_date,
+                 ROW_NUMBER() OVER (ORDER BY day_date) AS rn
+          FROM qualified
+        ),
+        islands AS (
+          SELECT day_date,
+                 DATE_SUB(day_date, INTERVAL rn DAY) AS grp_key
+          FROM numbered
+        ),
+        streaks AS (
+          SELECT grp_key,
+                 MIN(day_date) AS streak_start,
+                 MAX(day_date) AS streak_end,
+                 COUNT(*) AS streak_len
+          FROM islands
+          GROUP BY grp_key
         )
-        SELECT COUNT(*)
-        FROM streak
-        WHERE day_millis >= :thresholdMillis
+        SELECT COALESCE((
+          SELECT streak_len
+          FROM streaks
+          WHERE streak_end = DATE(:today)
+          LIMIT 1
+        ), 0)
         """, nativeQuery = true)
     Integer countCurrentConsecutiveStudyDays(
             @Param("userId") Long userId,

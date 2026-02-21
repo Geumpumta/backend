@@ -123,7 +123,7 @@ class StatisticsControllerIntegrationTest extends BaseIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value("true"))
-                .andExpect(jsonPath("$.data.weeklyStatistics.totalWeekMillis").value(ONE_HOUR_MILLIS * 2))
+                .andExpect(jsonPath("$.data.weeklyStatistics.totalWeekMillis").value((int) (ONE_HOUR_MILLIS * 2)))
                 .andExpect(jsonPath("$.data.weeklyStatistics.maxConsecutiveStudyDays").value(2))
                 .andExpect(jsonPath("$.data.weeklyStatistics.averageDailyMillis").value(1_028_571));
     }
@@ -141,7 +141,7 @@ class StatisticsControllerIntegrationTest extends BaseIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value("true"))
-                .andExpect(jsonPath("$.data.monthlyStatistics.totalMonthMillis").value(14_400_000L))
+                .andExpect(jsonPath("$.data.monthlyStatistics.totalMonthMillis").value((int) 14_400_000L))
                 .andExpect(jsonPath("$.data.monthlyStatistics.averageDailyMillis").value(464_516))
                 .andExpect(jsonPath("$.data.monthlyStatistics.maxConsecutiveStudyDays").value(2))
                 .andExpect(jsonPath("$.data.monthlyStatistics.studiedDays").value(3));
