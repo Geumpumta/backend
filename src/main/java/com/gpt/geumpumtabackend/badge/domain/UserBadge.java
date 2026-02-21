@@ -16,13 +16,13 @@ import java.time.LocalDateTime;
 public class UserBadge {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @Column(name = "user_id")
-    Long userId;
+    private Long userId;
 
     @Column(name = "badge_id")
-    Long badgeId;
+    private Long badgeId;
 
     private LocalDateTime awardedAt;
 
