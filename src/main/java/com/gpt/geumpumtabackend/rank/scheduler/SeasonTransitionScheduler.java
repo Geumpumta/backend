@@ -48,7 +48,12 @@ public class   SeasonTransitionScheduler {
 
             // 스냅샷 생성
             int snapshotCount = snapshotService.createSeasonSnapshot(endedSeasonId);
-            int grantedBadgeCount = badgeService.grantSeasonRankingBadges(endedSeasonId);
+            int grantedBadgeCount = 0;
+            try {
+                grantedBadgeCount = badgeService.grantSeasonRankingBadges(endedSeasonId);
+            } catch (Exception e) {
+                log.error("[SEASON_BADGE_GRANT_FAILED] seasonId={}", endedSeasonId, e);
+            }
             log.info("[SEASON_TRANSITION] seasonId={}, snapshots={}, rankingBadges={}",
                     endedSeasonId, snapshotCount, grantedBadgeCount);
         } catch (Exception e) {
