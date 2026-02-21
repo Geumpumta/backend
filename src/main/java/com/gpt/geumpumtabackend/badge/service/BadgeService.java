@@ -24,6 +24,7 @@ import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.statistics.repository.StatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -155,7 +156,7 @@ public class BadgeService {
         userBadgeRepository.saveAll(userBadges);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public List<NewBadgeResponse> grantStudyAchievementBadges(Long userId) {
         validateUserExists(userId);
 

@@ -2,7 +2,11 @@ package com.gpt.geumpumtabackend.unit.study.service;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
+import com.gpt.geumpumtabackend.badge.service.BadgeService;
+import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
+import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
@@ -21,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -42,6 +47,12 @@ class StudySessionServiceTest {
     
     @Mock
     private CampusWiFiValidationService wifiValidationService;
+
+    @Mock
+    private StudyProperties studyProperties;
+
+    @Mock
+    private BadgeService badgeService;
     
     @InjectMocks
     private StudySessionService studySessionService;
@@ -233,6 +244,60 @@ class StudySessionServiceTest {
             assertThat(session.getStatus()).isEqualTo(com.gpt.geumpumtabackend.study.domain.StudyStatus.STARTED);
             assertThat(session.getEndTime()).isNull();
             assertThat(session.getTotalMillis()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("공부 종료")
+    class EndStudySession {
+
+        @Test
+        @DisplayName("공부 종료 시 세션을 종료하고 새 배지를 응답으로 반환한다")
+        void 공부종료시_세션종료후_새배지를_반환한다() {
+            // Given
+            Long userId = 1L;
+            Long sessionId = 10L;
+            User testUser = createTestUser(userId, "테스트사용자", Department.SOFTWARE);
+            StudySession session = new StudySession();
+            session.startStudySession(LocalDateTime.now().minusHours(1), testUser);
+            List<NewBadgeResponse> expected = List.of(
+                    new NewBadgeResponse("TOTAL_HOURS_50", "50시간", "누적 50시간", "icon.png")
+            );
+
+            given(studySessionRepository.findByIdAndUser_Id(sessionId, userId))
+                    .willReturn(Optional.of(session));
+            given(badgeService.grantStudyAchievementBadges(userId)).willReturn(expected);
+
+            // When
+            List<NewBadgeResponse> result = studySessionService.endStudySession(new StudyEndRequest(sessionId), userId);
+
+            // Then
+            assertThat(session.getStatus()).isEqualTo(com.gpt.geumpumtabackend.study.domain.StudyStatus.FINISHED);
+            assertThat(result).isEqualTo(expected);
+            verify(badgeService).grantStudyAchievementBadges(userId);
+        }
+
+        @Test
+        @DisplayName("배지 지급 중 예외가 발생해도 세션 종료는 유지되고 빈 리스트를 반환한다")
+        void 배지지급실패여도_세션종료는_유지된다() {
+            // Given
+            Long userId = 1L;
+            Long sessionId = 11L;
+            User testUser = createTestUser(userId, "테스트사용자", Department.SOFTWARE);
+            StudySession session = new StudySession();
+            session.startStudySession(LocalDateTime.now().minusHours(1), testUser);
+
+            given(studySessionRepository.findByIdAndUser_Id(sessionId, userId))
+                    .willReturn(Optional.of(session));
+            given(badgeService.grantStudyAchievementBadges(userId))
+                    .willThrow(new RuntimeException("badge failed"));
+
+            // When
+            List<NewBadgeResponse> result = studySessionService.endStudySession(new StudyEndRequest(sessionId), userId);
+
+            // Then
+            assertThat(session.getStatus()).isEqualTo(com.gpt.geumpumtabackend.study.domain.StudyStatus.FINISHED);
+            assertThat(result).isEmpty();
         }
     }
 

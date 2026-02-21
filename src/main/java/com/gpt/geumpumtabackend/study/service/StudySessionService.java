@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +65,13 @@ public class StudySessionService {
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
         LocalDateTime endTime = LocalDateTime.now();
         studysession.endStudySession(endTime);
-        return badgeService.grantStudyAchievementBadges(userId);
+
+        try {
+            return badgeService.grantStudyAchievementBadges(userId);
+        } catch (Exception e) {
+            log.warn("배지 지급 실패 - userId={}", userId, e);
+            return List.of();
+        }
     }
 
     private BusinessException mapWiFiValidationException(WiFiValidationResult result) {
