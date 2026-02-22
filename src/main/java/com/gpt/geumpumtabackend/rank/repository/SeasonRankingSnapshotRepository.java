@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Set;
 
 public interface SeasonRankingSnapshotRepository extends JpaRepository<SeasonRankingSnapshot, Long> {
 
@@ -24,6 +25,12 @@ public interface SeasonRankingSnapshotRepository extends JpaRepository<SeasonRan
     );
 
     int countBySeasonId(Long seasonId);
+
+    List<SeasonRankingSnapshot> findBySeasonIdAndRankTypeAndFinalRankIn(
+            Long seasonId,
+            RankType rankType,
+            Set<Integer> finalRanks
+    );
 
 
     @Query(value = """

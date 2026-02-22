@@ -6,6 +6,8 @@ import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.jwt.JwtHandler;
 import com.gpt.geumpumtabackend.global.jwt.JwtUserClaim;
+import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
+import com.gpt.geumpumtabackend.badge.service.BadgeService;
 import com.gpt.geumpumtabackend.token.domain.Token;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.token.repository.RefreshTokenRepository;
@@ -14,6 +16,7 @@ import com.gpt.geumpumtabackend.user.domain.UserRole;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
 import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
 import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
+import com.gpt.geumpumtabackend.user.dto.response.CompleteRegistrationResponse;
 import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtHandler jwtHandler;
     private final FcmService fcmService;
+    private final BadgeService badgeService;
     private static final Random RANDOM = new Random();
 
     private static final List<String> ADJECTIVES = List.of(
@@ -58,7 +62,7 @@ public class UserService {
     }
 
     @Transactional
-    public TokenResponse completeRegistration(CompleteRegistrationRequest request, Long userId) {
+    public CompleteRegistrationResponse completeRegistration(CompleteRegistrationRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
         validateDuplication(request);
@@ -68,7 +72,9 @@ public class UserService {
         // 토큰 재발급
         JwtUserClaim jwtUserClaim = JwtUserClaim.create(user);
         Token token = jwtHandler.createTokens(jwtUserClaim);
-        return TokenResponse.to(token);
+        TokenResponse tokenResponse = TokenResponse.to(token);
+        NewBadgeResponse newBadge = badgeService.grantWelcomeBadge(userId);
+        return CompleteRegistrationResponse.of(tokenResponse, newBadge);
     }
 
     private void validateDuplication(CompleteRegistrationRequest request) {

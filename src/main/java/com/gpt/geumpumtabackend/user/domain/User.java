@@ -63,6 +63,8 @@ public class User extends BaseEntity {
     @Column(length = 255)
     private String fcmToken;
 
+    private Long representativeBadgeId;
+
     @Builder
     public User(String email, UserRole role, String name, String picture, OAuth2Provider provider, String providerId, Department department) {
         this.email = email;
@@ -105,5 +107,9 @@ public class User extends BaseEntity {
 
     public void clearFcmToken() {
         this.fcmToken = null;
+    }
+
+    public void setRepresentativeBadge(Long badgeId) {
+        this.representativeBadgeId = badgeId;
     }
 }

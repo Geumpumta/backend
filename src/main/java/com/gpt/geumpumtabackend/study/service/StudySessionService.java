@@ -8,6 +8,7 @@ import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
+import com.gpt.geumpumtabackend.study.event.StudySessionEndedEvent;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
@@ -15,6 +16,7 @@ import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
 import com.gpt.geumpumtabackend.wifi.service.CampusWiFiValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -31,6 +33,8 @@ public class StudySessionService {
     private final UserRepository userRepository;
     private final CampusWiFiValidationService wifiValidationService;
     private final StudyProperties studyProperties;
+    private final ApplicationEventPublisher eventPublisher;
+
     /*
     메인 홈
      */
@@ -61,6 +65,7 @@ public class StudySessionService {
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
         LocalDateTime endTime = LocalDateTime.now();
         studysession.endStudySession(endTime);
+        eventPublisher.publishEvent(new StudySessionEndedEvent(userId));
     }
 
     private BusinessException mapWiFiValidationException(WiFiValidationResult result) {

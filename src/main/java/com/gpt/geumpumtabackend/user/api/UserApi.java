@@ -14,6 +14,7 @@ import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
 import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
 import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
+import com.gpt.geumpumtabackend.user.dto.response.CompleteRegistrationResponse;
 import com.gpt.geumpumtabackend.user.dto.response.NicknameVerifyResponse;
 import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,10 +36,10 @@ public interface UserApi {
             description = "GUEST 권한을 가진 사용자는 회원가입 완료를 위해 학번과 학부를 입력합니다." +
                     "사용자의 권한이 USER로 변경되고 accessToken과 refreshToken을 재발급받습니다."
     )
-    @ApiResponse(content = @Content(schema = @Schema(implementation = TokenResponse.class)))
+    @ApiResponse(content = @Content(schema = @Schema(implementation = CompleteRegistrationResponse.class)))
     @SwaggerApiResponses(
             success = @SwaggerApiSuccessResponse(
-                    response = TokenResponse.class,
+                    response = CompleteRegistrationResponse.class,
                     description = "회원가입 완료 및 accessToken과 refreshToken 재발급 완료"),
             errors = {
                     @SwaggerApiFailedResponse(ExceptionType.NEED_AUTHORIZED),
@@ -48,7 +49,7 @@ public interface UserApi {
     @PostMapping("/complete-registration")
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('GUEST')")
-    public ResponseEntity<ResponseBody<TokenResponse>> completeRegistration(
+    public ResponseEntity<ResponseBody<CompleteRegistrationResponse>> completeRegistration(
             @RequestBody @Valid CompleteRegistrationRequest request,
             @Parameter(hidden = true) Long userId
     );

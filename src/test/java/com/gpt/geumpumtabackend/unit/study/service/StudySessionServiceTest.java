@@ -2,9 +2,12 @@ package com.gpt.geumpumtabackend.unit.study.service;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
+import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
+import com.gpt.geumpumtabackend.study.event.StudySessionEndedEvent;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.study.service.StudySessionService;
 import com.gpt.geumpumtabackend.user.domain.Department;
@@ -12,6 +15,7 @@ import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
 import com.gpt.geumpumtabackend.wifi.service.CampusWiFiValidationService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -42,6 +46,12 @@ class StudySessionServiceTest {
     
     @Mock
     private CampusWiFiValidationService wifiValidationService;
+
+    @Mock
+    private StudyProperties studyProperties;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
     
     @InjectMocks
     private StudySessionService studySessionService;
@@ -233,6 +243,48 @@ class StudySessionServiceTest {
             assertThat(session.getStatus()).isEqualTo(com.gpt.geumpumtabackend.study.domain.StudyStatus.STARTED);
             assertThat(session.getEndTime()).isNull();
             assertThat(session.getTotalMillis()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("공부 종료")
+    class EndStudySession {
+
+        @Test
+        @DisplayName("공부 종료 시 세션을 종료하고 AFTER_COMMIT 이벤트를 발행한다")
+        void 공부종료시_세션종료후_이벤트를_발행한다() {
+            // Given
+            Long userId = 1L;
+            Long sessionId = 10L;
+            User testUser = createTestUser(userId, "테스트사용자", Department.SOFTWARE);
+            StudySession session = new StudySession();
+            session.startStudySession(LocalDateTime.now().minusHours(1), testUser);
+
+            given(studySessionRepository.findByIdAndUser_Id(sessionId, userId))
+                    .willReturn(Optional.of(session));
+
+            // When
+            studySessionService.endStudySession(new StudyEndRequest(sessionId), userId);
+
+            // Then
+            assertThat(session.getStatus()).isEqualTo(com.gpt.geumpumtabackend.study.domain.StudyStatus.FINISHED);
+            verify(eventPublisher).publishEvent(new StudySessionEndedEvent(userId));
+        }
+
+        @Test
+        @DisplayName("세션이 없으면 STUDY_SESSION_NOT_FOUND 예외가 발생한다")
+        void 세션이_없으면_예외가_발생한다() {
+            // Given
+            Long userId = 1L;
+            Long sessionId = 11L;
+            given(studySessionRepository.findByIdAndUser_Id(sessionId, userId))
+                    .willReturn(Optional.empty());
+
+            // When
+            assertThatThrownBy(() -> studySessionService.endStudySession(new StudyEndRequest(sessionId), userId))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("exceptionType", ExceptionType.STUDY_SESSION_NOT_FOUND);
+            verify(eventPublisher, never()).publishEvent(any());
         }
     }
 
