@@ -39,6 +39,7 @@ class MaintenanceFilterTest {
         when(maintenanceService.isMaintenanceInProgress()).thenReturn(true);
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/board/list");
+        request.setServletPath("/api/v1/board/list");
         MockHttpServletResponse response = new MockHttpServletResponse();
         AtomicBoolean chainCalled = new AtomicBoolean(false);
         FilterChain filterChain = (req, res) -> chainCalled.set(true);
@@ -56,6 +57,24 @@ class MaintenanceFilterTest {
     @DisplayName("점검 중이어도 화이트리스트 경로는 통과시킨다")
     void 점검중이어도_화이트리스트는_통과한다() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/maintenance/status");
+        request.setServletPath("/api/v1/maintenance/status");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicBoolean chainCalled = new AtomicBoolean(false);
+        FilterChain filterChain = (req, res) -> chainCalled.set(true);
+
+        maintenanceFilter.doFilter(request, response, filterChain);
+
+        assertThat(chainCalled).isTrue();
+        verifyNoInteractions(maintenanceService);
+    }
+
+    @Test
+    @DisplayName("컨텍스트 패스가 있어도 화이트리스트 경로는 통과시킨다")
+    void 컨텍스트패스가_있어도_화이트리스트는_통과한다() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/geumpumta/api/v1/maintenance/status");
+        request.setContextPath("/geumpumta");
+        request.setServletPath("/api/v1/maintenance/status");
+
         MockHttpServletResponse response = new MockHttpServletResponse();
         AtomicBoolean chainCalled = new AtomicBoolean(false);
         FilterChain filterChain = (req, res) -> chainCalled.set(true);
@@ -72,6 +91,7 @@ class MaintenanceFilterTest {
         when(maintenanceService.isMaintenanceInProgress()).thenReturn(false);
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/board/list");
+        request.setServletPath("/api/v1/board/list");
         MockHttpServletResponse response = new MockHttpServletResponse();
         AtomicBoolean chainCalled = new AtomicBoolean(false);
         FilterChain filterChain = (req, res) -> chainCalled.set(true);

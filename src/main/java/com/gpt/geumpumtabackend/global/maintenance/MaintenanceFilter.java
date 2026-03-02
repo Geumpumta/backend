@@ -42,7 +42,7 @@ public class MaintenanceFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        String requestUri = request.getRequestURI();
+        String requestUri = request.getServletPath();
 
         if (isWhitelisted(requestUri) || !maintenanceService.isMaintenanceInProgress()) {
             filterChain.doFilter(request, response);
