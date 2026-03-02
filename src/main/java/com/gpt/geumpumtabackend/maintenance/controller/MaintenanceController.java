@@ -2,6 +2,7 @@ package com.gpt.geumpumtabackend.maintenance.controller;
 
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
+import com.gpt.geumpumtabackend.maintenance.api.MaintenanceApi;
 import com.gpt.geumpumtabackend.maintenance.dto.request.MaintenanceStatusUpdateRequest;
 import com.gpt.geumpumtabackend.maintenance.dto.response.MaintenanceStatusResponse;
 import com.gpt.geumpumtabackend.maintenance.service.MaintenanceService;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/maintenance")
-public class MaintenanceController {
+public class MaintenanceController implements MaintenanceApi {
 
     private final MaintenanceService maintenanceService;
 
