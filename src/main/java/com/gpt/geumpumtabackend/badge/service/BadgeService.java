@@ -129,7 +129,7 @@ public class BadgeService {
             return NewBadgeResponse.from(badge);
         }
         LocalDateTime now = LocalDateTime.now();
-        userBadgeRepository.save(new UserBadge(userId, badge.getId(), now, now));
+        userBadgeRepository.save(new UserBadge(userId, badge.getId(), now, null));
         return NewBadgeResponse.from(badge);
     }
 
