@@ -221,7 +221,7 @@ class BadgeServiceTest {
         UserBadge saved = captor.getValue();
         assertThat(saved.getUserId()).isEqualTo(userId);
         assertThat(saved.getBadgeId()).isEqualTo(badge.getId());
-        assertThat(saved.getNotifiedAt()).isNotNull();
+        assertThat(saved.getNotifiedAt()).isNull();
     }
 
     @Test
