@@ -1,15 +1,11 @@
 package com.gpt.geumpumtabackend.user.dto.response;
 
-import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 
-import java.util.List;
-
 public record CompleteRegistrationResponse(
-        TokenResponse token,
-        NewBadgeResponse newBadge
+        TokenResponse token
 ) {
-    public static CompleteRegistrationResponse of(TokenResponse token, NewBadgeResponse newBadge) {
-        return new CompleteRegistrationResponse(token, newBadge);
+    public static CompleteRegistrationResponse of(TokenResponse token) {
+        return new CompleteRegistrationResponse(token);
     }
 }

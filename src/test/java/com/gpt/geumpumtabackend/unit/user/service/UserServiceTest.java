@@ -155,7 +155,6 @@ class UserServiceTest {
             // Then
             assertThat(response.token().accessToken()).isEqualTo("access-token");
             assertThat(response.token().refreshToken()).isEqualTo("refresh-token");
-            assertThat(response.newBadge().code()).isEqualTo("WELCOME_001");
             assertThat(user.getSchoolEmail()).isEqualTo(request.email());
             assertThat(user.getStudentId()).isEqualTo(request.studentId());
             assertThat(user.getDepartment()).isEqualTo(Department.SOFTWARE);

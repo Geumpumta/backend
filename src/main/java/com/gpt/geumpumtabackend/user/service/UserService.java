@@ -73,8 +73,8 @@ public class UserService {
         JwtUserClaim jwtUserClaim = JwtUserClaim.create(user);
         Token token = jwtHandler.createTokens(jwtUserClaim);
         TokenResponse tokenResponse = TokenResponse.to(token);
-        NewBadgeResponse newBadge = badgeService.grantWelcomeBadge(userId);
-        return CompleteRegistrationResponse.of(tokenResponse, newBadge);
+        badgeService.grantWelcomeBadge(userId);
+        return CompleteRegistrationResponse.of(tokenResponse);
     }
 
     private void validateDuplication(CompleteRegistrationRequest request) {
