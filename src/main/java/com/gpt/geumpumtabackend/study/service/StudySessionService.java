@@ -99,7 +99,7 @@ public class StudySessionService {
     @Transactional
     public List<User> endExpiredMaxFocusSessions() {
         int maxFocusHours = studyProperties.getMaxFocusHours();
-        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(maxFocusHours);
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(maxFocusHours);
 
         List<StudySession> expiredSessions = studySessionRepository.findAllByStatusAndStartTimeBefore(
                 StudyStatus.STARTED, cutoffTime
