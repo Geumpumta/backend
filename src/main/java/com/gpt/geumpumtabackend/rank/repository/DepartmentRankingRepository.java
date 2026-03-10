@@ -88,4 +88,36 @@ public interface DepartmentRankingRepository extends JpaRepository<DepartmentRan
             ORDER BY COALESCE(rr.totalMillis, dr.total_millis, 0) DESC
             """, nativeQuery = true)
     List<DepartmentRankingTemp> getFinishedDepartmentRanking(@Param("period") LocalDateTime period, @Param("rankingType") String rankingType);
+
+
+    @Query(value = """
+            SELECT dr.department as department,
+                   CAST(SUM(dr.total_millis) AS SIGNED) as totalMillis,
+                   0 as ranking
+            FROM department_ranking dr
+            WHERE dr.ranking_type = 'MONTHLY'
+              AND dr.calculated_at >= :seasonStart
+              AND dr.calculated_at < :monthStart
+            GROUP BY dr.department
+            """, nativeQuery = true)
+    List<DepartmentRankingTemp> calculateSeasonFromMonthlyDepartmentRankings(
+        @Param("seasonStart") LocalDateTime seasonStart,
+        @Param("monthStart") LocalDateTime monthStart
+    );
+
+
+    @Query(value = """
+            SELECT dr.department as department,
+                   CAST(SUM(dr.total_millis) AS SIGNED) as totalMillis,
+                   0 as ranking
+            FROM department_ranking dr
+            WHERE dr.ranking_type = 'DAILY'
+              AND dr.calculated_at >= :monthStart
+              AND dr.calculated_at < :today
+            GROUP BY dr.department
+            """, nativeQuery = true)
+    List<DepartmentRankingTemp> calculateCurrentMonthFromDailyDepartmentRankings(
+        @Param("monthStart") LocalDateTime monthStart,
+        @Param("today") LocalDateTime today
+    );
 }

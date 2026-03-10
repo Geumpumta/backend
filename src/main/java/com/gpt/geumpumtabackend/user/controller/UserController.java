@@ -9,6 +9,7 @@ import com.gpt.geumpumtabackend.user.api.UserApi;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
 import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
 import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
+import com.gpt.geumpumtabackend.user.dto.response.CompleteRegistrationResponse;
 import com.gpt.geumpumtabackend.user.dto.response.NicknameVerifyResponse;
 import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.service.UserService;
@@ -35,11 +36,11 @@ public class UserController implements UserApi {
     @PostMapping("/complete-registration")
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('GUEST')")
-    public ResponseEntity<ResponseBody<TokenResponse>> completeRegistration(
+    public ResponseEntity<ResponseBody<CompleteRegistrationResponse>> completeRegistration(
             @RequestBody @Valid CompleteRegistrationRequest request,
             Long userId
     ){
-        TokenResponse response = userService.completeRegistration(request, userId);
+        CompleteRegistrationResponse response = userService.completeRegistration(request, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
     }
 

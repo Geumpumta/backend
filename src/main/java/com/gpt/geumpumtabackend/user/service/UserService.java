@@ -1,10 +1,13 @@
 package com.gpt.geumpumtabackend.user.service;
 
 
+import com.gpt.geumpumtabackend.fcm.service.FcmService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.jwt.JwtHandler;
 import com.gpt.geumpumtabackend.global.jwt.JwtUserClaim;
+import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
+import com.gpt.geumpumtabackend.badge.service.BadgeService;
 import com.gpt.geumpumtabackend.token.domain.Token;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
 import com.gpt.geumpumtabackend.token.repository.RefreshTokenRepository;
@@ -13,6 +16,7 @@ import com.gpt.geumpumtabackend.user.domain.UserRole;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
 import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
 import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
+import com.gpt.geumpumtabackend.user.dto.response.CompleteRegistrationResponse;
 import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +34,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtHandler jwtHandler;
+    private final FcmService fcmService;
+    private final BadgeService badgeService;
     private static final Random RANDOM = new Random();
 
     private static final List<String> ADJECTIVES = List.of(
@@ -55,18 +61,30 @@ public class UserService {
         user.setInitialNickname(nickname);
     }
 
-    // TODO : 데이터 중복 검증 추가하기
     @Transactional
-    public TokenResponse completeRegistration(CompleteRegistrationRequest request, Long userId) {
+    public CompleteRegistrationResponse completeRegistration(CompleteRegistrationRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
+        validateDuplication(request);
         user.completeRegistration(request);
         generateRandomNickname(user);
 
         // 토큰 재발급
         JwtUserClaim jwtUserClaim = JwtUserClaim.create(user);
         Token token = jwtHandler.createTokens(jwtUserClaim);
-        return TokenResponse.to(token);
+        TokenResponse tokenResponse = TokenResponse.to(token);
+        badgeService.grantWelcomeBadge(userId);
+        return CompleteRegistrationResponse.of(tokenResponse);
+    }
+
+    private void validateDuplication(CompleteRegistrationRequest request) {
+        if(userRepository.existsBySchoolEmail((request.email()))){
+            throw new BusinessException(ExceptionType.DUPLICATED_SCHOOL_EMAIL);
+        }
+
+        if(userRepository.existsByStudentId(request.studentId())){
+            throw new BusinessException(ExceptionType.DUPLICATED_STUDENT_ID);
+        }
     }
 
     public UserProfileResponse getUserProfile(Long userId) {
@@ -96,6 +114,7 @@ public class UserService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         refreshTokenRepository.deleteByUserId(userId);
+        fcmService.removeFcmToken(userId);
     }
 
     @Transactional
@@ -104,6 +123,7 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
 
         refreshTokenRepository.deleteByUserId(userId);
+        fcmService.removeFcmToken(userId);
         userRepository.deleteById(userId);
     }
 

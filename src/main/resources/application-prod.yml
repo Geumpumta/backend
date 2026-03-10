@@ -9,9 +9,10 @@ spring:
       - security/application-swagger.yml
       - security/application-wifi.yml
       - security/application-cloudinary.yml
+      - security/application-fcm.yml
 
   datasource:
-    url: ${geumpumta.mysql.url}
+    url: ${geumpumta.mysql.url}&rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true
     username: ${geumpumta.mysql.username}
     password: ${geumpumta.mysql.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -31,7 +32,7 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: false

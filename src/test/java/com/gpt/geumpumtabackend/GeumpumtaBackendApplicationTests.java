@@ -1,12 +1,9 @@
 package com.gpt.geumpumtabackend;
 
+import com.gpt.geumpumtabackend.integration.config.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
-@ActiveProfiles("test")
-class GeumpumtaBackendApplicationTests {
+class GeumpumtaBackendApplicationTests extends BaseIntegrationTest {
 
     @Test
     void contextLoads() {

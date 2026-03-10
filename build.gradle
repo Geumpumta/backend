@@ -39,8 +39,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // h2
-    testImplementation 'com.h2database:h2'
 
     // jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
@@ -59,13 +57,33 @@ dependencies {
     // Apache Commons Net for IP range validation
     implementation 'commons-net:commons-net:3.11.1'
 
+    // Caffeine Cache
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
     // Cloudinary
     implementation 'com.cloudinary:cloudinary-http45:1.39.0'
 
     // Jwt
     implementation 'com.nimbusds:nimbus-jose-jwt:9.37.4'
+
+    // Spring Retry
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework:spring-aspects'
+
+    // TestContainers
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+    testImplementation 'org.testcontainers:mysql:1.20.4'
+    testImplementation 'org.testcontainers:testcontainers:1.20.4'
+
+    // FCM
+    implementation 'com.google.firebase:firebase-admin:9.7.1'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+
+    // Mockito inline mock maker를 Java agent로 설정 (Java 21 호환)
+    // Docker 29+ 호환: shaded docker-java의 API 버전을 1.44로 설정
+    jvmArgs "-XX:+EnableDynamicAgentLoading", "-Dapi.version=1.44"
 }

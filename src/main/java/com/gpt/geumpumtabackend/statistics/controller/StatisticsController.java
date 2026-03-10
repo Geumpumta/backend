@@ -10,7 +10,6 @@ import com.gpt.geumpumtabackend.statistics.dto.response.MonthlyStatisticsRespons
 import com.gpt.geumpumtabackend.statistics.dto.response.WeeklyStatisticsResponse;
 import com.gpt.geumpumtabackend.statistics.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -1,5 +1,7 @@
 package com.gpt.geumpumtabackend.study.domain;
 
+import com.gpt.geumpumtabackend.global.exception.BusinessException;
+import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.user.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -32,9 +34,6 @@ public class StudySession {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-
-    private LocalDateTime heartBeatAt;
-
     public void startStudySession(LocalDateTime startTime, User user) {
         this.startTime = startTime;
         this.user = user;
@@ -42,12 +41,15 @@ public class StudySession {
     }
 
     public void endStudySession(LocalDateTime endTime) {
+        if(endTime.isBefore(startTime))
+            throw new BusinessException(ExceptionType.INVALID_END_TIME);
         this.endTime = endTime;
         status = StudyStatus.FINISHED;
         this.totalMillis = Duration.between(this.startTime, this.endTime).toMillis();
     }
-
-    public void updateHeartBeatAt(LocalDateTime heartBeatAt) {
-        this.heartBeatAt = heartBeatAt;
+    public void endMaxFocusStudySession(int maxFocusTime) {
+        this.endTime = this.startTime.plusMinutes(maxFocusTime);
+        status = StudyStatus.FINISHED;
+        this.totalMillis = Duration.between(this.startTime, this.endTime).toMillis();
     }
 }

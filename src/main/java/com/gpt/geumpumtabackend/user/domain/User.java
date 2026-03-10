@@ -14,12 +14,13 @@ import org.hibernate.annotations.SQLDelete;
 @NoArgsConstructor
 @Getter
 @SQLDelete(sql = """
-    UPDATE user
+    UPDATE `user`
     SET deleted_at = NOW(),
         email       = CONCAT('deleted_', email),
         school_email= CONCAT('deleted_', school_email),
         nickname    = CONCAT('deleted_', nickname),
-        student_id  = CONCAT('deleted_', student_id)
+        student_id  = CONCAT('deleted_', student_id),
+        fcm_token   = NULL
     WHERE id = ?
     """)
 public class User extends BaseEntity {
@@ -59,6 +60,11 @@ public class User extends BaseEntity {
     @Enumerated(value = EnumType.STRING)
     private Department department;
 
+    @Column(length = 255)
+    private String fcmToken;
+
+    private Long representativeBadgeId;
+
     @Builder
     public User(String email, UserRole role, String name, String picture, OAuth2Provider provider, String providerId, Department department) {
         this.email = email;
@@ -93,5 +99,17 @@ public class User extends BaseEntity {
         this.schoolEmail = schoolEmail;
         this.studentId = studentId;
         super.restore();
+    }
+
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
+
+    public void clearFcmToken() {
+        this.fcmToken = null;
+    }
+
+    public void setRepresentativeBadge(Long badgeId) {
+        this.representativeBadgeId = badgeId;
     }
 }

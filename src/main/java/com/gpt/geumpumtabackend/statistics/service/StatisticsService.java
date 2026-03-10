@@ -10,7 +10,7 @@ import com.gpt.geumpumtabackend.statistics.dto.response.DailyStatisticsResponse;
 import com.gpt.geumpumtabackend.statistics.dto.response.GrassStatisticsResponse;
 import com.gpt.geumpumtabackend.statistics.dto.response.MonthlyStatisticsResponse;
 import com.gpt.geumpumtabackend.statistics.dto.response.WeeklyStatisticsResponse;
-import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
+import com.gpt.geumpumtabackend.statistics.repository.StatisticsRepository;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class StatisticsService {
 
-    private final StudySessionRepository studySessionRepository;
+    private final StatisticsRepository statisticsRepository;
     private final UserRepository userRepository;
     private final ZoneId zone = ZoneId.of("Asia/Seoul");
 
@@ -110,7 +110,7 @@ public class StatisticsService {
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
         LocalDate firstDayOfMonth = date.minusMonths(3).withDayOfMonth(1);
         LocalDate endOfMonth = date.plusMonths(1).withDayOfMonth(1);
-        return GrassStatisticsResponse.from(studySessionRepository.getGrassStatistics(firstDayOfMonth, endOfMonth, targetUserId));
+        return GrassStatisticsResponse.from(statisticsRepository.getGrassStatistics(firstDayOfMonth, endOfMonth, targetUserId));
     }
 
     public List<TwoHourSlotStatistics> getTwoHourSlots(
@@ -118,7 +118,7 @@ public class StatisticsService {
             LocalDateTime dayEnd,
             Long targetUserId
     ){
-        return studySessionRepository.getTwoHourSlotStats(dayStart, dayEnd, targetUserId);
+        return statisticsRepository.getTwoHourSlotStats(dayStart, dayEnd, targetUserId);
     }
 
     public DayMaxFocusAndFullTimeStatistics getDayMaxFocusStatistics(
@@ -126,14 +126,14 @@ public class StatisticsService {
             LocalDateTime dayEnd,
             Long targetUserId
     ){
-        return studySessionRepository.getDayMaxFocusAndFullTime(dayStart, dayEnd, targetUserId);
+        return statisticsRepository.getDayMaxFocusAndFullTime(dayStart, dayEnd, targetUserId);
     }
 
     public WeeklyStatistics getWeeklyStatistics(
             LocalDateTime weekStart,
             Long targetUserId
     ){
-        return studySessionRepository.getWeeklyStatistics(weekStart, targetUserId);
+        return statisticsRepository.getWeeklyStatistics(weekStart, targetUserId);
     }
 
 
@@ -141,7 +141,7 @@ public class StatisticsService {
             LocalDateTime monthStart,
             Long targetUserId
     ){
-        return studySessionRepository.getMonthlyStatistics(monthStart, targetUserId);
+        return statisticsRepository.getMonthlyStatistics(monthStart, targetUserId);
     }
 
 }

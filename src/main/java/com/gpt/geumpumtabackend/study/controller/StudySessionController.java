@@ -4,10 +4,8 @@ import com.gpt.geumpumtabackend.global.aop.AssignUserId;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.study.api.StudySessionApi;
-import com.gpt.geumpumtabackend.study.dto.request.HeartBeatRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
-import com.gpt.geumpumtabackend.study.dto.response.HeartBeatResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.service.StudySessionService;
@@ -57,15 +55,5 @@ public class StudySessionController implements StudySessionApi {
     public ResponseEntity<ResponseBody<Void>> endStudySession(@Valid @RequestBody StudyEndRequest request, Long userId){
         studySessionService.endStudySession(request, userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
-    }
-
-    /*
-    하트비트 수신
-     */
-    @PostMapping("/heart-beat")
-    @PreAuthorize("isAuthenticated() and hasRole('USER')")
-    @AssignUserId
-    public ResponseEntity<ResponseBody<HeartBeatResponse>> processHeartBeat(@Valid @RequestBody HeartBeatRequest heartBeatRequest, Long userId){
-        return ResponseEntity.ok(ResponseUtil.createSuccessResponse(studySessionService.updateHeartBeat(heartBeatRequest, userId)));
     }
 }

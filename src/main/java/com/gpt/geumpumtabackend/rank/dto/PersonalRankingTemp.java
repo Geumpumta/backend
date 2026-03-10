@@ -12,16 +12,19 @@ public class PersonalRankingTemp {
     private String imageUrl;
     private String department;
 
-    // 기본 생성자 - SQL Native Query 결과 순서에 맞춤
-    public PersonalRankingTemp(Long userId, String nickname, String imageUrl, String department, Long totalMillis, Long ranking) {
+    public PersonalRankingTemp(Long userId, String nickname, String imageUrl, Object department, Long totalMillis, Long ranking) {
         this.userId = userId;
         this.nickname = nickname;
+        this.imageUrl = imageUrl;
+        if (department instanceof Department dept) {
+            this.department = dept.name();
+        } else if (department != null) {
+            this.department = department.toString();
+        }
         this.totalMillis = totalMillis;
         this.ranking = ranking;
-        this.imageUrl = imageUrl;
-        this.department = department; // 원본값 그대로 저장
     }
-    
+
     // Department enum 값을 한국어로 변환하는 메서드
     public String getDepartmentKoreanName() {
         if (department == null) return null;
