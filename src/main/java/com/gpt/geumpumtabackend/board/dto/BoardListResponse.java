@@ -3,7 +3,6 @@ package com.gpt.geumpumtabackend.board.dto;
 import com.gpt.geumpumtabackend.board.domain.Board;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public record BoardListResponse(
         Long id,
