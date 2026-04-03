@@ -1,11 +1,9 @@
 package com.gpt.geumpumtabackend.rank.dto.response;
 
 import com.gpt.geumpumtabackend.rank.domain.Season;
-import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 public record SeasonDepartmentRankingResponse(

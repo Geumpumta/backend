@@ -1,128 +1,141 @@
-# Rank Domain CLAUDE.md
+# Rank Domain
 
-## 개요
+개인/학과/시즌 랭킹 계산·저장·조회를 담당하는 도메인.
 
-개인/학과 랭킹 및 시즌 시스템을 담당하는 도메인. 실시간 랭킹 계산, 확정 랭킹 저장, 시즌 전환, 스냅샷 생성을 포함한다.
+---
 
-## 파일 구조
+## 1. 절대 규칙
 
+- **`StudySessionRepository` Native Query 수정 시 랭킹/통계 도메인 영향 반드시 확인** — 실시간 랭킹이 이 쿼리에 직접 의존
+- **`activeSeason` 캐시 eviction은 시즌 전환 전에 실행** — 순서 뒤바뀌면 stale 캐시로 잘못된 시즌 참조
+- **스냅샷은 생성 후 절대 수정 금지** — `SeasonRankingSnapshot`은 불변 이력 레코드
+- **`DepartmentRankingRepository` CTE 쿼리는 MySQL 8+ 전용** — H2에서 동작하지 않음
+- **`SeasonSnapshotBatchService`는 JPA가 아닌 JDBC 직접 사용** — 트랜잭션 범위가 JPA와 분리됨
+
+---
+
+## 2. 아키텍처
+
+### 파일 구조
 ```
 rank/
-├── api/
-│   ├── PersonalRankApi.java              # 개인 랭킹 Swagger 문서
-│   ├── DepartmentRankApi.java            # 학과 랭킹 Swagger 문서
-│   └── SeasonRankApi.java                # 시즌 랭킹 Swagger 문서
-├── controller/
-│   ├── PersonalRankController.java       # /api/v1/rank/personal/*
-│   ├── DepartmentRankController.java     # /api/v1/rank/department/*
-│   └── SeasonRankController.java         # /api/v1/rank/season/*
+├── api/                  # Swagger 문서 (PersonalRankApi, DepartmentRankApi, SeasonRankApi)
+├── controller/           # PersonalRank, DepartmentRank, SeasonRank 컨트롤러
 ├── domain/
-│   ├── UserRanking.java                  # 개인 랭킹 엔티티
-│   ├── DepartmentRanking.java            # 학과 랭킹 엔티티
-│   ├── Season.java                       # 시즌 엔티티 (기간 검증 포함)
-│   ├── SeasonRankingSnapshot.java        # 시즌 종료 시 확정 랭킹 스냅샷
-│   ├── RankType.java                     # enum: OVERALL, DEPARTMENT
-│   ├── RankingType.java                  # enum: DAILY, WEEKLY, MONTHLY
-│   ├── SeasonType.java                   # enum: SPRING_SEMESTER, SUMMER_VACATION, FALL_SEMESTER, WINTER_VACATION
-│   └── SeasonStatus.java                 # enum: ACTIVE, ENDED
+│   ├── UserRanking        # 확정 개인 랭킹 (rank, totalMillis, rankingType, calculatedAt)
+│   ├── DepartmentRanking  # 확정 학과 랭킹 (department, rank, totalMillis, rankingType, calculatedAt)
+│   ├── Season             # 시즌 (name, seasonType, startDate, endDate, status)
+│   ├── SeasonRankingSnapshot  # 시즌 종료 시 불변 스냅샷 (seasonId, userId, rankType, finalRank, finalTotalMillis)
+│   └── enums: RankType(OVERALL|DEPARTMENT), RankingType(DAILY|WEEKLY|MONTHLY),
+│              SeasonType(4시즌), SeasonStatus(ACTIVE|ENDED)
 ├── dto/
-│   ├── PersonalRankingTemp.java          # JPQL 프로젝션용 DTO (userId, nickname, department, totalMillis, ranking)
-│   ├── DepartmentRankingTemp.java        # 학과 집계용 DTO
-│   └── response/
-│       ├── PersonalRankingResponse.java      # topRanks + myRanking
-│       ├── PersonalRankingEntryResponse.java # 개인 랭킹 항목
-│       ├── DepartmentRankingResponse.java    # topRanks + myDepartmentRanking
-│       ├── DepartmentRankingEntryResponse.java # 학과 랭킹 항목
-│       └── SeasonRankingResponse.java        # 시즌 랭킹 (seasonId, seasonName, dates, rankings)
+│   ├── PersonalRankingTemp    # JPQL 프로젝션 DTO (Department enum/String 양쪽 생성자)
+│   ├── DepartmentRankingTemp  # 학과 집계 DTO
+│   └── response/              # PersonalRankingResponse, DepartmentRankingResponse,
+│                                SeasonRankingResponse, SeasonDepartmentRankingResponse
 ├── repository/
-│   ├── UserRankingRepository.java            # 개인 랭킹 JPQL 쿼리
-│   ├── DepartmentRankingRepository.java      # 학과 랭킹 Native Query (CTE 사용)
-│   ├── SeasonRepository.java                 # 시즌 조회 (날짜 범위)
-│   └── SeasonRankingSnapshotRepository.java  # 스냅샷 조회/존재 확인
+│   ├── UserRankingRepository           # JPQL — 확정 랭킹 + 시즌 월간/일간 합산 쿼리
+│   ├── DepartmentRankingRepository     # Native CTE — 25개 학과 랭킹 (MySQL 8+)
+│   ├── SeasonRepository                # Native — 날짜 범위로 시즌 조회
+│   └── SeasonRankingSnapshotRepository # 스냅샷 조회/존재 확인/학과 집계
 ├── service/
-│   ├── PersonalRankService.java              # 개인 랭킹 조회 (실시간/확정)
-│   ├── DepartmentRankService.java            # 학과 랭킹 조회
-│   ├── SeasonRankService.java                # 시즌 랭킹 계산 (월간+일간+실시간 병합)
-│   ├── SeasonService.java                    # 시즌 생명주기 관리 (@Cacheable)
-│   ├── SeasonSnapshotService.java            # 스냅샷 생성 (@Retryable, 3회, 5초 backoff)
-│   └── SeasonSnapshotBatchService.java       # JDBC 배치 인서트 (2000건 청크)
+│   ├── PersonalRankService         # 개인 랭킹 조회 (실시간/확정)
+│   ├── DepartmentRankService       # 학과 랭킹 조회
+│   ├── SeasonRankService           # 시즌 랭킹 (월간+일간+실시간 병합, mergeAndRank)
+│   ├── SeasonService               # 시즌 생명주기 (@Cacheable activeSeason)
+│   ├── SeasonSnapshotService       # 스냅샷 생성 (@Retryable 3회, 5초 backoff)
+│   └── SeasonSnapshotBatchService  # JDBC 배치 인서트 (2000건 청크)
 └── scheduler/
-    ├── RankingSchedulerService.java          # 일간/주간/월간 랭킹 스케줄러
-    └── SeasonTransitionScheduler.java        # 시즌 전환 스케줄러
+    ├── RankingSchedulerService     # 일간/주간/월간 랭킹 확정
+    └── SeasonTransitionScheduler   # 시즌 전환 + 스냅샷 생성
 ```
 
-## 핵심 개념
-
 ### 이중 랭킹 구조
-- **실시간 랭킹**: `StudySessionRepository`에서 직접 계산 (현재 기간)
-- **확정 랭킹**: 기간 종료 후 `UserRanking`/`DepartmentRanking`에 저장 (과거 기간)
 
-컨트롤러에서 `date` 파라미터 유무로 분기:
-- `date` 없음 → 현재 기간 실시간 랭킹
-- `date` 있음 → 해당 날짜의 확정 랭킹
+| 구분 | 데이터 소스 | 트리거 |
+|------|------------|--------|
+| 실시간 | `StudySessionRepository` Native Query (진행중 세션 포함) | `date` 파라미터 없을 때 |
+| 확정 | `UserRanking` / `DepartmentRanking` 테이블 | `date` 파라미터 있을 때 |
+
+### 시즌 랭킹 계산 (3단 병합)
+1. **확정 월간 합산** — seasonStart ~ (currentMonth - 1)의 월간 랭킹 SUM
+2. **현재 월 일간 합산** — 1일 ~ (today - 1)의 일간 랭킹 SUM
+3. **오늘 실시간** — `StudySessionRepository`에서 직접 계산
+4. **병합** — userId/department별 GROUP BY → totalMillis SUM → RANK() (동점 처리)
+
+### 동점 처리 (MySQL RANK 시맨틱)
+```
+Millis: 1000, 1000, 800 → Rank: 1, 1, 3  (2 건너뜀)
+```
+
+### 학과 랭킹
+- 학과별 상위 30명 공부시간 합산 → 전체 학과 간 RANK
+- CTE UNION ALL로 25개 학과 전부 포함 (0시간 학과도)
+- 응답에서는 0시간 학과를 `topRanks`에서 제외하되, **본인 학과는 0이어도 항상 표시**
+
+### Fallback
+랭킹에 없는 사용자/학과: `rank = listSize + 1`, `totalMillis = 0`
+
+---
+
+## 3. 빌드 & 테스트
+
+### 스케줄러 실행 순서 (겹침 방지)
+| Cron | 작업 |
+|------|------|
+| `5 0 0 * * *` | 일간 랭킹 확정 (매일 00:00:05) |
+| `0 1 0 ? * MON` | 주간 랭킹 확정 (월요일 00:01) |
+| `0 2 0 1 * ?` | 월간 랭킹 확정 (매월 1일 00:02) |
+| `0 5 0 * * *` | 시즌 전환 확인 (매일 00:05) |
+
+### 단위 테스트 (`unit/rank/service/`)
+- `PersonalRankServiceTest` — 실시간/확정 랭킹, fallback, 빈 리스트
+- `DepartmentRankServiceTest` — 0시간 필터링, 본인 학과 포함, 학과명 변환
+- `SeasonServiceTest` — 시즌 생성/전환, 4시즌 순환, 윤년 처리
+- `SeasonSnapshotServiceRetryTest` — 재시도 3회, 중복 방지(idempotency)
+
+### 통합 테스트 (`integration/rank/controller/`)
+- `DepartmentRankControllerIntegrationTest` — E2E, 인증, 데이터 격리
+- `SeasonRankControllerIntegrationTest` — 시즌 CRUD, 스냅샷 집계, 에러 케이스
+
+---
+
+## 4. 도메인 컨텍스트
 
 ### 시즌 시스템
-4개 시즌이 순환:
-| SeasonType | 기간 |
-|---|---|
-| SPRING_SEMESTER | 3/1 ~ 6/30 |
-| SUMMER_VACATION | 7/1 ~ 8/31 |
-| FALL_SEMESTER | 9/1 ~ 12/31 |
-| WINTER_VACATION | 1/1 ~ 2/28(29) |
 
-시즌 랭킹 = 확정 월간 합산 + 현재 월 일간 합산 + 오늘 실시간 데이터를 `mergeAndRank()`로 병합.
+| SeasonType | 기간 | 비고 |
+|------------|------|------|
+| `SPRING_SEMESTER` | 3/1 ~ 6/30 | |
+| `SUMMER_VACATION` | 7/1 ~ 8/31 | |
+| `FALL_SEMESTER` | 9/1 ~ 12/31 | |
+| `WINTER_VACATION` | 1/1 ~ 2/28(29) | 윤년 처리 |
 
-### 학과 랭킹 계산
-- 학과별 상위 30명의 공부 시간을 합산
-- Native Query + CTE로 25개 학과 처리
-- 공부 시간 0인 학과는 topRanks에서 제외하되, 본인 학과는 0이어도 표시
+**생명주기**: ACTIVE 시즌 1개만 존재 → 스케줄러가 endDate+1 감지 → 캐시 evict → 스냅샷 생성(Retry 3회) → 현재 시즌 ENDED → 다음 시즌 ACTIVE
 
-### Fallback 로직
-랭킹에 포함되지 않은 사용자: `rank = listSize + 1`, `totalMillis = 0`
-
-## 스케줄러 실행 시점
-
-| 작업 | Cron | 설명 |
+### 에러 코드
+| 코드 | 이름 | 설명 |
 |------|------|------|
-| 일간 랭킹 계산 | `5 0 0 * * *` | 매일 00:00:05 |
-| 주간 랭킹 계산 | `0 1 0 ? * MON` | 매주 월요일 00:01 |
-| 월간 랭킹 계산 | `0 2 0 1 * ?` | 매월 1일 00:02 |
-| 시즌 전환 확인 | `0 5 0 * * *` | 매일 00:05 |
+| SE001 | SEASON_NOT_FOUND | 시즌 미발견 |
+| SE002 | SEASON_NOT_ENDED | ACTIVE 시즌을 종료 시즌으로 조회 시도 |
+| SE003 | SEASON_INVALID_DATE_RANGE | endDate ≤ startDate |
+| SE004 | SEASON_ALREADY_ENDED | 이미 종료된 시즌 재종료 시도 |
+| SE005 | NO_ACTIVE_SEASON | 활성 시즌 없음 |
 
-## API 엔드포인트
+### API 엔드포인트
 
-### 개인 랭킹 (`/api/v1/rank/personal`)
-- `GET /daily?date=` — 일간 개인 랭킹
-- `GET /weekly?date=` — 주간 개인 랭킹 (월요일 기준)
-- `GET /monthly?date=` — 월간 개인 랭킹 (1일 기준)
+**개인 랭킹** (`/api/v1/rank/personal`): `GET /daily`, `/weekly`, `/monthly` — 모두 `?date=` 선택적
+**학과 랭킹** (`/api/v1/rank/department`): 동일 구조
+**시즌 랭킹** (`/api/v1/rank/season`): `GET /current`, `/current/department?department=`, `/{seasonId}`, `/{seasonId}/department?department=`
 
-### 학과 랭킹 (`/api/v1/rank/department`)
-- `GET /daily?date=` — 일간 학과 랭킹
-- `GET /weekly?date=` — 주간 학과 랭킹
-- `GET /monthly?date=` — 월간 학과 랭킹
+모든 엔드포인트: `@PreAuthorize(USER)` + `@AssignUserId`
 
-### 시즌 랭킹 (`/api/v1/rank/season`)
-- `GET /current` — 현재 시즌 전체 랭킹
-- `GET /current/department?department=` — 현재 시즌 학과별 랭킹
-- `GET /{seasonId}` — 종료된 시즌 전체 랭킹
-- `GET /{seasonId}/department?department=` — 종료된 시즌 학과별 랭킹
+---
 
-## 테스트
+## 5. 코딩 컨벤션
 
-### Unit Tests
-- `PersonalRankServiceTest` — 실시간/확정 랭킹, fallback, 동점 처리, 빈 리스트
-- `DepartmentRankServiceTest` — 0시간 학과 필터링, 본인 학과 포함, 학과명 변환
-- `SeasonRankServiceTest` — 데이터 병합, 동점 처리, 스냅샷 조회, 예외(SEASON_NOT_FOUND, SEASON_NOT_ENDED)
-- `SeasonServiceTest` — 시즌 생성/전환, 4개 시즌 순환, 윤년 처리, 날짜 검증
-- `SeasonSnapshotServiceRetryTest` — 재시도 메커니즘, 중복 방지
-
-### Integration Tests
-- `DepartmentRankControllerIntegrationTest` — E2E API 테스트, 인증, 데이터 격리
-
-## 개발 시 주의사항
-
-1. 랭킹 쿼리가 복잡하므로 `StudySessionRepository`의 Native Query도 함께 확인할 것
-2. 시즌 전환 시 `activeSeason` 캐시가 evict됨 — 캐시 관련 코드 수정 시 주의
-3. `SeasonSnapshotBatchService`는 JDBC 직접 사용 — JPA와 별도 트랜잭션
-4. `DepartmentRankingRepository`의 Native Query는 CTE 사용 — MySQL 8+ 필수
-5. `PersonalRankingTemp`에 Department enum/String 두 가지 생성자 존재 — JPQL 프로젝션 방식에 따라 다름
+1. `PersonalRankingTemp`에 Department enum/String 두 생성자 존재 — JPQL 프로젝션 방식에 따라 선택
+2. 응답은 `ResponseUtil.createSuccessResponse(data)` 표준 형식
+3. 읽기 전용 서비스 메서드에 `@Transactional(readOnly = true)`
+4. 새 에러 코드는 `SE` 접두사 + `ExceptionType` enum에 추가
+5. 랭킹 계산 로직 수정 시 동점 처리(RANK 시맨틱) 유지 확인
