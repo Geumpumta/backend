@@ -2,9 +2,13 @@ package com.gpt.geumpumtabackend.unit.study.service;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
+import com.gpt.geumpumtabackend.study.domain.StudyStatus;
+import com.gpt.geumpumtabackend.study.dto.request.StudyEndRequest;
 import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
+import com.gpt.geumpumtabackend.study.event.StudySessionEndedEvent;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.study.service.StudySessionService;
 import com.gpt.geumpumtabackend.user.domain.Department;
@@ -12,15 +16,18 @@ import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
 import com.gpt.geumpumtabackend.wifi.service.CampusWiFiValidationService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -42,6 +49,12 @@ class StudySessionServiceTest {
     
     @Mock
     private CampusWiFiValidationService wifiValidationService;
+
+    @Mock
+    private StudyProperties studyProperties;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
     
     @InjectMocks
     private StudySessionService studySessionService;
@@ -236,7 +249,103 @@ class StudySessionServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("공부 종료")
+    class EndStudySession {
+
+        @Test
+        @DisplayName("공부 종료 시 세션을 종료하고 AFTER_COMMIT 이벤트를 발행한다")
+        void 공부종료시_세션종료후_이벤트를_발행한다() {
+            // Given
+            Long userId = 1L;
+            Long sessionId = 10L;
+            User testUser = createTestUser(userId, "테스트사용자", Department.SOFTWARE);
+            StudySession session = new StudySession();
+            session.startStudySession(LocalDateTime.now().minusHours(1), testUser);
+
+            given(studySessionRepository.findByIdAndUser_Id(sessionId, userId))
+                    .willReturn(Optional.of(session));
+
+            // When
+            studySessionService.endStudySession(new StudyEndRequest(sessionId), userId);
+
+            // Then
+            assertThat(session.getStatus()).isEqualTo(com.gpt.geumpumtabackend.study.domain.StudyStatus.FINISHED);
+            verify(eventPublisher).publishEvent(new StudySessionEndedEvent(userId));
+        }
+
+        @Test
+        @DisplayName("세션이 없으면 STUDY_SESSION_NOT_FOUND 예외가 발생한다")
+        void 세션이_없으면_예외가_발생한다() {
+            // Given
+            Long userId = 1L;
+            Long sessionId = 11L;
+            given(studySessionRepository.findByIdAndUser_Id(sessionId, userId))
+                    .willReturn(Optional.empty());
+
+            // When
+            assertThatThrownBy(() -> studySessionService.endStudySession(new StudyEndRequest(sessionId), userId))
+                    .isInstanceOf(BusinessException.class)
+                    .hasFieldOrPropertyWithValue("exceptionType", ExceptionType.STUDY_SESSION_NOT_FOUND);
+            verify(eventPublisher, never()).publishEvent(any());
+        }
+    }
+
     // 테스트 데이터 생성 헬퍼 메서드
+    @Nested
+    @DisplayName("max focus 계산")
+    class MaxFocusCalculation {
+
+        @Test
+        @DisplayName("max focus 종료 시간은 hour 단위로 계산된다")
+        void max_focus_ends_in_hour_units() {
+            // Given
+            LocalDateTime startTime = LocalDateTime.of(2024, 1, 1, 9, 0);
+            User testUser = createTestUser(1L, "test-user", Department.SOFTWARE);
+            StudySession session = new StudySession();
+
+            // When
+            session.startStudySession(startTime, testUser);
+            session.endMaxFocusStudySession(3);
+
+            // Then
+            assertThat(session.getEndTime()).isEqualTo(startTime.plusHours(3));
+            assertThat(session.getTotalMillis()).isEqualTo(10_800_000L);
+            assertThat(session.getStatus()).isEqualTo(StudyStatus.FINISHED);
+        }
+
+        @Test
+        @DisplayName("만료 cutoff 는 3시간 기준으로 계산된다")
+        void expired_cutoff_uses_three_hours() {
+            // Given
+            User testUser = createTestUser(1L, "test-user", Department.SOFTWARE);
+            StudySession expiredSession = new StudySession();
+            LocalDateTime sessionStartTime = LocalDateTime.now().minusHours(4);
+            expiredSession.startStudySession(sessionStartTime, testUser);
+
+            given(studyProperties.getMaxFocusHours()).willReturn(3);
+            given(studySessionRepository.findAllByStatusAndStartTimeBefore(eq(StudyStatus.STARTED), any(LocalDateTime.class)))
+                    .willReturn(List.of(expiredSession));
+
+            LocalDateTime beforeCall = LocalDateTime.now();
+
+            // When
+            List<User> usersToNotify = studySessionService.endExpiredMaxFocusSessions();
+
+            // Then
+            LocalDateTime afterCall = LocalDateTime.now();
+            ArgumentCaptor<LocalDateTime> cutoffTimeCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+            verify(studySessionRepository).findAllByStatusAndStartTimeBefore(eq(StudyStatus.STARTED), cutoffTimeCaptor.capture());
+
+            assertThat(cutoffTimeCaptor.getValue())
+                    .isBetween(beforeCall.minusHours(3), afterCall.minusHours(3));
+            assertThat(usersToNotify).containsExactly(testUser);
+            assertThat(expiredSession.getEndTime()).isEqualTo(sessionStartTime.plusHours(3));
+            assertThat(expiredSession.getTotalMillis()).isEqualTo(10_800_000L);
+            assertThat(expiredSession.getStatus()).isEqualTo(StudyStatus.FINISHED);
+        }
+    }
+
     private User createTestUser(Long id, String name, Department department) {
         User user = User.builder()
             .name(name)

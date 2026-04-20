@@ -1,5 +1,7 @@
 package com.gpt.geumpumtabackend.unit.user.service;
 
+import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
+import com.gpt.geumpumtabackend.badge.service.BadgeService;
 import com.gpt.geumpumtabackend.fcm.service.FcmService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
@@ -15,6 +17,7 @@ import com.gpt.geumpumtabackend.user.domain.UserRole;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
 import com.gpt.geumpumtabackend.user.dto.request.NicknameVerifyRequest;
 import com.gpt.geumpumtabackend.user.dto.request.ProfileUpdateRequest;
+import com.gpt.geumpumtabackend.user.dto.response.CompleteRegistrationResponse;
 import com.gpt.geumpumtabackend.user.dto.response.UserProfileResponse;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import com.gpt.geumpumtabackend.user.service.UserService;
@@ -50,6 +53,9 @@ class UserServiceTest {
 
     @Mock
     private FcmService fcmService;
+
+    @Mock
+    private BadgeService badgeService;
 
     @InjectMocks
     private UserService userService;
@@ -129,19 +135,26 @@ class UserServiceTest {
                     .accessToken("access-token")
                     .refreshToken("refresh-token")
                     .build();
+            NewBadgeResponse newBadge = new NewBadgeResponse(
+                    "WELCOME_001",
+                    "웰컴 배지",
+                    "회원가입 기념 배지",
+                    "https://example.com/welcome.png"
+            );
 
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
             given(userRepository.existsBySchoolEmail(request.email())).willReturn(false);
             given(userRepository.existsByStudentId(request.studentId())).willReturn(false);
             given(userRepository.existsByNickname(any())).willReturn(false);
             given(jwtHandler.createTokens(any(JwtUserClaim.class))).willReturn(token);
+            given(badgeService.grantWelcomeBadge(userId)).willReturn(newBadge);
 
             // When
-            TokenResponse response = userService.completeRegistration(request, userId);
+            CompleteRegistrationResponse response = userService.completeRegistration(request, userId);
 
             // Then
-            assertThat(response.accessToken()).isEqualTo("access-token");
-            assertThat(response.refreshToken()).isEqualTo("refresh-token");
+            assertThat(response.token().accessToken()).isEqualTo("access-token");
+            assertThat(response.token().refreshToken()).isEqualTo("refresh-token");
             assertThat(user.getSchoolEmail()).isEqualTo(request.email());
             assertThat(user.getStudentId()).isEqualTo(request.studentId());
             assertThat(user.getDepartment()).isEqualTo(Department.SOFTWARE);
@@ -152,6 +165,7 @@ class UserServiceTest {
                             claim.role().equals(UserRole.USER) &&
                             !claim.withdrawn()
             ));
+            verify(badgeService).grantWelcomeBadge(userId);
         }
 
         @Test

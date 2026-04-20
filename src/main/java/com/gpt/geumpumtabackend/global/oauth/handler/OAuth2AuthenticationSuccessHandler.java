@@ -1,9 +1,7 @@
 package com.gpt.geumpumtabackend.global.oauth.handler;
 
-
-
-import com.gpt.geumpumtabackend.global.jwt.JwtHandler;
 import com.gpt.geumpumtabackend.global.jwt.JwtUserClaim;
+import com.gpt.geumpumtabackend.global.oauth.service.OAuthLoginPolicyService;
 import com.gpt.geumpumtabackend.global.oauth.service.OAuth2UserPrincipal;
 import com.gpt.geumpumtabackend.global.oauth.util.RedirectUrlValidator;
 import com.gpt.geumpumtabackend.global.oauth.util.StateUtil;
@@ -20,13 +18,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final JwtHandler jwtHandler;
+    private final OAuthLoginPolicyService oAuthLoginPolicyService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -45,15 +44,22 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         Boolean isWithdrawn = principal.getUser().getDeletedAt() != null;
 
         JwtUserClaim jwtUserClaim = new JwtUserClaim(userId, role, isWithdrawn);
-        Token token = jwtHandler.createTokens(jwtUserClaim);
+        Optional<Token> token = oAuthLoginPolicyService.issueTokenIfNoActiveSession(jwtUserClaim);
+        if (token.isEmpty()) {
+            String blockedUrl = UriComponentsBuilder.fromUriString(redirectUri)
+                    .queryParam("error", "already_logged_in")
+                    .build().toUriString();
+            response.sendRedirect(blockedUrl);
+            return;
+        }
+        Token issuedToken = token.get();
 
         // 토큰 붙여서 리다이렉트
         String redirectUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("accessToken", token.getAccessToken())
-                .queryParam("refreshToken", token.getRefreshToken())
+                .queryParam("accessToken", issuedToken.getAccessToken())
+                .queryParam("refreshToken", issuedToken.getRefreshToken())
                 .build().toUriString();
 
-        System.out.println(redirectUrl);
         response.sendRedirect(redirectUrl);
     }
 }

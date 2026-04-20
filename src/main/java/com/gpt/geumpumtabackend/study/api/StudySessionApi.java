@@ -122,6 +122,11 @@ public interface StudySessionApi {
             - 총 학습 시간 계산 및 저장
             - 세션 상태를 FINISHED로 변경
             - 랭킹 시스템에 반영 (다음 스케줄링 시)
+            - 배지 지급은 트랜잭션 커밋 이후 동기적으로 처리
+
+            🎖️ **배지 확인 방법:**
+            - 이 API 응답에는 배지 정보가 포함되지 않습니다.
+            - 종료 성공 후 `GET /api/v1/badge/unnotified`를 호출해 새 배지를 조회하세요.
             """
     )
     @SwaggerApiResponses(
