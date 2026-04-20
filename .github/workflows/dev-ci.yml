@@ -2,7 +2,7 @@ name: Dev - CI (Build & Push)
 
 on:
   push:
-    branches: ["dev"]
+    branches: ["dev", "fix/studyTime"]
   pull_request:
     branches: ["dev"]
 
