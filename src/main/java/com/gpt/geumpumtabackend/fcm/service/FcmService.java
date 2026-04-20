@@ -1,6 +1,7 @@
 package com.gpt.geumpumtabackend.fcm.service;
 
 import com.gpt.geumpumtabackend.fcm.dto.FcmMessageDto;
+import com.gpt.geumpumtabackend.fcm.exception.FcmPermanentException;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.user.domain.User;
@@ -19,6 +20,7 @@ public class FcmService {
 
     private final UserRepository userRepository;
     private final FcmMessageSender fcmMessageSender;
+    private final FcmOutboxService fcmOutboxService;
 
     @Transactional
     public void registerFcmToken(Long userId, String fcmToken) {
@@ -43,13 +45,33 @@ public class FcmService {
         user.clearFcmToken();
     }
 
-    public void sendMaxFocusNotification(User user, int hours) {
-        if (user.getFcmToken() == null || user.getFcmToken().isBlank()) {
+    public void sendMaxFocusNotification(Long userId, int hours) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            log.warn("Max focus notification skipped — user not found. userId={}", userId);
+            return;
+        }
+        String token = user.getFcmToken();
+        if (token == null || token.isBlank()) {
             return;
         }
 
-        FcmMessageDto messageDto = FcmMessageDto.builder()
-                .token(user.getFcmToken())
+        FcmMessageDto dto = buildMaxFocusDto(token, hours);
+        try {
+            fcmMessageSender.send(dto);
+        } catch (FcmPermanentException e) {
+            log.error("Max focus FCM permanent failure, saving to DEAD_LETTER. userId={}, errorCode={}",
+                    userId, e.getErrorCode(), e);
+            fcmOutboxService.saveDeadLetter(userId, dto, String.valueOf(e.getErrorCode()), e.getMessage());
+        } catch (Exception e) {
+            log.error("Max focus FCM transient failure, queuing to outbox(PENDING). userId={}", userId, e);
+            fcmOutboxService.saveFailedNotification(userId, dto, e.getMessage());
+        }
+    }
+
+    private FcmMessageDto buildMaxFocusDto(String token, int hours) {
+        return FcmMessageDto.builder()
+                .token(token)
                 .title("최대 집중 시간 도달")
                 .body(String.format("%d시간 동안 열심히 공부하셨습니다! 잠시 휴식을 취해보세요.", hours))
                 .data(Map.of(
@@ -57,10 +79,5 @@ public class FcmService {
                         "maxFocusHours", String.valueOf(hours)
                 ))
                 .build();
-        try {
-            fcmMessageSender.send(messageDto);
-        } catch (Exception e) {
-            log.error("Failed to send max focus notification to user {}", user.getId(), e);
-        }
     }
 }

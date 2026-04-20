@@ -6,16 +6,12 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.Notification;
 import com.gpt.geumpumtabackend.fcm.dto.FcmMessageDto;
-import com.gpt.geumpumtabackend.global.exception.BusinessException;
-import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.fcm.exception.FcmPermanentException;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -32,11 +28,6 @@ public class FcmMessageSender {
 
     private final UserRepository userRepository;
 
-    @Retryable(
-            retryFor = FirebaseMessagingException.class,
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 1000, multiplier = 2)
-    )
     public void send(FcmMessageDto messageDto) throws FirebaseMessagingException {
         Notification notification = Notification.builder()
                 .setTitle(messageDto.getTitle())
@@ -59,20 +50,16 @@ public class FcmMessageSender {
         }
     }
 
-    @Recover
-    public void sendRecover(FirebaseMessagingException e, FcmMessageDto messageDto) {
-        log.error("FCM send failed after 3 retries for token {}", messageDto.getToken(), e);
-        throw new BusinessException(ExceptionType.FCM_SEND_FAILED);
-    }
-
     private void handleSendFailure(FirebaseMessagingException e, String token)
             throws FirebaseMessagingException {
         MessagingErrorCode errorCode = e.getMessagingErrorCode();
 
+        // 일시 오류 → 그대로 throw 하여 호출자가 outbox(PENDING) 에 기록하도록 위임
         if (errorCode == null || !PERMANENT_ERROR_CODES.contains(errorCode)) {
             throw e;
         }
 
+        // UNREGISTERED → 토큰 제거로 자가치유, DEAD_LETTER 기록 불필요
         if (errorCode == MessagingErrorCode.UNREGISTERED) {
             log.warn("FCM token unregistered, clearing token: {}", token);
             userRepository.findByFcmToken(token)
@@ -80,6 +67,8 @@ public class FcmMessageSender {
             return;
         }
 
+        // 그 외 영구 오류 → 운영 분석이 필요하므로 DEAD_LETTER 로 기록하도록 전용 예외 전파
         log.warn("FCM permanent error [{}] for token {}: {}", errorCode, token, e.getMessage());
+        throw new FcmPermanentException(errorCode, e.getMessage(), e);
     }
 }
