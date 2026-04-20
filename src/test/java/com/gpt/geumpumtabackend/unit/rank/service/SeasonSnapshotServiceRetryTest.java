@@ -2,6 +2,7 @@ package com.gpt.geumpumtabackend.unit.rank.service;
 
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.rank.domain.Season;
 import com.gpt.geumpumtabackend.rank.domain.SeasonStatus;
 import com.gpt.geumpumtabackend.rank.domain.SeasonType;
 import com.gpt.geumpumtabackend.rank.repository.SeasonRankingSnapshotRepository;
