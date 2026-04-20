@@ -5,7 +5,6 @@ import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingResponse;
 import com.gpt.geumpumtabackend.rankbenchmark.mysql.MysqlRankingReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/rank-benchmark/mysql")
 @RequiredArgsConstructor
-@Profile("local")
 @ConditionalOnProperty(prefix = "benchmark.rank", name = "enabled", havingValue = "true")
 public class MysqlRankingBenchmarkController {
 

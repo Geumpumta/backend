@@ -11,7 +11,6 @@ import com.gpt.geumpumtabackend.rankbenchmark.dto.LatencyStats;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -30,7 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Profile("local")
 @ConditionalOnProperty(prefix = "benchmark.rank", name = "enabled", havingValue = "true")
 public class RankingBenchmarkService {
 

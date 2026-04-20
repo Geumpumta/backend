@@ -10,7 +10,6 @@ import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -27,7 +26,6 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-@Profile("local")
 @ConditionalOnProperty(prefix = "benchmark.rank", name = "enabled", havingValue = "true")
 public class RedisRankingReader {
 

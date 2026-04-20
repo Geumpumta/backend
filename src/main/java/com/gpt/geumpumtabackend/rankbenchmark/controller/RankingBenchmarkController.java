@@ -7,7 +7,6 @@ import com.gpt.geumpumtabackend.rankbenchmark.redis.RedisRankingBackfillService;
 import com.gpt.geumpumtabackend.rankbenchmark.service.RankingBenchmarkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/rank-benchmark")
 @RequiredArgsConstructor
-@Profile("local")
 @ConditionalOnProperty(prefix = "benchmark.rank", name = "enabled", havingValue = "true")
 public class RankingBenchmarkController {
 

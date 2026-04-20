@@ -5,7 +5,6 @@ import com.gpt.geumpumtabackend.user.domain.Department;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +19,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile("local")
 @ConditionalOnProperty(prefix = "benchmark.rank", name = "enabled", havingValue = "true")
 public class StudySessionDataGenerator {
 

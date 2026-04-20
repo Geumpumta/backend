@@ -6,14 +6,12 @@ import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingEntryResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Slf4j
 @Component
-@Profile("local")
 @ConditionalOnProperty(prefix = "benchmark.rank", name = "enabled", havingValue = "true")
 public class RankingResultVerifier {
 
