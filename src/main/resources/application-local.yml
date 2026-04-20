@@ -52,3 +52,15 @@ logging:
     org.hibernate.orm.jdbc.bind: trace
     # ---- 질의문 실행 결과를 살펴봅니다.
     org.hibernate.orm.jdbc.extract: trace
+benchmark:
+  rank:
+    enabled: true
+    dataset:
+      total-sessions: 10000000
+      user-count: 20000
+      started-session-count: 200
+      batch-chunk: 5000
+    harness:
+      warmup-iterations: 20
+      measure-iterations: 200
+      base-url: http://localhost:8080
