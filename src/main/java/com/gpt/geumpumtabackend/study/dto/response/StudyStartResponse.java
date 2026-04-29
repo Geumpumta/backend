@@ -2,9 +2,11 @@ package com.gpt.geumpumtabackend.study.dto.response;
 
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 
-public record StudyStartResponse(Long studySessionId) {
+import java.time.LocalDateTime;
+
+public record StudyStartResponse(Long studySessionId, LocalDateTime startTime) {
 
     public static StudyStartResponse fromEntity(StudySession studySession) {
-        return new StudyStartResponse(studySession.getId());
+        return new StudyStartResponse(studySession.getId(), studySession.getStartTime());
     }
 }
