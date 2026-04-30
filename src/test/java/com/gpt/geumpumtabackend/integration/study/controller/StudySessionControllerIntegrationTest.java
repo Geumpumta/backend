@@ -191,6 +191,25 @@ class  StudySessionControllerIntegrationTest extends BaseIntegrationTest {
         }
 
         @Test
+        @DisplayName("studying session response includes start time")
+        void studying_session_response_includes_start_time() throws Exception {
+            // Given
+            LocalDateTime startTime = LocalDateTime.of(2026, 4, 29, 9, 30, 15);
+            StudySession session = new StudySession();
+            session.startStudySession(startTime, testUser);
+            studySessionRepository.save(session);
+
+            // When & Then
+            mockMvc.perform(get("/api/v1/study")
+                            .header("Authorization", "Bearer " + accessToken))
+                    .andDo(print())
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value("true"))
+                    .andExpect(jsonPath("$.data.isStudying").value(true))
+                    .andExpect(jsonPath("$.data.startTime").value("2026-04-29T09:30:15"));
+        }
+
+        @Test
         @DisplayName("공부_기록이_없으면_빈_응답을_반환한다")
         void 공부_기록이_없으면_빈_응답을_반환한다() throws Exception {
             // When & Then

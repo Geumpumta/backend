@@ -1,8 +1,10 @@
 package com.gpt.geumpumtabackend.study.dto.response;
 
-public record StudySessionResponse(Long totalStudySession, boolean isStudying) {
+import java.time.LocalDateTime;
 
-    public static StudySessionResponse of(Long totalStudySession, boolean isStudying) {
-        return new StudySessionResponse(totalStudySession, isStudying);
+public record StudySessionResponse(Long totalStudySession, boolean isStudying, LocalDateTime startTime) {
+
+    public static StudySessionResponse of(Long totalStudySession, boolean isStudying, LocalDateTime startTime) {
+        return new StudySessionResponse(totalStudySession, isStudying, startTime);
     }
 }

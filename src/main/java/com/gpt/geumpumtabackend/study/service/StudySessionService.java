@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,9 +42,13 @@ public class StudySessionService {
     public StudySessionResponse getTodayStudySession(Long userId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime now = LocalDateTime.now();
-        boolean isStudying = studySessionRepository.findByUser_IdAndStatus(userId, StudyStatus.STARTED).isPresent();
+        Optional<StudySession> startedSession = studySessionRepository.findByUser_IdAndStatus(userId, StudyStatus.STARTED);
         Long totalStudySession = studySessionRepository.sumCompletedStudySessionByUserId(userId, startOfDay, now);
-        return StudySessionResponse.of(totalStudySession,isStudying);
+        return StudySessionResponse.of(
+                totalStudySession,
+                startedSession.isPresent(),
+                startedSession.map(StudySession::getStartTime).orElse(null)
+        );
     }
 
     /*
