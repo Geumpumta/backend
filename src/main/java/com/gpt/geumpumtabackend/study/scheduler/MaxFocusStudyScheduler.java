@@ -26,11 +26,7 @@ public class MaxFocusStudyScheduler {
 
             int maxFocusHours = studyProperties.getMaxFocusHours();
             for (User user : usersToNotify) {
-                try {
-                    fcmService.sendMaxFocusNotification(user, maxFocusHours);
-                } catch (Exception e) {
-                    log.error("Failed to send FCM max focus notification for user {}", user.getId(), e);
-                }
+                fcmService.sendMaxFocusNotification(user, maxFocusHours);
             }
         } catch (Exception e) {
             log.error("[MAX_FOCUS_SCHEDULER] Failed to check max focus sessions", e);

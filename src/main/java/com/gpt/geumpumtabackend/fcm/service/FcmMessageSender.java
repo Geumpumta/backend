@@ -6,12 +6,10 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.Notification;
 import com.gpt.geumpumtabackend.fcm.dto.FcmMessageDto;
+import com.gpt.geumpumtabackend.fcm.exception.PermanentFcmException;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
-import com.gpt.geumpumtabackend.user.domain.User;
-import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
@@ -19,21 +17,19 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class FcmMessageSender {
 
-    private static final Set<MessagingErrorCode> PERMANENT_ERROR_CODES = Set.of(
+    private static final Set<MessagingErrorCode> NON_RETRYABLE_ERROR_CODES = Set.of(
             MessagingErrorCode.UNREGISTERED,
             MessagingErrorCode.INVALID_ARGUMENT,
             MessagingErrorCode.SENDER_ID_MISMATCH,
             MessagingErrorCode.THIRD_PARTY_AUTH_ERROR
     );
 
-    private final UserRepository userRepository;
-
     @Retryable(
             retryFor = FirebaseMessagingException.class,
+            noRetryFor = PermanentFcmException.class,
             maxAttempts = 3,
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
@@ -55,7 +51,12 @@ public class FcmMessageSender {
         try {
             FirebaseMessaging.getInstance().send(messageBuilder.build());
         } catch (FirebaseMessagingException e) {
-            handleSendFailure(e, messageDto.getToken());
+            MessagingErrorCode code = e.getMessagingErrorCode();
+            if (code != null && NON_RETRYABLE_ERROR_CODES.contains(code)) {
+                log.warn("FCM permanent error [{}] for token {}: {}", code, messageDto.getToken(), e.getMessage());
+                throw new PermanentFcmException(e);
+            }
+            throw e;
         }
     }
 
@@ -63,23 +64,5 @@ public class FcmMessageSender {
     public void sendRecover(FirebaseMessagingException e, FcmMessageDto messageDto) {
         log.error("FCM send failed after 3 retries for token {}", messageDto.getToken(), e);
         throw new BusinessException(ExceptionType.FCM_SEND_FAILED);
-    }
-
-    private void handleSendFailure(FirebaseMessagingException e, String token)
-            throws FirebaseMessagingException {
-        MessagingErrorCode errorCode = e.getMessagingErrorCode();
-
-        if (errorCode == null || !PERMANENT_ERROR_CODES.contains(errorCode)) {
-            throw e;
-        }
-
-        if (errorCode == MessagingErrorCode.UNREGISTERED) {
-            log.warn("FCM token unregistered, clearing token: {}", token);
-            userRepository.findByFcmToken(token)
-                    .ifPresent(User::clearFcmToken);
-            return;
-        }
-
-        log.warn("FCM permanent error [{}] for token {}: {}", errorCode, token, e.getMessage());
     }
 }
