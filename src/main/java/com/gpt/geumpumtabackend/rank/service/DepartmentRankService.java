@@ -31,6 +31,7 @@ public class DepartmentRankService {
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
 
+    // 현재 진행 중 학과 랭킹은 Redis 조회 모델을 우선 조회하고, Redis가 비어 있거나 장애가 나면 기존 MySQL 쿼리로 대체 조회한다.
     @Autowired(required = false)
     private RedisRealtimeRankingReader redisRankingReader;
 
@@ -40,6 +41,7 @@ public class DepartmentRankService {
     public DepartmentRankingResponse getCurrentDailyDepartmentRanking(Long userId){
         if (redisRankingReader != null) {
             try {
+                // Redis 키가 없으면 Optional.empty()가 반환되고 아래 DB 대체 조회 경로를 탄다.
                 return redisRankingReader.departmentDaily(userId)
                         .orElseGet(() -> getCurrentDailyDepartmentRankingFromDatabase(userId));
             } catch (BusinessException e) {
@@ -75,6 +77,7 @@ public class DepartmentRankService {
     public DepartmentRankingResponse getCurrentWeeklyDepartmentRanking(Long userId){
         if (redisRankingReader != null) {
             try {
+                // Redis 키가 없으면 Optional.empty()가 반환되고 아래 DB 대체 조회 경로를 탄다.
                 return redisRankingReader.departmentWeekly(userId)
                         .orElseGet(() -> getCurrentWeeklyDepartmentRankingFromDatabase(userId));
             } catch (BusinessException e) {
@@ -111,6 +114,7 @@ public class DepartmentRankService {
      public DepartmentRankingResponse getCurrentMonthlyDepartmentRanking(Long userId){
          if (redisRankingReader != null) {
              try {
+                 // Redis 키가 없으면 Optional.empty()가 반환되고 아래 DB 대체 조회 경로를 탄다.
                  return redisRankingReader.departmentMonthly(userId)
                          .orElseGet(() -> getCurrentMonthlyDepartmentRankingFromDatabase(userId));
              } catch (BusinessException e) {

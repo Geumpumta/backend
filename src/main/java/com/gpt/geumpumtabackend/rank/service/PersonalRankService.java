@@ -33,6 +33,7 @@ public class PersonalRankService {
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
 
+    // 현재 진행 중 랭킹은 Redis 조회 모델을 우선 조회하고, Redis가 비어 있거나 장애가 나면 기존 MySQL 쿼리로 대체 조회한다.
     @Autowired(required = false)
     private RedisRealtimeRankingReader redisRankingReader;
     /*
@@ -41,6 +42,7 @@ public class PersonalRankService {
     public PersonalRankingResponse getCurrentDaily(Long userId) {
         if (redisRankingReader != null) {
             try {
+                // Redis 키가 없으면 Optional.empty()가 반환되고 아래 DB 대체 조회 경로를 탄다.
                 return redisRankingReader.personalDaily(userId)
                         .orElseGet(() -> getCurrentDailyFromDatabase(userId));
             } catch (BusinessException e) {
@@ -76,6 +78,7 @@ public class PersonalRankService {
     public PersonalRankingResponse getCurrentWeekly(Long userId) {
         if (redisRankingReader != null) {
             try {
+                // Redis 키가 없으면 Optional.empty()가 반환되고 아래 DB 대체 조회 경로를 탄다.
                 return redisRankingReader.personalWeekly(userId)
                         .orElseGet(() -> getCurrentWeeklyFromDatabase(userId));
             } catch (BusinessException e) {
@@ -112,6 +115,7 @@ public class PersonalRankService {
     public PersonalRankingResponse getCurrentMonthly(Long userId) {
         if (redisRankingReader != null) {
             try {
+                // Redis 키가 없으면 Optional.empty()가 반환되고 아래 DB 대체 조회 경로를 탄다.
                 return redisRankingReader.personalMonthly(userId)
                         .orElseGet(() -> getCurrentMonthlyFromDatabase(userId));
             } catch (BusinessException e) {
@@ -153,7 +157,7 @@ public class PersonalRankService {
             }
         }
         
-        // LEFT JOIN으로 모든 사용자가 포함되므로 이론적으로는 항상 찾아야 하지만, 만약을 위한 fallback
+        // LEFT JOIN으로 모든 사용자가 포함되므로 이론적으로는 항상 찾아야 하지만, 만약을 위한 대체 랭킹을 만든다.
         if (myRanking == null) {
             User user = userRepository.findById(userId).orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
             String departmentName = user.getDepartment() != null ? user.getDepartment().getKoreanName() : null;
