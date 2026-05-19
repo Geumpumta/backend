@@ -6,11 +6,14 @@ import com.gpt.geumpumtabackend.rank.domain.RankingType;
 import com.gpt.geumpumtabackend.rank.dto.PersonalRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.PersonalRankingEntryResponse;
+import com.gpt.geumpumtabackend.rank.redis.RedisRealtimeRankingReader;
 import com.gpt.geumpumtabackend.rank.repository.UserRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -23,15 +26,34 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PersonalRankService {
 
     private final UserRankingRepository userRankingRepository;
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
+
+    @Autowired(required = false)
+    private RedisRealtimeRankingReader redisRankingReader;
     /*
     현재 진행 중인 세션의 일간 랭킹 조회
      */
     public PersonalRankingResponse getCurrentDaily(Long userId) {
+        if (redisRankingReader != null) {
+            try {
+                return redisRankingReader.personalDaily(userId)
+                        .orElseGet(() -> getCurrentDailyFromDatabase(userId));
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("[REDIS_RANKING] Falling back to DB for current daily personal ranking. userId={}", userId, e);
+            }
+        }
+
+        return getCurrentDailyFromDatabase(userId);
+    }
+
+    private PersonalRankingResponse getCurrentDailyFromDatabase(Long userId) {
         LocalDate today = LocalDate.now();
         LocalDateTime startToday = today.atStartOfDay();
         LocalDateTime endToday = today.atTime(23, 59, 59);
@@ -52,6 +74,21 @@ public class PersonalRankService {
     현재 진행 중인 세션의 주간 랭킹 조회
      */
     public PersonalRankingResponse getCurrentWeekly(Long userId) {
+        if (redisRankingReader != null) {
+            try {
+                return redisRankingReader.personalWeekly(userId)
+                        .orElseGet(() -> getCurrentWeeklyFromDatabase(userId));
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("[REDIS_RANKING] Falling back to DB for current weekly personal ranking. userId={}", userId, e);
+            }
+        }
+
+        return getCurrentWeeklyFromDatabase(userId);
+    }
+
+    private PersonalRankingResponse getCurrentWeeklyFromDatabase(Long userId) {
         LocalDate today = LocalDate.now();
         LocalDateTime weekStart = today.with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime weekEnd = today.with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
@@ -73,6 +110,21 @@ public class PersonalRankService {
     현재 진행 중인 세션의 월간 랭킹 조회
      */
     public PersonalRankingResponse getCurrentMonthly(Long userId) {
+        if (redisRankingReader != null) {
+            try {
+                return redisRankingReader.personalMonthly(userId)
+                        .orElseGet(() -> getCurrentMonthlyFromDatabase(userId));
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("[REDIS_RANKING] Falling back to DB for current monthly personal ranking. userId={}", userId, e);
+            }
+        }
+
+        return getCurrentMonthlyFromDatabase(userId);
+    }
+
+    private PersonalRankingResponse getCurrentMonthlyFromDatabase(Long userId) {
         LocalDate today = LocalDate.now();
         LocalDateTime startMonth = today.withDayOfMonth(1).atStartOfDay();
         LocalDateTime endMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);

@@ -6,11 +6,14 @@ import com.gpt.geumpumtabackend.rank.domain.RankingType;
 import com.gpt.geumpumtabackend.rank.dto.DepartmentRankingTemp;
 import com.gpt.geumpumtabackend.rank.dto.response.DepartmentRankingEntryResponse;
 import com.gpt.geumpumtabackend.rank.dto.response.DepartmentRankingResponse;
+import com.gpt.geumpumtabackend.rank.redis.RedisRealtimeRankingReader;
 import com.gpt.geumpumtabackend.rank.repository.DepartmentRankingRepository;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -21,16 +24,35 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DepartmentRankService {
 
     private final DepartmentRankingRepository departmentRankingRepository;
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
 
+    @Autowired(required = false)
+    private RedisRealtimeRankingReader redisRankingReader;
+
     /*
     현재 진행중인 학과 랭킹 일간 조회
      */
     public DepartmentRankingResponse getCurrentDailyDepartmentRanking(Long userId){
+        if (redisRankingReader != null) {
+            try {
+                return redisRankingReader.departmentDaily(userId)
+                        .orElseGet(() -> getCurrentDailyDepartmentRankingFromDatabase(userId));
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("[REDIS_RANKING] Falling back to DB for current daily department ranking. userId={}", userId, e);
+            }
+        }
+
+        return getCurrentDailyDepartmentRankingFromDatabase(userId);
+    }
+
+    private DepartmentRankingResponse getCurrentDailyDepartmentRankingFromDatabase(Long userId){
         LocalDate today = LocalDate.now();
         LocalDateTime startDay = today.atStartOfDay();
         LocalDateTime endDay = today.atTime(23, 59, 59);
@@ -51,6 +73,21 @@ public class DepartmentRankService {
     현재 진행중인 학과 랭킹 주간 조회
      */
     public DepartmentRankingResponse getCurrentWeeklyDepartmentRanking(Long userId){
+        if (redisRankingReader != null) {
+            try {
+                return redisRankingReader.departmentWeekly(userId)
+                        .orElseGet(() -> getCurrentWeeklyDepartmentRankingFromDatabase(userId));
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("[REDIS_RANKING] Falling back to DB for current weekly department ranking. userId={}", userId, e);
+            }
+        }
+
+        return getCurrentWeeklyDepartmentRankingFromDatabase(userId);
+    }
+
+    private DepartmentRankingResponse getCurrentWeeklyDepartmentRankingFromDatabase(Long userId){
         LocalDate today = LocalDate.now();
         LocalDateTime weekStart = today.with(DayOfWeek.MONDAY).atStartOfDay();
         LocalDateTime weekEnd = today.with(DayOfWeek.SUNDAY).atTime(23, 59, 59);
@@ -72,6 +109,21 @@ public class DepartmentRankService {
     현재 진행중인 학과 랭킹 월간 조회
      */
      public DepartmentRankingResponse getCurrentMonthlyDepartmentRanking(Long userId){
+         if (redisRankingReader != null) {
+             try {
+                 return redisRankingReader.departmentMonthly(userId)
+                         .orElseGet(() -> getCurrentMonthlyDepartmentRankingFromDatabase(userId));
+             } catch (BusinessException e) {
+                 throw e;
+             } catch (Exception e) {
+                 log.warn("[REDIS_RANKING] Falling back to DB for current monthly department ranking. userId={}", userId, e);
+             }
+         }
+
+         return getCurrentMonthlyDepartmentRankingFromDatabase(userId);
+     }
+
+     private DepartmentRankingResponse getCurrentMonthlyDepartmentRankingFromDatabase(Long userId){
          LocalDate today = LocalDate.now();
          LocalDateTime startMonth = today.withDayOfMonth(1).atStartOfDay();
          LocalDateTime endMonth = today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59);

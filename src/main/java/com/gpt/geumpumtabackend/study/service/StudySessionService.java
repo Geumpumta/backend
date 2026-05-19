@@ -1,6 +1,8 @@
 package com.gpt.geumpumtabackend.study.service;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.rank.redis.RedisRankingSessionSnapshot;
+import com.gpt.geumpumtabackend.rank.redis.RedisRealtimeRankingWriter;
 import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.domain.StudyStatus;
@@ -16,9 +18,12 @@ import com.gpt.geumpumtabackend.wifi.dto.WiFiValidationResult;
 import com.gpt.geumpumtabackend.wifi.service.CampusWiFiValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,6 +39,9 @@ public class StudySessionService {
     private final CampusWiFiValidationService wifiValidationService;
     private final StudyProperties studyProperties;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired(required = false)
+    private RedisRealtimeRankingWriter redisRankingWriter;
 
     /*
     메인 홈
@@ -56,6 +64,7 @@ public class StudySessionService {
     public StudyStartResponse startStudySession(StudyStartRequest request, Long userId) {
         verifyCampusWifiConnection(request, userId);
         StudySession savedSession = makeStudySession(userId);
+        syncStartedSessionToRedisAfterCommit(savedSession);
         return StudyStartResponse.fromEntity(savedSession);
     }
 
@@ -68,6 +77,7 @@ public class StudySessionService {
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
         LocalDateTime endTime = LocalDateTime.now();
         studysession.endStudySession(endTime);
+        syncEndedSessionToRedisAfterCommit(studysession);
         eventPublisher.publishEvent(new StudySessionEndedEvent(userId));
     }
 
@@ -116,8 +126,64 @@ public class StudySessionService {
         List<User> usersToNotify = new ArrayList<>();
         for (StudySession expiredSession : expiredSessions) {
             expiredSession.endMaxFocusStudySession(maxFocusHours);
+            syncEndedSessionToRedisAfterCommit(expiredSession);
             usersToNotify.add(expiredSession.getUser());
         }
         return usersToNotify;
+    }
+
+    private void syncStartedSessionToRedisAfterCommit(StudySession session) {
+        if (redisRankingWriter == null || session == null) {
+            return;
+        }
+
+        User user = session.getUser();
+        if (session.getId() == null || user == null || user.getId() == null || user.getDepartment() == null) {
+            return;
+        }
+
+        RedisRankingSessionSnapshot snapshot = RedisRankingSessionSnapshot.started(
+                session.getId(),
+                user.getId(),
+                user.getDepartment(),
+                session.getStartTime()
+        );
+        runAfterCommit(() -> redisRankingWriter.recordSessionStarted(snapshot));
+    }
+
+    private void syncEndedSessionToRedisAfterCommit(StudySession session) {
+        if (redisRankingWriter == null || session == null) {
+            return;
+        }
+
+        User user = session.getUser();
+        if (session.getId() == null || user == null || user.getId() == null || user.getDepartment() == null
+                || session.getEndTime() == null || session.getTotalMillis() == null) {
+            return;
+        }
+
+        RedisRankingSessionSnapshot snapshot = RedisRankingSessionSnapshot.ended(
+                session.getId(),
+                user.getId(),
+                user.getDepartment(),
+                session.getStartTime(),
+                session.getEndTime(),
+                session.getTotalMillis()
+        );
+        runAfterCommit(() -> redisRankingWriter.recordSessionEnded(snapshot));
+    }
+
+    private void runAfterCommit(Runnable action) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    action.run();
+                }
+            });
+            return;
+        }
+
+        action.run();
     }
 }
