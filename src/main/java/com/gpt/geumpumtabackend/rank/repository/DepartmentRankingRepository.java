@@ -12,6 +12,7 @@ import java.util.List;
 
 public interface DepartmentRankingRepository extends JpaRepository<DepartmentRanking, Long> {
 
+    long countByRankingTypeAndCalculatedAt(RankingType rankingType, LocalDateTime calculatedAt);
 
     /*
     끝난 학과 - 각 학과별 상위 30명 기준

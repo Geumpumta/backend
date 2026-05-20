@@ -31,7 +31,8 @@ import java.util.List;
 @SpringBootTest(
         properties = {
                 "spring.test.database.replace=NONE",
-                "spring.jpa.hibernate.ddl-auto=create-drop"
+                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.task.scheduling.enabled=false"
         }
 )
 @ActiveProfiles("test")

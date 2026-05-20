@@ -8,6 +8,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(
+        name = "department_ranking",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_department_ranking_period_department",
+                columnNames = {"ranking_type", "calculated_at", "department"}
+        )
+)
 @NoArgsConstructor
 public class DepartmentRanking {
 

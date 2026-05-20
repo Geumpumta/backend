@@ -15,6 +15,8 @@ import java.util.List;
 @Repository
 public interface UserRankingRepository extends JpaRepository<UserRanking, Long> {
 
+    long countByRankingTypeAndCalculatedAt(RankingType rankingType, LocalDateTime calculatedAt);
+
    /*
    끝난 일간 랭킹
     */

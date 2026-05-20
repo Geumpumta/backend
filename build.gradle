@@ -71,6 +71,10 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry'
     implementation 'org.springframework:spring-aspects'
 
+    // ShedLock
+    implementation 'net.javacrumbs.shedlock:shedlock-spring:7.7.0'
+    implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.7.0'
+
     // TestContainers
     testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
     testImplementation 'org.testcontainers:mysql:1.20.4'
