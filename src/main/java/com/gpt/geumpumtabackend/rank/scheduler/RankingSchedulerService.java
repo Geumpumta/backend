@@ -4,7 +4,6 @@ import com.gpt.geumpumtabackend.rank.domain.RankingType;
 import com.gpt.geumpumtabackend.rank.service.RankingAggregationJobCreator;
 import lombok.RequiredArgsConstructor;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +11,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 @Service
-@Profile("!test")
 @RequiredArgsConstructor
 public class RankingSchedulerService {
 

@@ -4,7 +4,6 @@ import com.gpt.geumpumtabackend.rank.repository.RankingAggregationJobRepository;
 import com.gpt.geumpumtabackend.rank.service.RankingAggregationWorker;
 import lombok.RequiredArgsConstructor;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-@Profile("!test")
 @RequiredArgsConstructor
 public class RankingAggregationWorkerScheduler {
 
