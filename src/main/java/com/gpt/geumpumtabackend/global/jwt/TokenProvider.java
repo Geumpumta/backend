@@ -8,9 +8,8 @@ import com.gpt.geumpumtabackend.global.jwt.exception.JwtAccessDeniedException;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtAuthenticationException;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtTokenExpiredException;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtTokenInvalidException;
-import com.gpt.geumpumtabackend.user.domain.User;
+import com.gpt.geumpumtabackend.token.service.UserSessionService;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
-import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import com.gpt.geumpumtabackend.user.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +27,7 @@ public class TokenProvider implements AuthenticationProvider {
 
     private final JwtHandler jwtHandler;
     private final UserService userService;
+    private final UserSessionService userSessionService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -40,11 +40,17 @@ public class TokenProvider implements AuthenticationProvider {
         try {
             JwtUserClaim claims = jwtHandler.parseToken(tokenValue);
             this.validateAdminRole(claims);
+            userSessionService.validateActiveSession(claims.userId(), claims.sessionId());
             return new JwtAuthentication(claims);
         } catch (ExpiredJwtException e) {
             throw new JwtTokenExpiredException(e);
         } catch (JwtAuthenticationException e) {
             throw e;
+        } catch (BusinessException e) {
+            if (ExceptionType.SESSION_INVALID.equals(e.getExceptionType())) {
+                throw new JwtAuthenticationException(ExceptionType.SESSION_INVALID);
+            }
+            throw new JwtTokenInvalidException(e);
         } catch (Exception e) {
             throw new JwtTokenInvalidException(e);
         }

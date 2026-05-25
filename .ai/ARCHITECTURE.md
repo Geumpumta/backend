@@ -42,19 +42,18 @@ Geumpumta 백엔드 시스템 아키텍처 문서.
                   │ role        │ GUEST → USER → ADMIN
                   │ department  │ Enum (25개 학과)
                   │ provider    │ KAKAO, GOOGLE, APPLE
-                  │ fcmToken    │
                   └──────┬──────┘
                          │
-          ┌──────────────┼──────────────┐
-          │ 1:N (FK)     │ 1:N (FK)     │ 1:N (FK 없음)
-          ▼              ▼              ▼
-   ┌─────────────┐ ┌───────────┐ ┌─────────────┐
-   │StudySession │ │UserRanking│ │RefreshToken │
-   │ startTime   │ │ rank      │ │ userId      │
-   │ endTime     │ │ totalMillis│ │ refreshToken│
-   │ totalMillis │ │ rankingType│ │ expiredAt   │
-   │ status      │ │calculatedAt│ └─────────────┘
-   └─────────────┘ └───────────┘
+          ┌──────────────┼──────────────┬──────────────┐
+          │ 1:N (FK)     │ 1:N (FK)     │ userId 참조  │ userId 참조
+          ▼              ▼              ▼              ▼
+   ┌─────────────┐ ┌───────────┐ ┌─────────────┐ ┌─────────────┐
+   │StudySession │ │UserRanking│ │UserSession  │ │RefreshToken │
+   │ startTime   │ │ rank      │ │ sessionId   │ │ legacy      │
+   │ endTime     │ │ totalMillis│ │ status      │ │ unused      │
+   │ totalMillis │ │ rankingType│ │ refreshToken│ │ cleanup     │
+   │ status      │ │calculatedAt│ │ fcmToken    │ └─────────────┘
+   └─────────────┘ └───────────┘ └─────────────┘
 
 ┌──────────────────┐  ┌───────────────────────┐  ┌────────┐
 │DepartmentRanking │  │SeasonRankingSnapshot  │  │ Season │
@@ -67,7 +66,9 @@ Geumpumta 백엔드 시스템 아키텍처 문서.
 
 **설계 결정:**
 - `SeasonRankingSnapshot`에 FK 없음 → 시즌/유저 삭제 후에도 이력 보존
-- `RefreshToken`에 FK 없음 → 유저 soft-delete와 독립적으로 토큰 정리
+- 인증 상태의 기준은 `RefreshToken` 단독 존재 여부가 아니라 `UserSession.status=ACTIVE`
+- `UserSession`에 FK 없음 → 유저 soft-delete와 독립적으로 세션 revoke/정리 가능
+- `RefreshToken` 테이블은 기존 스키마 호환을 위해 유지하지만 신규 인증 흐름에서는 사용하지 않음
 - `User` soft-delete 시 `deleted_` prefix → unique 제약 유지하면서 재가입 허용
 
 ---
@@ -80,18 +81,28 @@ Geumpumta 백엔드 시스템 아키텍처 문서.
   → CustomAuthorizationRequestResolver (redirect_uri를 state에 인코딩)
   → OAuth2 Provider 인증
   → CustomOAuth2UserService.loadUser() → User 조회/생성 (role=GUEST)
-  → SuccessHandler → JWT 발급 → redirect_uri?accessToken=...&refreshToken=...
+  → SuccessHandler → 기존 ACTIVE UserSession revoke
+  → 새 UserSession 생성(status=ACTIVE, refreshToken 저장)
+  → sessionId 포함 JWT 발급 → redirect_uri?accessToken=...&refreshToken=...
 
 [회원가입 완료]
 POST /email/request-code → Redis에 인증코드 (TTL 5분)
 POST /email/verify-code  → 코드 검증
-POST /user/complete-registration → GUEST→USER 승격, 새 JWT 발급
+POST /user/complete-registration → GUEST→USER 승격, 새 UserSession/JWT 발급
 
 [API 요청]
 Authorization: Bearer {token}
   → JwtAuthenticationFilter → parseToken (JJWT, HMAC-SHA256)
+  → JWT sessionId의 UserSession ACTIVE 여부 검증
   → withdrawn=true이면 /restore 외 차단
   → @PreAuthorize → @AssignUserId AOP → Controller
+
+[토큰 재발급]
+POST /token/reissue
+  → 만료된 AccessToken에서도 claim 파싱
+  → refreshToken으로 UserSession 조회
+  → sessionId/userId/status/expiresAt 검증
+  → 기존 refreshToken을 유지하고 새 AccessToken 발급
 ```
 
 ---
@@ -170,8 +181,9 @@ DepartmentRankService → StudySessionRepository, DepartmentRankingRepository
 SeasonRankService ────→ SeasonService(@Cacheable), UserRankingRepo, StudySessionRepo
 SeasonSnapshotService → UserRankingRepo, SeasonSnapshotBatchService(JDBC)
 StatisticsService ────→ StudySessionRepository (12개 CTE)
-UserService ──────────→ JwtHandler, RefreshTokenRepo, FcmService
-TokenService ─────────→ JwtHandler, RefreshTokenRepo
+UserService ──────────→ JwtHandler, UserSessionService
+TokenService ─────────→ JwtHandler, UserSessionService
+FcmService ───────────→ UserSessionService, FcmMessageSender
 ```
 
 ### StudySessionRepository — 쿼리 허브
@@ -206,7 +218,7 @@ TokenService ─────────→ JwtHandler, RefreshTokenRepo
 
 ```
 매일:
-00:00:00  RefreshTokenDelete     만료 토큰 삭제
+00:00:00  RefreshTokenDelete     legacy 만료 토큰 + 만료 UserSession 삭제
 00:00:05  DailyRanking           전일 개인/학과 랭킹 확정
 00:05:00  SeasonTransition       시즌 종료 확인 → 전환/스냅샷
                                  ★ MonthlyRanking(00:02) 이후 실행 (데이터 의존)
