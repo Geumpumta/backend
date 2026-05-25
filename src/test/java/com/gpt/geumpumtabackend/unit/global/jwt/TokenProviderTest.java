@@ -12,15 +12,14 @@ import com.gpt.geumpumtabackend.global.jwt.exception.JwtAuthenticationException;
 import com.gpt.geumpumtabackend.global.jwt.exception.JwtTokenInvalidException;
 import com.gpt.geumpumtabackend.token.domain.UserSession;
 import com.gpt.geumpumtabackend.token.service.UserSessionService;
+import com.gpt.geumpumtabackend.unit.config.BaseUnitTest;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
 import com.gpt.geumpumtabackend.user.service.UserService;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,9 +28,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("TokenProvider 단위 테스트")
-class TokenProviderTest {
+class TokenProviderTest extends BaseUnitTest {
 
     @Mock
     private JwtHandler jwtHandler;
