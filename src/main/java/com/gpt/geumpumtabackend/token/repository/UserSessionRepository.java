@@ -43,7 +43,7 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
             """)
     void revokeAllByUserId(@Param("userId") Long userId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("DELETE FROM UserSession s WHERE s.expiresAt <= :timeToDelete")
     void deleteExpiredSessions(@Param("timeToDelete") LocalDateTime timeToDelete);
 }

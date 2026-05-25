@@ -64,7 +64,7 @@ public class UserService {
 
     @Transactional
     public CompleteRegistrationResponse completeRegistration(CompleteRegistrationRequest request, Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(()->new BusinessException(ExceptionType.USER_NOT_FOUND));
         validateDuplication(request);
         user.completeRegistration(request);
@@ -127,7 +127,7 @@ public class UserService {
 
     @Transactional
     public TokenResponse restoreUser(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
 
         String nickname = removeDeletedPrefix(user.getNickname());

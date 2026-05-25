@@ -143,7 +143,7 @@ class UserServiceTest {
                     "https://example.com/welcome.png"
             );
 
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(userRepository.findByIdForUpdate(userId)).willReturn(Optional.of(user));
             given(userRepository.existsBySchoolEmail(request.email())).willReturn(false);
             given(userRepository.existsByStudentId(request.studentId())).willReturn(false);
             given(userRepository.existsByNickname(any())).willReturn(false);
@@ -184,7 +184,7 @@ class UserServiceTest {
                     "Software Engineering"
             );
 
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(userRepository.findByIdForUpdate(userId)).willReturn(Optional.of(user));
             given(userRepository.existsBySchoolEmail(request.email())).willReturn(true);
 
             // When & Then
@@ -205,7 +205,7 @@ class UserServiceTest {
                     "Software Engineering"
             );
 
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(userRepository.findByIdForUpdate(userId)).willReturn(Optional.of(user));
             given(userRepository.existsBySchoolEmail(request.email())).willReturn(false);
             given(userRepository.existsByStudentId(request.studentId())).willReturn(true);
 
@@ -375,7 +375,7 @@ class UserServiceTest {
                     .refreshToken("refresh-token")
                     .build();
 
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(userRepository.findByIdForUpdate(userId)).willReturn(Optional.of(user));
             given(jwtProperties.getRefreshTokenExpireIn()).willReturn(3600);
             given(userSessionService.createNewSession(userId, 3600)).willReturn(createUserSession(userId));
             given(jwtHandler.createTokens(any(JwtUserClaim.class), eq("session-refresh"))).willReturn(token);
