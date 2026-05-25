@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "사용자 API", description = "사용자 관련 API")
@@ -131,7 +132,8 @@ public interface UserApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<Void>> logout(
-            @Parameter(hidden = true) Long userId
+            @Parameter(hidden = true) Long userId,
+            @Parameter(hidden = true) Authentication authentication
     );
 
     @Operation(

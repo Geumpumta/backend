@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -102,7 +103,8 @@ public interface FcmApi {
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<Void>> registerFcmToken(
             @RequestBody @Valid FcmTokenRequest request,
-            @Parameter(hidden = true) Long userId
+            @Parameter(hidden = true) Long userId,
+            @Parameter(hidden = true) Authentication authentication
     );
 
     @Operation(
@@ -123,6 +125,7 @@ public interface FcmApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<Void>> removeFcmToken(
-            @Parameter(hidden = true) Long userId
+            @Parameter(hidden = true) Long userId,
+            @Parameter(hidden = true) Authentication authentication
     );
 }

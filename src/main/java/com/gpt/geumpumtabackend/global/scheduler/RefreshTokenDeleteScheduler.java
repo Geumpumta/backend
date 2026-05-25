@@ -1,6 +1,7 @@
 package com.gpt.geumpumtabackend.global.scheduler;
 
 import com.gpt.geumpumtabackend.token.repository.RefreshTokenRepository;
+import com.gpt.geumpumtabackend.token.repository.UserSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -15,10 +16,13 @@ import java.time.LocalDateTime;
 public class RefreshTokenDeleteScheduler {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserSessionRepository userSessionRepository;
 
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void deleteExpiredToken() {
-        refreshTokenRepository.deleteAllRefreshToken(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        refreshTokenRepository.deleteAllRefreshToken(now);
+        userSessionRepository.deleteExpiredSessions(now);
     }
 }

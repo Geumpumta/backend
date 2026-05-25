@@ -1,16 +1,17 @@
 package com.gpt.geumpumtabackend.user.service;
 
 
-import com.gpt.geumpumtabackend.fcm.service.FcmService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.jwt.JwtHandler;
+import com.gpt.geumpumtabackend.global.jwt.JwtProperties;
 import com.gpt.geumpumtabackend.global.jwt.JwtUserClaim;
 import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
 import com.gpt.geumpumtabackend.badge.service.BadgeService;
 import com.gpt.geumpumtabackend.token.domain.Token;
+import com.gpt.geumpumtabackend.token.domain.UserSession;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
-import com.gpt.geumpumtabackend.token.repository.RefreshTokenRepository;
+import com.gpt.geumpumtabackend.token.service.UserSessionService;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
 import com.gpt.geumpumtabackend.user.dto.request.CompleteRegistrationRequest;
@@ -32,9 +33,9 @@ import java.util.Random;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtHandler jwtHandler;
-    private final FcmService fcmService;
+    private final JwtProperties jwtProperties;
+    private final UserSessionService userSessionService;
     private final BadgeService badgeService;
     private static final Random RANDOM = new Random();
 
@@ -70,8 +71,7 @@ public class UserService {
         generateRandomNickname(user);
 
         // 토큰 재발급
-        JwtUserClaim jwtUserClaim = JwtUserClaim.create(user);
-        Token token = jwtHandler.createTokens(jwtUserClaim);
+        Token token = issueToken(user);
         TokenResponse tokenResponse = TokenResponse.to(token);
         badgeService.grantWelcomeBadge(userId);
         return CompleteRegistrationResponse.of(tokenResponse);
@@ -110,11 +110,10 @@ public class UserService {
     }
 
     @Transactional
-    public void logout(Long userId) {
+    public void logout(Long userId, String sessionId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
-        refreshTokenRepository.deleteByUserId(userId);
-        fcmService.removeFcmToken(userId);
+        userSessionService.logout(userId, sessionId);
     }
 
     @Transactional
@@ -122,8 +121,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
 
-        refreshTokenRepository.deleteByUserId(userId);
-        fcmService.removeFcmToken(userId);
+        userSessionService.revokeAllByUserId(userId);
         userRepository.deleteById(userId);
     }
 
@@ -138,8 +136,7 @@ public class UserService {
         String studentId = removeDeletedPrefix(user.getStudentId());
         user.restore(nickname, email, schoolEmail, studentId);
 
-        JwtUserClaim jwtUserClaim = JwtUserClaim.create(user);
-        Token token = jwtHandler.createTokens(jwtUserClaim);
+        Token token = issueToken(user);
         return TokenResponse.to(token);
     }
 
@@ -148,5 +145,14 @@ public class UserService {
         return value.startsWith(DELETED_PREFIX)
                 ? value.substring(DELETED_PREFIX.length())
                 : value;
+    }
+
+    private Token issueToken(User user) {
+        UserSession userSession = userSessionService.createNewSession(
+                user.getId(),
+                jwtProperties.getRefreshTokenExpireIn()
+        );
+        JwtUserClaim jwtUserClaim = JwtUserClaim.create(user, userSession.getSessionId());
+        return jwtHandler.createTokens(jwtUserClaim, userSession.getRefreshToken());
     }
 }
