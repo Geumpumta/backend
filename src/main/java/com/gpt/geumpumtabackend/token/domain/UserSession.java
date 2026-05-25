@@ -9,7 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,8 +19,6 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 @NoArgsConstructor(access = PROTECTED)
 public class UserSession extends BaseEntity {
-
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,7 +51,7 @@ public class UserSession extends BaseEntity {
         this.userId = userId;
         this.status = UserSessionStatus.ACTIVE;
         this.refreshToken = refreshToken;
-        this.lastSeenAt = LocalDateTime.now(KST);
+        this.lastSeenAt = LocalDateTime.now();
         this.expiresAt = expiresAt;
     }
 
@@ -78,7 +75,7 @@ public class UserSession extends BaseEntity {
     }
 
     public void touchLastSeen() {
-        this.lastSeenAt = LocalDateTime.now(KST);
+        this.lastSeenAt = LocalDateTime.now();
     }
 
     public boolean isActive() {
