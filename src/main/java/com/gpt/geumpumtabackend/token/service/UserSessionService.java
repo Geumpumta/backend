@@ -6,7 +6,6 @@ import com.gpt.geumpumtabackend.token.domain.UserSession;
 import com.gpt.geumpumtabackend.token.domain.UserSessionStatus;
 import com.gpt.geumpumtabackend.token.repository.UserSessionRepository;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserSessionService {
-
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final UserSessionRepository userSessionRepository;
 
@@ -29,7 +26,7 @@ public class UserSessionService {
                 .sessionId(UUID.randomUUID().toString())
                 .userId(userId)
                 .refreshToken(UUID.randomUUID().toString())
-                .expiresAt(LocalDateTime.now(KST).plusSeconds(refreshTokenExpireIn))
+                .expiresAt(LocalDateTime.now().plusSeconds(refreshTokenExpireIn))
                 .build();
 
         return userSessionRepository.save(userSession);
@@ -44,7 +41,7 @@ public class UserSessionService {
         UserSession userSession = userSessionRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new BusinessException(ExceptionType.SESSION_INVALID));
 
-        LocalDateTime now = LocalDateTime.now(KST);
+        LocalDateTime now = LocalDateTime.now();
         if (!userSession.getUserId().equals(userId) || !userSession.isActive() || userSession.isExpired(now)) {
             throw new BusinessException(ExceptionType.SESSION_INVALID);
         }
@@ -103,7 +100,7 @@ public class UserSessionService {
         UserSession userSession = userSessionRepository.findByUserIdAndStatus(userId, UserSessionStatus.ACTIVE)
                 .orElseThrow(() -> new BusinessException(ExceptionType.SESSION_INVALID));
 
-        LocalDateTime now = LocalDateTime.now(KST);
+        LocalDateTime now = LocalDateTime.now();
         if (userSession.isExpired(now)) {
             throw new BusinessException(ExceptionType.SESSION_INVALID);
         }
