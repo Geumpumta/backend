@@ -22,6 +22,7 @@ public enum ExceptionType {
     JWT_EXPIRED(UNAUTHORIZED, "S004", "JWT 토큰이 만료되었습니다."),
     JWT_INVALID(UNAUTHORIZED, "S005", "JWT 토큰이 올바르지 않습니다."),
     JWT_NOT_EXIST(UNAUTHORIZED, "S006", "JWT 토큰이 존재하지 않습니다."),
+    SESSION_INVALID(UNAUTHORIZED, "S007", "로그인 세션이 유효하지 않습니다."),
 
     // Token
     REFRESH_TOKEN_NOT_EXIST(NOT_FOUND, "T001", "리프래시 토큰이 존재하지 않습니다"),

@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -43,16 +42,8 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         UserRole role = principal.getUser().getRole();
         Boolean isWithdrawn = principal.getUser().getDeletedAt() != null;
 
-        JwtUserClaim jwtUserClaim = new JwtUserClaim(userId, role, isWithdrawn);
-        Optional<Token> token = oAuthLoginPolicyService.issueTokenIfNoActiveSession(jwtUserClaim);
-        if (token.isEmpty()) {
-            String blockedUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                    .queryParam("error", "already_logged_in")
-                    .build().toUriString();
-            response.sendRedirect(blockedUrl);
-            return;
-        }
-        Token issuedToken = token.get();
+        JwtUserClaim jwtUserClaim = JwtUserClaim.create(userId, role, isWithdrawn);
+        Token issuedToken = oAuthLoginPolicyService.issueTokenReplacingActiveSession(jwtUserClaim);
 
         // 토큰 붙여서 리다이렉트
         String redirectUrl = UriComponentsBuilder.fromUriString(redirectUri)
