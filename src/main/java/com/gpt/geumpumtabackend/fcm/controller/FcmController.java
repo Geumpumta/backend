@@ -26,8 +26,8 @@ public class FcmController implements FcmApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<Void>> registerFcmToken(
-            @RequestBody @Valid FcmTokenRequest request,
             Long userId,
+            @RequestBody @Valid FcmTokenRequest request,
             Authentication authentication
     ) {
         fcmService.registerFcmToken(userId, getSessionId(authentication), request.fcmToken());
