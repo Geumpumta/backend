@@ -102,8 +102,8 @@ public interface FcmApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     ResponseEntity<ResponseBody<Void>> registerFcmToken(
-            @RequestBody @Valid FcmTokenRequest request,
             @Parameter(hidden = true) Long userId,
+            @RequestBody @Valid FcmTokenRequest request,
             @Parameter(hidden = true) Authentication authentication
     );
 
