@@ -2,7 +2,7 @@ name: Prod - CD with Docker
 
 on:
   workflow_run:
-    workflows: [ "Prod - Java CI with Gradle" ] # Prod CI 파일 이름과 일치해야 함
+    workflows: [ "Prod - Java CI with Gradle" ]
     types: [ completed ]
 
 permissions:
@@ -11,11 +11,11 @@ permissions:
 
 jobs:
   build:
-    # Prod 브랜치인 경우에만 실행
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
+
     outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
+      image-tag: ${{ steps.image.outputs.image_tag }}
 
     steps:
       - name: Download artifact
@@ -39,13 +39,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.ACTION_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=sha
+      - name: Set image tag
+        id: image
+        run: |
+          echo "image_tag=ghcr.io/${{ github.repository }}:sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
@@ -53,42 +50,67 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.image.outputs.image_tag }}
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   deploy:
     needs: build
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, prod, ec2]
 
-    # [Prod] GitHub Environment 사용
     environment:
       name: production
 
     steps:
       - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.ACTION_TOKEN }}
-
-      - name: Pull latest image
-        run: docker pull ${{ needs.build.outputs.image-tag }}
-
-      - name: Clean up old container and image
         run: |
-          docker rm -f ${{ secrets.CONTAINER_NAME }} || true
-          docker image prune -f 
+          echo "${{ secrets.ACTION_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      - name: Run New Container (Prod)
+      - name: Create runtime env file
+        working-directory: /home/ubuntu/geumpumta
         run: |
-          docker run -d \
-            --name ${{ secrets.CONTAINER_NAME }} \
-            --network ${{ secrets.NETWORK_NAME }} \
-            -p ${{ secrets.WEB_PORT }}:8080 \
-            -e SPRING_PROFILES_ACTIVE=prod \
-            -e TZ=Asia/Seoul \
-            ${{ needs.build.outputs.image-tag }}
+          cat > .env.runtime <<EOF
+          APP_IMAGE=${{ needs.build.outputs.image-tag }}
+
+          MYSQL_DATABASE=${{ vars.MYSQL_DATABASE }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+
+          SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILES_ACTIVE }}
+          TZ=${{ vars.TZ }}
+
+          WEB_PORT=${{ vars.WEB_PORT }}
+          MYSQL_PORT=${{ vars.MYSQL_PORT }}
+          REDIS_PORT=${{ vars.REDIS_PORT }}
+
+          SPRING_DATASOURCE_URL=${{ vars.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.MYSQL_USER }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+
+          SPRING_DATA_REDIS_HOST=${{ vars.SPRING_DATA_REDIS_HOST }}
+          SPRING_DATA_REDIS_PORT=${{ vars.SPRING_DATA_REDIS_PORT }}
+          EOF
+
+          chmod 600 .env.runtime
+
+      - name: Show Docker Compose config
+        working-directory: /home/ubuntu/geumpumta
+        run: |
+          docker compose --env-file .env.runtime -f docker-compose.prod.yml config
+
+      - name: Deploy with Docker Compose
+        working-directory: /home/ubuntu/geumpumta
+        run: |
+          docker compose --env-file .env.runtime -f docker-compose.prod.yml pull
+          docker compose --env-file .env.runtime -f docker-compose.prod.yml up -d
+
+      - name: Health check
+        run: |
+          sleep 25
+          curl -f http://localhost:${{ vars.WEB_PORT }}/actuator/health
+
+      - name: Clean up old images
+        run: |
+          docker image prune -f
