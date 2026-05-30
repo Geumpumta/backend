@@ -9,6 +9,9 @@ permissions:
   contents: read
   packages: write
 
+env:
+  IMAGE_NAME: ghcr.io/geumpumta/backend
+
 jobs:
   build:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
@@ -42,7 +45,11 @@ jobs:
       - name: Set image tag
         id: image
         run: |
-          echo "image_tag=ghcr.io/${{ github.repository }}:sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${IMAGE_NAME}:sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Print image tag
+        run: |
+          echo "Image tag: ${{ steps.image.outputs.image_tag }}"
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v6
@@ -72,27 +79,21 @@ jobs:
         run: |
           cat > .env.runtime <<EOF
           APP_IMAGE=${{ needs.build.outputs.image-tag }}
-
           MYSQL_DATABASE=${{ vars.MYSQL_DATABASE }}
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_USER=${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-
           SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILES_ACTIVE }}
           TZ=${{ vars.TZ }}
-
           WEB_PORT=${{ vars.WEB_PORT }}
           MYSQL_PORT=${{ vars.MYSQL_PORT }}
           REDIS_PORT=${{ vars.REDIS_PORT }}
-
           SPRING_DATASOURCE_URL=${{ vars.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME=${{ secrets.MYSQL_USER }}
           SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-
           SPRING_DATA_REDIS_HOST=${{ vars.SPRING_DATA_REDIS_HOST }}
           SPRING_DATA_REDIS_PORT=${{ vars.SPRING_DATA_REDIS_PORT }}
           EOF
-
           chmod 600 .env.runtime
 
       - name: Show Docker Compose config
