@@ -50,7 +50,6 @@ jobs:
         run: |
           docker version
           docker info
-
       # TestContainers용 이미지 미리 pull
       - name: Pre-pull docker images for tests
         run: |
