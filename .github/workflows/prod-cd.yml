@@ -5,6 +5,7 @@ on:
     workflows: [ "Prod - Java CI with Gradle" ]
     types: [ completed ]
 
+
 permissions:
   contents: read
   packages: write
