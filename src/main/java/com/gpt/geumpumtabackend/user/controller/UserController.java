@@ -2,6 +2,7 @@ package com.gpt.geumpumtabackend.user.controller;
 
 
 import com.gpt.geumpumtabackend.global.aop.AssignUserId;
+import com.gpt.geumpumtabackend.global.jwt.JwtAuthentication;
 import com.gpt.geumpumtabackend.global.response.ResponseBody;
 import com.gpt.geumpumtabackend.global.response.ResponseUtil;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
@@ -17,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -82,9 +84,10 @@ public class UserController implements UserApi {
     @AssignUserId
     @PreAuthorize("isAuthenticated() and hasRole('USER')")
     public ResponseEntity<ResponseBody<Void>> logout(
-            Long userId
+            Long userId,
+            Authentication authentication
     ){
-        userService.logout(userId);
+        userService.logout(userId, getSessionId(authentication));
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse());
     }
     @DeleteMapping("/withdraw")
@@ -105,5 +108,9 @@ public class UserController implements UserApi {
     ){
         TokenResponse response = userService.restoreUser(userId);
         return ResponseEntity.ok(ResponseUtil.createSuccessResponse(response));
+    }
+
+    private String getSessionId(Authentication authentication) {
+        return ((JwtAuthentication) authentication).sessionId();
     }
 }

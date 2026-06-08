@@ -10,6 +10,7 @@ import java.util.Collections;
 
 public record JwtAuthentication(
         Long userId,
+        String sessionId,
         UserRole role,
         Boolean withdrawn
 ) implements Authentication {
@@ -17,6 +18,7 @@ public record JwtAuthentication(
     public JwtAuthentication(JwtUserClaim claims) {
         this(
                 claims.userId(),
+                claims.sessionId(),
                 claims.role(),
                 claims.withdrawn()
         );

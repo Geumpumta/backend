@@ -7,6 +7,8 @@ import com.gpt.geumpumtabackend.integration.config.BaseIntegrationTest;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.token.domain.Token;
+import com.gpt.geumpumtabackend.token.domain.UserSession;
+import com.gpt.geumpumtabackend.token.service.UserSessionService;
 import com.gpt.geumpumtabackend.user.domain.Department;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
@@ -48,6 +50,9 @@ class StatisticsControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private StudySessionRepository studySessionRepository;
 
+    @Autowired
+    private UserSessionService userSessionService;
+
     private User testUser;
     private User otherUser;
     private String accessToken;
@@ -57,9 +62,14 @@ class StatisticsControllerIntegrationTest extends BaseIntegrationTest {
         testUser = createUser("테스트유저", "stats@kumoh.ac.kr", Department.SOFTWARE);
         otherUser = createUser("다른유저", "other-stats@kumoh.ac.kr", Department.COMPUTER_ENGINEERING);
 
-        JwtUserClaim claim = new JwtUserClaim(testUser.getId(), UserRole.USER, false);
-        Token token = jwtHandler.createTokens(claim);
-        accessToken = token.getAccessToken();
+        accessToken = createAccessToken(testUser);
+    }
+
+    private String createAccessToken(User user) {
+        UserSession userSession = userSessionService.createNewSession(user.getId(), 3600);
+        JwtUserClaim claim = JwtUserClaim.create(user, userSession.getSessionId());
+        Token token = jwtHandler.createTokens(claim, userSession.getRefreshToken());
+        return token.getAccessToken();
     }
 
     private User createUser(String name, String email, Department department) {

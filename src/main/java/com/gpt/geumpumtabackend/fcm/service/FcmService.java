@@ -2,9 +2,9 @@ package com.gpt.geumpumtabackend.fcm.service;
 
 import com.gpt.geumpumtabackend.fcm.dto.FcmMessageDto;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
-import com.gpt.geumpumtabackend.global.exception.ExceptionType;
+import com.gpt.geumpumtabackend.token.domain.UserSession;
+import com.gpt.geumpumtabackend.token.service.UserSessionService;
 import com.gpt.geumpumtabackend.user.domain.User;
-import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,39 +17,33 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class FcmService {
 
-    private final UserRepository userRepository;
+    private final UserSessionService userSessionService;
     private final FcmMessageSender fcmMessageSender;
 
     @Transactional
-    public void registerFcmToken(Long userId, String fcmToken) {
-        if (fcmToken == null || fcmToken.isBlank()) {
-            throw new BusinessException(ExceptionType.FCM_INVALID_TOKEN);
-        }
-
-        userRepository.findByFcmToken(fcmToken)
-                .ifPresent(User::clearFcmToken);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
-
-        user.updateFcmToken(fcmToken);
+    public void registerFcmToken(Long userId, String sessionId, String fcmToken) {
+        userSessionService.registerFcmToken(userId, sessionId, fcmToken);
     }
 
     @Transactional
-    public void removeFcmToken(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ExceptionType.USER_NOT_FOUND));
-
-        user.clearFcmToken();
+    public void removeFcmToken(Long userId, String sessionId) {
+        userSessionService.removeFcmToken(userId, sessionId);
     }
 
     public void sendMaxFocusNotification(User user, int hours) {
-        if (user.getFcmToken() == null || user.getFcmToken().isBlank()) {
+        UserSession userSession;
+        try {
+            userSession = userSessionService.findActiveSession(user.getId());
+        } catch (BusinessException e) {
+            return;
+        }
+        String fcmToken = userSession.getFcmToken();
+        if (fcmToken == null || fcmToken.isBlank()) {
             return;
         }
 
         FcmMessageDto messageDto = FcmMessageDto.builder()
-                .token(user.getFcmToken())
+                .token(fcmToken)
                 .title("최대 집중 시간 도달")
                 .body(String.format("%d시간 동안 열심히 공부하셨습니다! 잠시 휴식을 취해보세요.", hours))
                 .data(Map.of(

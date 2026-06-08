@@ -8,8 +8,7 @@ import com.google.firebase.messaging.Notification;
 import com.gpt.geumpumtabackend.fcm.dto.FcmMessageDto;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
-import com.gpt.geumpumtabackend.user.domain.User;
-import com.gpt.geumpumtabackend.user.repository.UserRepository;
+import com.gpt.geumpumtabackend.token.service.UserSessionService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,7 @@ public class FcmMessageSender {
             MessagingErrorCode.THIRD_PARTY_AUTH_ERROR
     );
 
-    private final UserRepository userRepository;
+    private final UserSessionService userSessionService;
 
     @Retryable(
             retryFor = FirebaseMessagingException.class,
@@ -75,8 +74,7 @@ public class FcmMessageSender {
 
         if (errorCode == MessagingErrorCode.UNREGISTERED) {
             log.warn("FCM token unregistered, clearing token: {}", token);
-            userRepository.findByFcmToken(token)
-                    .ifPresent(User::clearFcmToken);
+            userSessionService.clearFcmToken(token);
             return;
         }
 

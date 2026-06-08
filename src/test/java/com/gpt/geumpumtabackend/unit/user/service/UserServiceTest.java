@@ -2,15 +2,16 @@ package com.gpt.geumpumtabackend.unit.user.service;
 
 import com.gpt.geumpumtabackend.badge.dto.response.NewBadgeResponse;
 import com.gpt.geumpumtabackend.badge.service.BadgeService;
-import com.gpt.geumpumtabackend.fcm.service.FcmService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.global.jwt.JwtHandler;
+import com.gpt.geumpumtabackend.global.jwt.JwtProperties;
 import com.gpt.geumpumtabackend.global.jwt.JwtUserClaim;
 import com.gpt.geumpumtabackend.global.oauth.user.OAuth2Provider;
 import com.gpt.geumpumtabackend.token.domain.Token;
+import com.gpt.geumpumtabackend.token.domain.UserSession;
 import com.gpt.geumpumtabackend.token.dto.response.TokenResponse;
-import com.gpt.geumpumtabackend.token.repository.RefreshTokenRepository;
+import com.gpt.geumpumtabackend.token.service.UserSessionService;
 import com.gpt.geumpumtabackend.user.domain.Department;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
@@ -46,13 +47,13 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private RefreshTokenRepository refreshTokenRepository;
-
-    @Mock
     private JwtHandler jwtHandler;
 
     @Mock
-    private FcmService fcmService;
+    private JwtProperties jwtProperties;
+
+    @Mock
+    private UserSessionService userSessionService;
 
     @Mock
     private BadgeService badgeService;
@@ -142,11 +143,13 @@ class UserServiceTest {
                     "https://example.com/welcome.png"
             );
 
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(userRepository.findByIdForUpdate(userId)).willReturn(Optional.of(user));
             given(userRepository.existsBySchoolEmail(request.email())).willReturn(false);
             given(userRepository.existsByStudentId(request.studentId())).willReturn(false);
             given(userRepository.existsByNickname(any())).willReturn(false);
-            given(jwtHandler.createTokens(any(JwtUserClaim.class))).willReturn(token);
+            given(jwtProperties.getRefreshTokenExpireIn()).willReturn(3600);
+            given(userSessionService.createNewSession(userId, 3600)).willReturn(createUserSession(userId));
+            given(jwtHandler.createTokens(any(JwtUserClaim.class), eq("session-refresh"))).willReturn(token);
             given(badgeService.grantWelcomeBadge(userId)).willReturn(newBadge);
 
             // When
@@ -162,9 +165,10 @@ class UserServiceTest {
             assertThat(user.getNickname()).isNotBlank();
             verify(jwtHandler).createTokens(argThat(claim ->
                     claim.userId().equals(userId) &&
+                            claim.sessionId().equals("session-id") &&
                             claim.role().equals(UserRole.USER) &&
                             !claim.withdrawn()
-            ));
+            ), eq("session-refresh"));
             verify(badgeService).grantWelcomeBadge(userId);
         }
 
@@ -180,7 +184,7 @@ class UserServiceTest {
                     "Software Engineering"
             );
 
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(userRepository.findByIdForUpdate(userId)).willReturn(Optional.of(user));
             given(userRepository.existsBySchoolEmail(request.email())).willReturn(true);
 
             // When & Then
@@ -201,7 +205,7 @@ class UserServiceTest {
                     "Software Engineering"
             );
 
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(userRepository.findByIdForUpdate(userId)).willReturn(Optional.of(user));
             given(userRepository.existsBySchoolEmail(request.email())).willReturn(false);
             given(userRepository.existsByStudentId(request.studentId())).willReturn(true);
 
@@ -304,15 +308,15 @@ class UserServiceTest {
         void 로그아웃_정상처리() {
             // Given
             Long userId = 1L;
+            String sessionId = "session-id";
             User user = createTestUser(userId, UserRole.USER);
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
             // When
-            userService.logout(userId);
+            userService.logout(userId, sessionId);
 
             // Then
-            verify(refreshTokenRepository).deleteByUserId(userId);
-            verify(fcmService).removeFcmToken(userId);
+            verify(userSessionService).logout(userId, sessionId);
         }
 
         @Test
@@ -323,7 +327,7 @@ class UserServiceTest {
             given(userRepository.findById(userId)).willReturn(Optional.empty());
 
             // When & Then
-            assertThatThrownBy(() -> userService.logout(userId))
+            assertThatThrownBy(() -> userService.logout(userId, "session-id"))
                     .isInstanceOf(BusinessException.class)
                     .hasFieldOrPropertyWithValue("exceptionType", ExceptionType.USER_NOT_FOUND);
         }
@@ -345,8 +349,7 @@ class UserServiceTest {
             userService.withdrawUser(userId);
 
             // Then
-            verify(refreshTokenRepository).deleteByUserId(userId);
-            verify(fcmService).removeFcmToken(userId);
+            verify(userSessionService).revokeAllByUserId(userId);
             verify(userRepository).deleteById(userId);
         }
     }
@@ -372,8 +375,10 @@ class UserServiceTest {
                     .refreshToken("refresh-token")
                     .build();
 
-            given(userRepository.findById(userId)).willReturn(Optional.of(user));
-            given(jwtHandler.createTokens(any(JwtUserClaim.class))).willReturn(token);
+            given(userRepository.findByIdForUpdate(userId)).willReturn(Optional.of(user));
+            given(jwtProperties.getRefreshTokenExpireIn()).willReturn(3600);
+            given(userSessionService.createNewSession(userId, 3600)).willReturn(createUserSession(userId));
+            given(jwtHandler.createTokens(any(JwtUserClaim.class), eq("session-refresh"))).willReturn(token);
 
             // When
             TokenResponse response = userService.restoreUser(userId);
@@ -387,8 +392,10 @@ class UserServiceTest {
             assertThat(user.getStudentId()).isEqualTo("20240001");
             assertThat(user.getDeletedAt()).isNull();
             verify(jwtHandler).createTokens(argThat(claim ->
-                    claim.userId().equals(userId) && !claim.withdrawn()
-            ));
+                    claim.userId().equals(userId)
+                            && claim.sessionId().equals("session-id")
+                            && !claim.withdrawn()
+            ), eq("session-refresh"));
         }
     }
 
@@ -436,6 +443,15 @@ class UserServiceTest {
 
         setField(user, "id", id);
         return user;
+    }
+
+    private UserSession createUserSession(Long userId) {
+        return UserSession.builder()
+                .userId(userId)
+                .sessionId("session-id")
+                .refreshToken("session-refresh")
+                .expiresAt(LocalDateTime.now().plusHours(1))
+                .build();
     }
 
     private void setField(User user, String fieldName, Object value) {

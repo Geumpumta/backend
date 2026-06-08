@@ -2,42 +2,36 @@ package com.gpt.geumpumtabackend.global.jwt;
 
 
 
-import com.gpt.geumpumtabackend.user.domain.UserRole;
-import com.gpt.geumpumtabackend.token.domain.RefreshToken;
 import com.gpt.geumpumtabackend.token.domain.Token;
-import com.gpt.geumpumtabackend.token.repository.RefreshTokenRepository;
+import com.gpt.geumpumtabackend.user.domain.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 public class JwtHandler {
 
     private final JwtProperties jwtProperties;
     private final SecretKey secretKey;
-    private final RefreshTokenRepository refreshTokenRepository;
     public static final String USER_ID = "USER_ID";
     public static final String USER_ROLE = "ROLE_USER";
-    private static final String KEY_ROLE = "role";
+    public static final String SESSION_ID = "SESSION_ID";
     private static final String IS_WITHDRAWN = "WITHDRAWN";
     private static final long MILLI_SECOND = 1000L;
 
-    public JwtHandler(JwtProperties jwtProperties, RefreshTokenRepository refreshTokenRepository) {
+    public JwtHandler(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
-        this.refreshTokenRepository = refreshTokenRepository;
         secretKey = new SecretKeySpec(jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
-    @Transactional
-    public Token createTokens(JwtUserClaim jwtUserClaim) {
+    public Token createTokens(JwtUserClaim jwtUserClaim, String refreshToken) {
         Map<String, Object> tokenClaims = this.createClaims(jwtUserClaim);
         Date now = new Date(System.currentTimeMillis());
         long accessTokenExpireIn = jwtProperties.getAccessTokenExpireIn();
@@ -49,25 +43,29 @@ public class JwtHandler {
                 .signWith(secretKey)
                 .compact();
 
-        String refreshToken = UUID.randomUUID().toString();
-        long refreshTokenExpireIn = jwtProperties.getRefreshTokenExpireIn();
-        RefreshToken refreshTokenEntity = new RefreshToken(jwtUserClaim.userId(), refreshToken, refreshTokenExpireIn);
-        if(refreshTokenRepository.existsByUserId(jwtUserClaim.userId()))
-            refreshTokenRepository.deleteByUserId(jwtUserClaim.userId());
-        refreshTokenRepository.save(refreshTokenEntity);
-
         return Token.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
     }
 
+    public Token createAccessToken(JwtUserClaim jwtUserClaim) {
+        return createTokens(jwtUserClaim, null);
+    }
+
+    public Token createTokens(JwtUserClaim jwtUserClaim) {
+        return createTokens(jwtUserClaim, null);
+    }
+
     public Map<String, Object> createClaims(JwtUserClaim jwtUserClaim) {
-        return Map.of(
-                USER_ID, jwtUserClaim.userId(),
-                USER_ROLE, jwtUserClaim.role(),
-                IS_WITHDRAWN, jwtUserClaim.withdrawn()
-        );
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(USER_ID, jwtUserClaim.userId());
+        claims.put(USER_ROLE, jwtUserClaim.role());
+        claims.put(IS_WITHDRAWN, jwtUserClaim.withdrawn());
+        if (jwtUserClaim.sessionId() != null) {
+            claims.put(SESSION_ID, jwtUserClaim.sessionId());
+        }
+        return claims;
     }
 
 
@@ -92,6 +90,7 @@ public class JwtHandler {
         Boolean withdrawn = claims.get(IS_WITHDRAWN, Boolean.class);
         return new JwtUserClaim(
                 claims.get(USER_ID, Long.class),
+                claims.get(SESSION_ID, String.class),
                 UserRole.valueOf(claims.get(USER_ROLE, String.class)),
                 withdrawn != null ? withdrawn : false
         );

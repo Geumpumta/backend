@@ -9,6 +9,8 @@ import com.gpt.geumpumtabackend.rank.repository.DepartmentRankingRepository;
 import com.gpt.geumpumtabackend.study.domain.StudySession;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.token.domain.Token;
+import com.gpt.geumpumtabackend.token.domain.UserSession;
+import com.gpt.geumpumtabackend.token.service.UserSessionService;
 import com.gpt.geumpumtabackend.user.domain.Department;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.domain.UserRole;
@@ -51,6 +53,9 @@ class DepartmentRankControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private DepartmentRankingRepository departmentRankingRepository;
 
+    @Autowired
+    private UserSessionService userSessionService;
+
     private User softwareUser1;
     private User softwareUser2;
     private User computerUser;
@@ -65,10 +70,14 @@ class DepartmentRankControllerIntegrationTest extends BaseIntegrationTest {
         computerUser = createUser("컴퓨터공학", "ce@kumoh.ac.kr", Department.COMPUTER_ENGINEERING);
         electronicUser = createUser("전자공학", "ee@kumoh.ac.kr", Department.ELECTRONIC_SYSTEMS);
 
-        // 소프트웨어 유저 토큰 생성
-        JwtUserClaim claim = new JwtUserClaim(softwareUser1.getId(), UserRole.USER, false);
-        Token token = jwtHandler.createTokens(claim);
-        softwareUserToken = token.getAccessToken();
+        softwareUserToken = createAccessToken(softwareUser1);
+    }
+
+    private String createAccessToken(User user) {
+        UserSession userSession = userSessionService.createNewSession(user.getId(), 3600);
+        JwtUserClaim claim = JwtUserClaim.create(user, userSession.getSessionId());
+        Token token = jwtHandler.createTokens(claim, userSession.getRefreshToken());
+        return token.getAccessToken();
     }
 
     private User createUser(String name, String email, Department department) {
@@ -273,11 +282,10 @@ class DepartmentRankControllerIntegrationTest extends BaseIntegrationTest {
                     .andExpect(jsonPath("$.data.myDepartmentRanking.rank").value(1));
 
             // 3. 전자공학 학생 토큰으로 조회 - 같은 랭킹이지만 내 학과는 다름
-            JwtUserClaim electronicClaim = new JwtUserClaim(electronicUser.getId(), UserRole.USER, false);
-            Token electronicToken = jwtHandler.createTokens(electronicClaim);
+            String electronicToken = createAccessToken(electronicUser);
 
             mockMvc.perform(get("/api/v1/rank/department/daily")
-                            .header("Authorization", "Bearer " + electronicToken.getAccessToken()))
+                            .header("Authorization", "Bearer " + electronicToken))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.topRanks[0].departmentName").value("소프트웨어전공"))
                     .andExpect(jsonPath("$.data.myDepartmentRanking.departmentName").value("전자시스템전공"))
@@ -313,11 +321,10 @@ class DepartmentRankControllerIntegrationTest extends BaseIntegrationTest {
                     .getContentAsString();
 
             // 컴퓨터공학 유저로 조회
-            JwtUserClaim computerClaim = new JwtUserClaim(computerUser.getId(), UserRole.USER, false);
-            Token computerToken = jwtHandler.createTokens(computerClaim);
+            String computerToken = createAccessToken(computerUser);
 
             String ceResponse = mockMvc.perform(get("/api/v1/rank/department/daily")
-                            .header("Authorization", "Bearer " + computerToken.getAccessToken()))
+                            .header("Authorization", "Bearer " + computerToken))
                     .andExpect(status().isOk())
                     .andReturn()
                     .getResponse()
