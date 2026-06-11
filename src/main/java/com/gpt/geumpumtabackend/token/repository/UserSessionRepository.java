@@ -22,7 +22,7 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
 
     List<UserSession> findAllByUserIdAndStatus(Long userId, UserSessionStatus status);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
             UPDATE UserSession s
             SET s.status = com.gpt.geumpumtabackend.token.domain.UserSessionStatus.REVOKED,
@@ -33,7 +33,7 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
             """)
     void revokeActiveSessionsByUserId(@Param("userId") Long userId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
             UPDATE UserSession s
             SET s.status = com.gpt.geumpumtabackend.token.domain.UserSessionStatus.REVOKED,
@@ -43,7 +43,7 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
             """)
     void revokeAllByUserId(@Param("userId") Long userId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM UserSession s WHERE s.expiresAt <= :timeToDelete")
     void deleteExpiredSessions(@Param("timeToDelete") LocalDateTime timeToDelete);
 }
