@@ -23,6 +23,7 @@ public class NotificationOutboxWorkerService {
     private final FcmService fcmService;
     private final NotificationOutboxCommandService notificationOutboxCommandService;
     private final NotificationOutboxProperties notificationOutboxProperties;
+    private final NotificationRetryPolicy notificationRetryPolicy;
 
     @Scheduled(
             fixedDelayString = "${notification.outbox.worker.fixed-delay-ms:10000}",
@@ -56,24 +57,22 @@ public class NotificationOutboxWorkerService {
         try {
             fcmService.sendOutbox(outbox);
         } catch (FirebaseMessagingException e) {
-            String errorCode = e.getMessagingErrorCode() == null ? "UNKNOWN" : e.getMessagingErrorCode().name();
-            LocalDateTime nextRetryAt = now.plusSeconds(
-                    notificationOutboxProperties.getRetry().getFirebaseErrorDelaySeconds()
+            NotificationRetryDecision decision = notificationRetryPolicy.decide(
+                    e,
+                    outbox.getRetryCount(),
+                    now
             );
-            notificationOutboxCommandService.markRetryOrDead(outboxId, errorCode, e.getMessage(), nextRetryAt);
+            notificationOutboxCommandService.applyRetryDecision(outboxId, decision);
             return;
         } catch (Exception e) {
-            notificationOutboxCommandService.markRetryOrDead(
-                    outbox.getId(),
-                    "FCM_UNEXPECTED_ERROR",
-                    e.getMessage(),
-                    LocalDateTime.now().plusSeconds(
-                            notificationOutboxProperties.getRetry().getUnexpectedErrorDelaySeconds()
-                    )
+            NotificationRetryDecision decision = notificationRetryPolicy.decideUnexpected(
+                    e,
+                    outbox.getRetryCount(),
+                    LocalDateTime.now()
             );
+            notificationOutboxCommandService.applyRetryDecision(outboxId, decision);
             return;
         }
         notificationOutboxCommandService.deleteSent(outboxId);
-
     }
 }

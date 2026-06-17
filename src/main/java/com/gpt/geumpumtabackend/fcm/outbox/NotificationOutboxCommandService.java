@@ -19,7 +19,6 @@ public class NotificationOutboxCommandService {
 
     private final NotificationOutboxRepository notificationOutboxRepository;
     private final UserSessionService userSessionService;
-    private final NotificationOutboxProperties notificationOutboxProperties;
 
     public void createMaxFocusOutbox(Long studySessionId, Long userId, int maxFocusHours) {
         String eventKey = "max-focus:" + studySessionId;
@@ -58,14 +57,14 @@ public class NotificationOutboxCommandService {
         notificationOutboxRepository.delete(outbox);
     }
 
-    public void markRetryOrDead(Long outboxId, String errorCode, String errorMessage, LocalDateTime nextRetryAt) {
+    public void applyRetryDecision(Long outboxId, NotificationRetryDecision decision) {
         NotificationOutbox outbox = notificationOutboxRepository.findByIdForUpdate(outboxId)
                 .orElseThrow();
-        if(outbox.getRetryCount() >= notificationOutboxProperties.getRetry().getMaxRetry()) {
-            outbox.markDead(errorCode, errorMessage);
+        if(decision.type() == NotificationRetryDecisionType.DEAD) {
+            outbox.markDead(decision.errorCode(), decision.errorMessage());
             return;
         }
-        outbox.scheduleRetry(errorCode, errorMessage, nextRetryAt);
+        outbox.scheduleRetry(decision.errorCode(), decision.errorMessage(), decision.nextRetryAt());
     }
     public void markDead(Long outboxId, String errorCode, String errorMessage) {
         NotificationOutbox outbox = notificationOutboxRepository.findByIdForUpdate(outboxId)

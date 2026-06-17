@@ -29,5 +29,7 @@ public class NotificationOutboxProperties {
         private int maxRetry = 4;
         private long firebaseErrorDelaySeconds = 10;
         private long unexpectedErrorDelaySeconds = 30;
+        private long quotaDelaySeconds = 60;
+        private long providerConfigDelaySeconds = 300;
     }
 }
