@@ -51,7 +51,7 @@ public class NotificationOutboxCommandService {
                 });
     }
 
-    public void deleteSent(Long outboxId) {
+    public void deleteAfterSendSuccess(Long outboxId) {
         NotificationOutbox outbox = notificationOutboxRepository.findByIdForUpdate(outboxId)
                 .orElseThrow();
         notificationOutboxRepository.delete(outbox);
@@ -71,5 +71,20 @@ public class NotificationOutboxCommandService {
                 .orElseThrow();
 
         outbox.markDead(errorCode, errorMessage);
+    }
+    public void markRetryScheduled(
+            Long outboxId,
+            String errorCode,
+            String errorMessage,
+            LocalDateTime nextRetryAt
+    ) {
+        NotificationOutbox outbox = notificationOutboxRepository.findByIdForUpdate(outboxId)
+                .orElseThrow();
+        outbox.scheduleRetry(errorCode, errorMessage, nextRetryAt);
+    }
+    public void markCancelled(Long outboxId, String reason) {
+        NotificationOutbox outbox = notificationOutboxRepository.findByIdForUpdate(outboxId)
+                .orElseThrow();
+        outbox.markCancelled(reason);
     }
 }

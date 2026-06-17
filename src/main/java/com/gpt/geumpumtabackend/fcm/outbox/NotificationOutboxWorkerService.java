@@ -73,6 +73,6 @@ public class NotificationOutboxWorkerService {
             notificationOutboxCommandService.applyRetryDecision(outboxId, decision);
             return;
         }
-        notificationOutboxCommandService.deleteSent(outboxId);
+        notificationOutboxCommandService.deleteAfterSendSuccess(outboxId);
     }
 }

@@ -89,4 +89,11 @@ public class NotificationOutbox extends BaseEntity {
         this.lastErrorCode = errorCode;
     }
 
+    public void markCancelled(String reason) {
+        this.status = NotificationOutboxStatus.CANCELLED;
+        this.lastErrorCode = "CANCELLED";
+        this.lastErrorMessage = reason;
+        this.lockedBy = null;
+    }
+
 }
