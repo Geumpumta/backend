@@ -31,12 +31,8 @@ public class FcmMessageSender {
 
     private final UserSessionService userSessionService;
 
-    @Retryable(
-            retryFor = FirebaseMessagingException.class,
-            maxAttempts = 3,
-            backoff = @Backoff(delay = 1000, multiplier = 2)
-    )
-    public void send(FcmMessageDto messageDto) throws FirebaseMessagingException {
+
+    public String sendOnce(FcmMessageDto messageDto) throws FirebaseMessagingException {
         Notification notification = Notification.builder()
                 .setTitle(messageDto.getTitle())
                 .setBody(messageDto.getBody())
@@ -51,33 +47,8 @@ public class FcmMessageSender {
             messageBuilder.putAllData(messageDto.getData());
         }
 
-        try {
-            FirebaseMessaging.getInstance().send(messageBuilder.build());
-        } catch (FirebaseMessagingException e) {
-            handleSendFailure(e, messageDto.getToken());
-        }
-    }
 
-    @Recover
-    public void sendRecover(FirebaseMessagingException e, FcmMessageDto messageDto) {
-        log.error("FCM send failed after 3 retries for token {}", messageDto.getToken(), e);
-        throw new BusinessException(ExceptionType.FCM_SEND_FAILED);
-    }
+        return FirebaseMessaging.getInstance().send(messageBuilder.build());
 
-    private void handleSendFailure(FirebaseMessagingException e, String token)
-            throws FirebaseMessagingException {
-        MessagingErrorCode errorCode = e.getMessagingErrorCode();
-
-        if (errorCode == null || !PERMANENT_ERROR_CODES.contains(errorCode)) {
-            throw e;
-        }
-
-        if (errorCode == MessagingErrorCode.UNREGISTERED) {
-            log.warn("FCM token unregistered, clearing token: {}", token);
-            userSessionService.clearFcmToken(token);
-            return;
-        }
-
-        log.warn("FCM permanent error [{}] for token {}: {}", errorCode, token, e.getMessage());
     }
 }

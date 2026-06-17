@@ -1,5 +1,7 @@
 package com.gpt.geumpumtabackend.fcm.service;
 
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.gpt.geumpumtabackend.fcm.domain.NotificationOutbox;
 import com.gpt.geumpumtabackend.fcm.dto.FcmMessageDto;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.token.domain.UserSession;
@@ -30,31 +32,16 @@ public class FcmService {
         userSessionService.removeFcmToken(userId, sessionId);
     }
 
-    public void sendMaxFocusNotification(User user, int hours) {
-        UserSession userSession;
-        try {
-            userSession = userSessionService.findActiveSession(user.getId());
-        } catch (BusinessException e) {
-            return;
-        }
-        String fcmToken = userSession.getFcmToken();
-        if (fcmToken == null || fcmToken.isBlank()) {
-            return;
-        }
-
+    public String sendOutbox(NotificationOutbox outbox) throws FirebaseMessagingException {
         FcmMessageDto messageDto = FcmMessageDto.builder()
-                .token(fcmToken)
-                .title("최대 집중 시간 도달")
-                .body(String.format("%d시간 동안 열심히 공부하셨습니다! 잠시 휴식을 취해보세요.", hours))
+                .token(outbox.getFcmTokenSnapshot())
+                .title(outbox.getTitle())
+                .body(outbox.getBody())
                 .data(Map.of(
                         "type", "STUDY_SESSION_FORCE_ENDED",
-                        "maxFocusHours", String.valueOf(hours)
+                        "eventKey", outbox.getEventKey()
                 ))
                 .build();
-        try {
-            fcmMessageSender.send(messageDto);
-        } catch (Exception e) {
-            log.error("Failed to send max focus notification to user {}", user.getId(), e);
-        }
+        return fcmMessageSender.sendOnce(messageDto);
     }
 }
