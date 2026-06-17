@@ -4,7 +4,8 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.gpt.geumpumtabackend.fcm.domain.NotificationOutbox;
 import com.gpt.geumpumtabackend.fcm.domain.NotificationOutboxStatus;
 import com.gpt.geumpumtabackend.fcm.repository.NotificationOutboxRepository;
-import com.gpt.geumpumtabackend.fcm.service.FcmService;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,7 +21,7 @@ public class NotificationOutboxWorkerService {
 
 
     private final NotificationOutboxRepository notificationOutboxRepository;
-    private final FcmService fcmService;
+    private final FcmSendGuard fcmSendGuard;
     private final NotificationOutboxCommandService notificationOutboxCommandService;
     private final NotificationOutboxProperties notificationOutboxProperties;
     private final NotificationRetryPolicy notificationRetryPolicy;
@@ -55,7 +56,15 @@ public class NotificationOutboxWorkerService {
         }
         NotificationOutbox outbox = processingOutbox.get();
         try {
-            fcmService.sendOutbox(outbox);
+            fcmSendGuard.send(outbox);
+        } catch (RequestNotPermitted e) {
+            NotificationRetryDecision decision = notificationRetryPolicy.decideRateLimited(now);
+            notificationOutboxCommandService.applyRetryDecision(outboxId, decision);
+            return;
+        } catch(CallNotPermittedException e) {
+            NotificationRetryDecision decision = notificationRetryPolicy.decideCircuitOpen(now);
+            notificationOutboxCommandService.applyRetryDecision(outboxId, decision);
+            return;
         } catch (FirebaseMessagingException e) {
             NotificationRetryDecision decision = notificationRetryPolicy.decide(
                     e,
@@ -64,7 +73,7 @@ public class NotificationOutboxWorkerService {
             );
             notificationOutboxCommandService.applyRetryDecision(outboxId, decision);
             return;
-        } catch (Exception e) {
+        } catch(Exception e) {
             NotificationRetryDecision decision = notificationRetryPolicy.decideUnexpected(
                     e,
                     outbox.getRetryCount(),
@@ -75,4 +84,5 @@ public class NotificationOutboxWorkerService {
         }
         notificationOutboxCommandService.deleteAfterSendSuccess(outboxId);
     }
+
 }

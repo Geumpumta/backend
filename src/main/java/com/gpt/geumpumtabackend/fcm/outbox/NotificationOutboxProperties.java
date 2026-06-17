@@ -31,5 +31,7 @@ public class NotificationOutboxProperties {
         private long unexpectedErrorDelaySeconds = 30;
         private long quotaDelaySeconds = 60;
         private long providerConfigDelaySeconds = 300;
+        private long circuitOpenDelaySeconds = 30;
+        private long rateLimitedDelaySeconds = 10;
     }
 }

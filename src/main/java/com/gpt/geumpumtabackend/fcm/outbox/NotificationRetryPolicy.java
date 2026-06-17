@@ -65,4 +65,20 @@ public class NotificationRetryPolicy {
                 now.plusSeconds(properties.getRetry().getUnexpectedErrorDelaySeconds())
         );
     }
+
+    public NotificationRetryDecision decideCircuitOpen(LocalDateTime now) {
+        return NotificationRetryDecision.retry(
+                "FCM_CIRCUIT_OPEN",
+                "FCM circuit breaker is open",
+                now.plusSeconds(properties.getRetry().getCircuitOpenDelaySeconds())
+        );
+    }
+
+    public NotificationRetryDecision decideRateLimited(LocalDateTime now) {
+        return NotificationRetryDecision.retry(
+                "FCM_RATE_LIMITED",
+                "FCM rate limiter rejected send request",
+                now.plusSeconds(properties.getRetry().getRateLimitedDelaySeconds())
+        );
+    }
 }
