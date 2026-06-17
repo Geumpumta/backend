@@ -43,7 +43,6 @@ public class NotificationOutbox extends BaseEntity {
     private LocalDateTime lastAttemptAt;
     private String lockedBy;
     private String lastErrorMessage;
-    private String providerMessageId;
     private String lastErrorCode;
 
     public static NotificationOutbox createMaxFocusNotification(
@@ -72,12 +71,6 @@ public class NotificationOutbox extends BaseEntity {
         this.status = NotificationOutboxStatus.PROCESSING;
         this.lockedBy = workerId;
         this.lastAttemptAt = now;
-    }
-
-    public void markSent(String providerMessageId) {
-        this.status = NotificationOutboxStatus.SENT;
-        this.providerMessageId = providerMessageId;
-        this.lockedBy = null;
     }
 
     public void scheduleRetry(String errorCode, String errorMessage, LocalDateTime nextRetryAt) {

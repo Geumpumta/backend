@@ -5,39 +5,38 @@ import com.gpt.geumpumtabackend.fcm.domain.NotificationOutbox;
 import com.gpt.geumpumtabackend.fcm.domain.NotificationOutboxStatus;
 import com.gpt.geumpumtabackend.fcm.repository.NotificationOutboxRepository;
 import com.gpt.geumpumtabackend.fcm.service.FcmService;
-import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationOutboxWorkerService {
 
-    private static final int BATCH_SIZE = 100;
 
     private final NotificationOutboxRepository notificationOutboxRepository;
     private final FcmService fcmService;
     private final NotificationOutboxCommandService notificationOutboxCommandService;
+    private final NotificationOutboxProperties notificationOutboxProperties;
 
     @Scheduled(
-            fixedDelay=10,
-            initialDelay=5,
-            timeUnit = TimeUnit.SECONDS
+            fixedDelayString = "${notification.outbox.worker.fixed-delay-ms:10000}",
+            initialDelayString = "${notification.outbox.worker.initial-delay-ms:5000}"
     )
     public void publishPendingEvent() {
+        if (!notificationOutboxProperties.getWorker().isEnabled()) {
+            return;
+        }
+
         List<NotificationOutbox> outboxes = notificationOutboxRepository.findDueOutboxes(
                 List.of(NotificationOutboxStatus.PENDING, NotificationOutboxStatus.RETRY_SCHEDULED),
                 LocalDateTime.now(),
-                PageRequest.of(0, BATCH_SIZE)
+                PageRequest.of(0, notificationOutboxProperties.getWorker().getBatchSize())
         );
         for(NotificationOutbox outbox:outboxes) {
             processOne(outbox.getId());
@@ -46,7 +45,7 @@ public class NotificationOutboxWorkerService {
 
     private void processOne(Long outboxId) {
         LocalDateTime now = LocalDateTime.now();
-        String workerId = "notification-worker";
+        String workerId = notificationOutboxProperties.getWorker().getWorkerId();
 
         Optional<NotificationOutbox> processingOutbox =
                 notificationOutboxCommandService.markProcessing(outboxId, workerId, now);
@@ -55,19 +54,26 @@ public class NotificationOutboxWorkerService {
         }
         NotificationOutbox outbox = processingOutbox.get();
         try {
-            String ProviderMessageId = fcmService.sendOutbox(outbox);
-            notificationOutboxCommandService.markSent(outboxId, ProviderMessageId);
+            fcmService.sendOutbox(outbox);
         } catch (FirebaseMessagingException e) {
             String errorCode = e.getMessagingErrorCode() == null ? "UNKNOWN" : e.getMessagingErrorCode().name();
-            LocalDateTime nextRetryAt = now.plusSeconds(10);
+            LocalDateTime nextRetryAt = now.plusSeconds(
+                    notificationOutboxProperties.getRetry().getFirebaseErrorDelaySeconds()
+            );
             notificationOutboxCommandService.markRetryOrDead(outboxId, errorCode, e.getMessage(), nextRetryAt);
+            return;
         } catch (Exception e) {
             notificationOutboxCommandService.markRetryOrDead(
                     outbox.getId(),
                     "FCM_UNEXPECTED_ERROR",
                     e.getMessage(),
-                    LocalDateTime.now().plusSeconds(30)
+                    LocalDateTime.now().plusSeconds(
+                            notificationOutboxProperties.getRetry().getUnexpectedErrorDelaySeconds()
+                    )
             );
+            return;
         }
+        notificationOutboxCommandService.deleteSent(outboxId);
+
     }
 }

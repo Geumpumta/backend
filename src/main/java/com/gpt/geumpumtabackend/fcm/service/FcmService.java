@@ -3,10 +3,8 @@ package com.gpt.geumpumtabackend.fcm.service;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.gpt.geumpumtabackend.fcm.domain.NotificationOutbox;
 import com.gpt.geumpumtabackend.fcm.dto.FcmMessageDto;
-import com.gpt.geumpumtabackend.global.exception.BusinessException;
-import com.gpt.geumpumtabackend.token.domain.UserSession;
+
 import com.gpt.geumpumtabackend.token.service.UserSessionService;
-import com.gpt.geumpumtabackend.user.domain.User;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class FcmService {
 
     private final UserSessionService userSessionService;
