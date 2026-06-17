@@ -1,6 +1,5 @@
 package com.gpt.geumpumtabackend.study.scheduler;
 
-import com.gpt.geumpumtabackend.fcm.service.FcmService;
 import com.gpt.geumpumtabackend.study.config.StudyProperties;
 import com.gpt.geumpumtabackend.study.service.StudySessionService;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Component;
 public class MaxFocusStudyScheduler {
 
     private final StudySessionService studySessionService;
-    private final FcmService fcmService;
     private final StudyProperties studyProperties;
 
     @Scheduled(fixedRate = 1000)

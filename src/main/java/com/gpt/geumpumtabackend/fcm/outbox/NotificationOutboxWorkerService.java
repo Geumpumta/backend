@@ -3,17 +3,19 @@ package com.gpt.geumpumtabackend.fcm.outbox;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.gpt.geumpumtabackend.fcm.domain.NotificationOutbox;
 import com.gpt.geumpumtabackend.fcm.domain.NotificationOutboxStatus;
+import com.gpt.geumpumtabackend.fcm.outbox.retry.NotificationRetryDecision;
+import com.gpt.geumpumtabackend.fcm.outbox.retry.NotificationRetryPolicy;
 import com.gpt.geumpumtabackend.fcm.repository.NotificationOutboxRepository;
+import com.gpt.geumpumtabackend.fcm.sender.FcmSendGuard;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

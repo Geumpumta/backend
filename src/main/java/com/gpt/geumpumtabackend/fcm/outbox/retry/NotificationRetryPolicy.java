@@ -1,10 +1,10 @@
-package com.gpt.geumpumtabackend.fcm.outbox;
+package com.gpt.geumpumtabackend.fcm.outbox.retry;
 
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.gpt.geumpumtabackend.fcm.outbox.NotificationOutboxProperties;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor

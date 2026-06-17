@@ -1,16 +1,17 @@
 package com.gpt.geumpumtabackend.fcm.outbox;
 
 import com.gpt.geumpumtabackend.fcm.domain.NotificationOutbox;
+import com.gpt.geumpumtabackend.fcm.outbox.retry.NotificationRetryDecision;
+import com.gpt.geumpumtabackend.fcm.outbox.retry.NotificationRetryDecisionType;
 import com.gpt.geumpumtabackend.fcm.repository.NotificationOutboxRepository;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.token.domain.UserSession;
 import com.gpt.geumpumtabackend.token.service.UserSessionService;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

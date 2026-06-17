@@ -1,4 +1,4 @@
-package com.gpt.geumpumtabackend.fcm.outbox;
+package com.gpt.geumpumtabackend.fcm.outbox.retry;
 
 import com.google.firebase.messaging.MessagingErrorCode;
 import org.springframework.stereotype.Component;

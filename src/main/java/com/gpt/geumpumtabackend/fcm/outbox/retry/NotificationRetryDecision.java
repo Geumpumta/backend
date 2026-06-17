@@ -1,4 +1,4 @@
-package com.gpt.geumpumtabackend.fcm.outbox;
+package com.gpt.geumpumtabackend.fcm.outbox.retry;
 
 import java.time.LocalDateTime;
 
