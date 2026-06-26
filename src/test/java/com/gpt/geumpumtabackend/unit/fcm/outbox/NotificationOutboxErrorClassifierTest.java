@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("NotificationOutboxErrorClassifier")
-class NotificationOutboxErrorClassifierTest {
+class NotificationOutboxErrorClassifierTest extends BaseUnitTest {
 
     private final NotificationOutboxErrorClassifier classifier = new NotificationOutboxErrorClassifier();
 
