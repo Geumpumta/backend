@@ -8,7 +8,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@NoArgsConstructor
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+...
+`@NoArgsConstructor`(access = AccessLevel.PROTECTED)
 @Getter
 public class NotificationOutbox extends BaseEntity {
 
