@@ -18,7 +18,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 @DisplayName("NotificationRetryPolicy")
-class NotificationRetryPolicyTest {
+class NotificationRetryPolicyTest extends BaseUnitTest {
 
     private NotificationRetryPolicy retryPolicy;
     private LocalDateTime now;
