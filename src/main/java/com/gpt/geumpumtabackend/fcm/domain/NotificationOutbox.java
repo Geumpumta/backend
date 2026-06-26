@@ -2,13 +2,14 @@ package com.gpt.geumpumtabackend.fcm.domain;
 
 import com.gpt.geumpumtabackend.global.base.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class NotificationOutbox extends BaseEntity {
 
