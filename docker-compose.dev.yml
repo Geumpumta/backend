@@ -1,0 +1,79 @@
+services:
+  geumpumta-backend-dev:
+    image: ${APP_IMAGE}
+    container_name: geumpumta-backend-dev
+    restart: always
+    depends_on:
+      mysql-geumpumta-dev:
+        condition: service_healthy
+      redis-geumpumta-dev:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WEB_PORT}:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      TZ: ${TZ}
+
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
+
+      APP_SCHEDULER_ENABLED: ${APP_SCHEDULER_ENABLED}
+      APP_FCM_ENABLED: ${APP_FCM_ENABLED}
+
+    networks:
+      - appnet-dev
+
+  mysql-geumpumta-dev:
+    image: mysql:8.4.0
+    container_name: mysql-geumpumta-dev
+    restart: always
+    ports:
+      - "127.0.0.1:${MYSQL_PORT}:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: ${TZ}
+    volumes:
+      - ./docker-infra/dev/mysql/data:/var/lib/mysql
+      - ./docker-infra/dev/mysql/config:/etc/mysql/conf.d
+      - ./docker-infra/dev/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - appnet-dev
+
+  redis-geumpumta-dev:
+    image: redis:alpine
+    container_name: redis-geumpumta-dev
+    restart: always
+    command:
+      - redis-server
+      - /usr/local/etc/redis/redis.conf
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:6379"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ./docker-infra/dev/redis/config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./docker-infra/dev/redis/data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - appnet-dev
+
+networks:
+  appnet-dev:
+    external: true
+    name: geumpumta-net-dev
