@@ -2,25 +2,32 @@ name: Dev - CD (Deploy)
 
 on:
   workflow_run:
-    workflows: [ "Dev - CI (Build & Push)" ]
-    types: [ completed ]
+    workflows: ["Dev - CI (Build & Push)"]
+    types: [completed]
 
+concurrency:
+  group: dev-deploy
+  cancel-in-progress: false
 
 permissions:
+  contents: read
+  actions: read
   packages: read
 
 jobs:
   deploy:
-    # CI가 성공했을 때만 실행
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: [self-hosted]
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev' }}
+    runs-on: [self-hosted, dev, ec2]
 
-    # [설정] GitHub Environment의 'development' 변수들(32124 포트 등)을 사용
     environment:
       name: development
 
     steps:
-      # CI에서 넘겨준 이미지 태그 파일 다운로드
+      - name: Checkout deploy files
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTION_TOKEN }}
+
       - name: Download Image Tag Artifact
         uses: actions/download-artifact@v4
         with:
@@ -30,29 +37,134 @@ jobs:
 
       - name: Read Image Tag
         id: get-tag
-        run: echo "IMAGE_TAG=$(head -n 1 image_tag.txt)" >> $GITHUB_OUTPUT
+        run: |
+          IMAGE_TAG="$(head -n 1 image_tag.txt)"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Deploy image: ${IMAGE_TAG}"
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.ACTION_TOKEN }}
-
-      - name: Pull latest image
-        run: docker pull ${{ steps.get-tag.outputs.IMAGE_TAG }}
-
-      - name: Clean up old container
         run: |
-          docker rm -f ${{ secrets.CONTAINER_NAME }} || true
-          docker image prune -f 
+          echo "${{ secrets.ACTION_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      - name: Run New Container (Dev)
+      - name: Prepare server directories
         run: |
-          docker run -d \
-            --name ${{ secrets.CONTAINER_NAME }} \
-            --network ${{ secrets.NETWORK_NAME }} \
-            -p ${{ secrets.WEB_PORT }}:8080 \
-            -e SPRING_PROFILES_ACTIVE=dev \
-            -e TZ=Asia/Seoul \
-            ${{ steps.get-tag.outputs.IMAGE_TAG }}
+          mkdir -p /home/ubuntu/geumpumta/docker-infra/dev/mysql/data
+          mkdir -p /home/ubuntu/geumpumta/docker-infra/dev/mysql/config
+          mkdir -p /home/ubuntu/geumpumta/docker-infra/dev/mysql/init
+          mkdir -p /home/ubuntu/geumpumta/docker-infra/dev/redis/config
+          mkdir -p /home/ubuntu/geumpumta/docker-infra/dev/redis/data
+
+      - name: Create dev Redis config
+        run: |
+          cat > /home/ubuntu/geumpumta/docker-infra/dev/redis/config/redis.conf <<'EOF'
+          bind 0.0.0.0
+          protected-mode no
+          port 6379
+
+          maxmemory 128mb
+          maxmemory-policy allkeys-lru
+
+          appendonly no
+
+          save 900 1
+          save 300 10
+          save 60 10000
+
+          dbfilename dump.rdb
+          dir /data
+
+          stop-writes-on-bgsave-error yes
+          rdbcompression yes
+          rdbchecksum yes
+
+          loglevel notice
+          EOF
+
+      - name: Create dev MySQL config
+        run: |
+          cat > /home/ubuntu/geumpumta/docker-infra/dev/mysql/config/my.cnf <<'EOF'
+          [mysqld]
+          character-set-server=utf8mb4
+          collation-server=utf8mb4_unicode_ci
+
+          max_connections=50
+          innodb_buffer_pool_size=128M
+          innodb_log_buffer_size=16M
+          performance_schema=OFF
+
+          skip-name-resolve
+          EOF
+
+      - name: Create Docker network
+        run: |
+          docker network create geumpumta-net-dev || true
+
+      - name: Sync compose file
+        run: |
+          cp docker-compose.dev.yml /home/ubuntu/geumpumta/docker-compose.dev.yml
+
+      - name: Create runtime env file
+        working-directory: /home/ubuntu/geumpumta
+        run: |
+          cat > .env.runtime <<EOF
+          APP_IMAGE=${{ steps.get-tag.outputs.IMAGE_TAG }}
+
+          MYSQL_DATABASE=${{ vars.MYSQL_DATABASE }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+
+          SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILES_ACTIVE }}
+          TZ=${{ vars.TZ }}
+
+          WEB_PORT=${{ vars.WEB_PORT }}
+          MYSQL_PORT=${{ vars.MYSQL_PORT }}
+          REDIS_PORT=${{ vars.REDIS_PORT }}
+
+          SPRING_DATASOURCE_URL=${{ vars.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_USERNAME=${{ secrets.MYSQL_USER }}
+          SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+
+          SPRING_DATA_REDIS_HOST=${{ vars.SPRING_DATA_REDIS_HOST }}
+          SPRING_DATA_REDIS_PORT=${{ vars.SPRING_DATA_REDIS_PORT }}
+
+          APP_SCHEDULER_ENABLED=${{ vars.APP_SCHEDULER_ENABLED }}
+          APP_FCM_ENABLED=${{ vars.APP_FCM_ENABLED }}
+          EOF
+
+          chmod 600 .env.runtime
+
+      - name: Show compose config
+        working-directory: /home/ubuntu/geumpumta
+        run: |
+          docker compose --env-file .env.runtime -f docker-compose.dev.yml config
+
+      - name: Deploy dev with Docker Compose
+        working-directory: /home/ubuntu/geumpumta
+        run: |
+          docker compose --env-file .env.runtime -f docker-compose.dev.yml pull
+          docker compose --env-file .env.runtime -f docker-compose.dev.yml up -d
+
+      - name: Health check
+        run: |
+          for i in {1..40}; do
+            echo "Health check attempt $i/40"
+
+            if curl -fsS --connect-timeout 3 --max-time 10 \
+              "http://127.0.0.1/actuator/health"; then
+              echo "Health check succeeded"
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          echo "Health check failed"
+          docker logs --tail=300 geumpumta-backend-dev || true
+          docker logs --tail=200 mysql-geumpumta-dev || true
+          docker logs --tail=200 redis-geumpumta-dev || true
+          exit 1
+
+      - name: Clean up old images
+        run: |
+          docker image prune -f
