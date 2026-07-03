@@ -5,6 +5,7 @@ on:
     workflows: [ "Prod - Java CI with Gradle" ]
     types: [ completed ]
 
+
 permissions:
   contents: read
   packages: write
@@ -79,21 +80,27 @@ jobs:
         run: |
           cat > .env.runtime <<EOF
           APP_IMAGE=${{ needs.build.outputs.image-tag }}
+
           MYSQL_DATABASE=${{ vars.MYSQL_DATABASE }}
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_USER=${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+
           SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILES_ACTIVE }}
           TZ=${{ vars.TZ }}
+
           WEB_PORT=${{ vars.WEB_PORT }}
           MYSQL_PORT=${{ vars.MYSQL_PORT }}
           REDIS_PORT=${{ vars.REDIS_PORT }}
+
           SPRING_DATASOURCE_URL=${{ vars.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME=${{ secrets.MYSQL_USER }}
           SPRING_DATASOURCE_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+
           SPRING_DATA_REDIS_HOST=${{ vars.SPRING_DATA_REDIS_HOST }}
           SPRING_DATA_REDIS_PORT=${{ vars.SPRING_DATA_REDIS_PORT }}
           EOF
+
           chmod 600 .env.runtime
 
       - name: Show Docker Compose config
@@ -108,9 +115,37 @@ jobs:
           docker compose --env-file .env.runtime -f docker-compose.prod.yml up -d
 
       - name: Health check
+        working-directory: /home/ubuntu/geumpumta
         run: |
-          sleep 25
-          curl -f http://localhost:${{ vars.WEB_PORT }}/actuator/health
+          echo "Start health check..."
+          echo "Target: http://127.0.0.1:${{ vars.WEB_PORT }}/actuator/health"
+
+          for i in {1..30}; do
+            echo "Health check attempt $i/30"
+
+            if curl -fsS --connect-timeout 3 --max-time 10 "http://127.0.0.1:${{ vars.WEB_PORT }}/actuator/health"; then
+              echo ""
+              echo "Health check succeeded"
+              exit 0
+            fi
+
+            echo "Health check failed. Waiting 5 seconds..."
+            sleep 5
+          done
+
+          echo "Health check failed after 30 attempts."
+          echo ""
+          echo "Docker containers:"
+          docker ps -a
+          echo ""
+          echo "Backend container logs:"
+          docker logs --tail=300 geumpumta-backend-prod || true
+          echo ""
+          echo "Runtime datasource:"
+          docker exec geumpumta-backend-prod env \
+            | grep -E 'SPRING_DATASOURCE_(URL|USERNAME)' || true
+
+          exit 1
 
       - name: Clean up old images
         run: |

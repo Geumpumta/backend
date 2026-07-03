@@ -1,5 +1,6 @@
 package com.gpt.geumpumtabackend.unit.study.service;
 
+import com.gpt.geumpumtabackend.fcm.outbox.NotificationOutboxCommandService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.study.config.StudyProperties;
@@ -55,6 +56,9 @@ class StudySessionServiceTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private NotificationOutboxCommandService notificationOutboxCommandService;
     
     @InjectMocks
     private StudySessionService studySessionService;
@@ -322,6 +326,7 @@ class StudySessionServiceTest {
             StudySession expiredSession = new StudySession();
             LocalDateTime sessionStartTime = LocalDateTime.now().minusHours(4);
             expiredSession.startStudySession(sessionStartTime, testUser);
+            setStudySessionId(expiredSession, 10L);
 
             given(studyProperties.getMaxFocusHours()).willReturn(3);
             given(studySessionRepository.findAllByStatusAndStartTimeBefore(eq(StudyStatus.STARTED), any(LocalDateTime.class)))
@@ -330,7 +335,7 @@ class StudySessionServiceTest {
             LocalDateTime beforeCall = LocalDateTime.now();
 
             // When
-            List<User> usersToNotify = studySessionService.endExpiredMaxFocusSessions();
+            studySessionService.endExpiredMaxFocusSessions();
 
             // Then
             LocalDateTime afterCall = LocalDateTime.now();
@@ -339,10 +344,10 @@ class StudySessionServiceTest {
 
             assertThat(cutoffTimeCaptor.getValue())
                     .isBetween(beforeCall.minusHours(3), afterCall.minusHours(3));
-            assertThat(usersToNotify).containsExactly(testUser);
             assertThat(expiredSession.getEndTime()).isEqualTo(sessionStartTime.plusHours(3));
             assertThat(expiredSession.getTotalMillis()).isEqualTo(10_800_000L);
             assertThat(expiredSession.getStatus()).isEqualTo(StudyStatus.FINISHED);
+            verify(notificationOutboxCommandService).createMaxFocusOutbox(10L, 1L, 3);
         }
     }
 
@@ -367,5 +372,15 @@ class StudySessionServiceTest {
         }
         
         return user;
+    }
+
+    private void setStudySessionId(StudySession studySession, Long id) {
+        try {
+            java.lang.reflect.Field idField = StudySession.class.getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(studySession, id);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set study session ID", e);
+        }
     }
 }

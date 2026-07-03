@@ -78,6 +78,13 @@ dependencies {
 
     // FCM
     implementation 'com.google.firebase:firebase-admin:9.7.1'
+
+    // Circuit Breaker
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.3.0'
+    implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.3.0'
+    implementation 'io.github.resilience4j:resilience4j-ratelimiter:2.3.0'
+    implementation 'io.github.resilience4j:resilience4j-micrometer:2.3.0'
+
 }
 
 tasks.named('test') {

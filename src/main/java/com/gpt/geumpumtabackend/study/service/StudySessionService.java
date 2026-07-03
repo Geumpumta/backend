@@ -1,4 +1,7 @@
 package com.gpt.geumpumtabackend.study.service;
+import com.gpt.geumpumtabackend.fcm.domain.NotificationOutbox;
+import com.gpt.geumpumtabackend.fcm.outbox.NotificationOutboxCommandService;
+import com.gpt.geumpumtabackend.fcm.outbox.NotificationOutboxWorkerService;
 import com.gpt.geumpumtabackend.global.exception.BusinessException;
 import com.gpt.geumpumtabackend.global.exception.ExceptionType;
 import com.gpt.geumpumtabackend.study.config.StudyProperties;
@@ -34,6 +37,7 @@ public class StudySessionService {
     private final CampusWiFiValidationService wifiValidationService;
     private final StudyProperties studyProperties;
     private final ApplicationEventPublisher eventPublisher;
+    private final NotificationOutboxCommandService notificationOutboxCommandService;
 
     /*
     메인 홈
@@ -105,7 +109,7 @@ public class StudySessionService {
     }
 
     @Transactional
-    public List<User> endExpiredMaxFocusSessions() {
+    public void endExpiredMaxFocusSessions() {
         int maxFocusHours = studyProperties.getMaxFocusHours();
         LocalDateTime cutoffTime = LocalDateTime.now().minusHours(maxFocusHours);
 
@@ -113,11 +117,14 @@ public class StudySessionService {
                 StudyStatus.STARTED, cutoffTime
         );
 
-        List<User> usersToNotify = new ArrayList<>();
         for (StudySession expiredSession : expiredSessions) {
             expiredSession.endMaxFocusStudySession(maxFocusHours);
-            usersToNotify.add(expiredSession.getUser());
+            // 만료된 세션에 대해서 OutboxEntity에 내역을 추가
+            notificationOutboxCommandService.createMaxFocusOutbox(
+                    expiredSession.getId(),
+                    expiredSession.getUser().getId(),
+                    maxFocusHours
+            );
         }
-        return usersToNotify;
     }
 }
