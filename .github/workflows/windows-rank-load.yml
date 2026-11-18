@@ -1,0 +1,91 @@
+name: Windows ranking load
+on:
+  push:
+    branches: [perf/windows-rank-load]
+    paths: [bench/rank-read/windows-run.txt]
+permissions:
+  contents: read
+concurrency:
+  group: windows-ranking-benchmark
+  cancel-in-progress: false
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    environment: rank-windows-bench
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c
+        with:
+          authkey: ${{ secrets.TS_AUTHKEY }}
+          log-mode: quiet
+      - name: Prepare synthetic test sessions
+        shell: bash
+        env:
+          PART_01: ${{ secrets.RANK_FIXTURE_01 }}
+          PART_02: ${{ secrets.RANK_FIXTURE_02 }}
+          PART_03: ${{ secrets.RANK_FIXTURE_03 }}
+          PART_04: ${{ secrets.RANK_FIXTURE_04 }}
+          PART_05: ${{ secrets.RANK_FIXTURE_05 }}
+          PART_06: ${{ secrets.RANK_FIXTURE_06 }}
+          PART_07: ${{ secrets.RANK_FIXTURE_07 }}
+          PART_08: ${{ secrets.RANK_FIXTURE_08 }}
+          PART_09: ${{ secrets.RANK_FIXTURE_09 }}
+          PART_10: ${{ secrets.RANK_FIXTURE_10 }}
+          PART_11: ${{ secrets.RANK_FIXTURE_11 }}
+          PART_12: ${{ secrets.RANK_FIXTURE_12 }}
+          PART_13: ${{ secrets.RANK_FIXTURE_13 }}
+          PART_14: ${{ secrets.RANK_FIXTURE_14 }}
+          PART_15: ${{ secrets.RANK_FIXTURE_15 }}
+          PART_16: ${{ secrets.RANK_FIXTURE_16 }}
+          PART_17: ${{ secrets.RANK_FIXTURE_17 }}
+          PART_18: ${{ secrets.RANK_FIXTURE_18 }}
+          PART_19: ${{ secrets.RANK_FIXTURE_19 }}
+          PART_20: ${{ secrets.RANK_FIXTURE_20 }}
+          PART_21: ${{ secrets.RANK_FIXTURE_21 }}
+          PART_22: ${{ secrets.RANK_FIXTURE_22 }}
+          PART_23: ${{ secrets.RANK_FIXTURE_23 }}
+          PART_24: ${{ secrets.RANK_FIXTURE_24 }}
+          PART_25: ${{ secrets.RANK_FIXTURE_25 }}
+          PART_26: ${{ secrets.RANK_FIXTURE_26 }}
+          PART_27: ${{ secrets.RANK_FIXTURE_27 }}
+          PART_28: ${{ secrets.RANK_FIXTURE_28 }}
+          PART_29: ${{ secrets.RANK_FIXTURE_29 }}
+          PART_30: ${{ secrets.RANK_FIXTURE_30 }}
+          PART_31: ${{ secrets.RANK_FIXTURE_31 }}
+          PART_32: ${{ secrets.RANK_FIXTURE_32 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          for key in ${!PART_@}; do printf '%s' "${!key}"; done | base64 -d | gzip -dc > "$RUNNER_TEMP/sessions"
+          test "$(wc -l < "$RUNNER_TEMP/sessions")" -ge 4000
+      - name: Measure authenticated daily ranking
+        shell: bash
+        env:
+          TARGET: ${{ secrets.RANK_WINDOWS_IP }}
+          RANK_READ_PRECONNECT: '1'
+        run: |
+          set -euo pipefail
+          mkdir results
+          for mode in mysql redis; do
+            port=18090
+            if [[ "$mode" == redis ]]; then port=18091; fi
+            origin="http://$TARGET:$port"
+            for rate in 200 400; do
+              probe="results/$mode-$rate-probe"
+              node bench/rank-read/load.cjs "$origin" - "$rate" 30 "$probe" /actuator/health/liveness
+              node -e 'const s=require("./"+process.argv[1]+"/summary.json"); if(!s.validGenerator || s.success!==s.planned) console.warn("Probe did not sustain the target rate")' "$probe"
+              node bench/rank-read/load.cjs "$origin" "$RUNNER_TEMP/sessions" "$rate" 120 "results/$mode-$rate-warmup"
+              node bench/rank-read/load.cjs "$origin" "$RUNNER_TEMP/sessions" "$rate" 300 "results/$mode-$rate-measure"
+            done
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: windows-rank-load
+          path: |
+            results/*/summary.json
+            results/*/seconds.csv
+          retention-days: 7
