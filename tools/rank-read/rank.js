@@ -39,7 +39,7 @@ export const options = {
 function requestRank(phase) {
     const response = http.get(`${__ENV.RANK_BASE_URL}/api/v1/rank/personal/daily`, {
         headers: {
-            Authorization: `Bearer ${__ENV.RANK_TOKEN}`,
+            Authorization: `Bearer ${(__ENV.RANK_TOKEN || '').trim()}`,
             'X-Rank-Run': __ENV.RANK_RUN_ID,
             'X-Rank-Phase': phase,
         },
@@ -60,8 +60,18 @@ function requestRank(phase) {
 }
 
 export function setup() {
-    if (!requestRank('setup').ok) {
-        throw new Error('Daily rank preflight failed. Check the app, test account and response.');
+    const { response, ok } = requestRank('setup');
+    if (!ok) {
+        let code;
+        try {
+            const value = response.json('code');
+            if (typeof value === 'string' && /^[A-Z][A-Z0-9_]{0,50}$/.test(value)) {
+                code = value;
+            }
+        } catch (_) {
+            // The preflight response may be an empty or non-JSON error.
+        }
+        throw new Error(`Daily rank preflight failed (HTTP ${response.status}${code ? `, code ${code}` : ''}).`);
     }
 }
 

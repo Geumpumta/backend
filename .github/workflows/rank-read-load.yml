@@ -65,6 +65,7 @@ jobs:
           curl --silent --show-error --connect-timeout 5 --max-time 10 -o /dev/null \
             -w 'HTTP %{http_code} connect %{time_connect}s total %{time_total}s\n' \
             "$RANK_BASE_URL/api/v1/rank/personal/daily" | tee build/rank-read/network-before.txt
+          python3 -c 'import os, re; assert re.fullmatch(r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", os.environ["RANK_TOKEN"].strip()), "Expected a compact lab JWT"'
           output=()
           if [[ "$RANK_PROMETHEUS_ENABLED" == true ]]; then
             curl --fail --silent --show-error --max-time 5 "http://$RANK_VPN_IP:9090/-/ready"
