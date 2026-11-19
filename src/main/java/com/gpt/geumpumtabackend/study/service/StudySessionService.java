@@ -9,6 +9,7 @@ import com.gpt.geumpumtabackend.study.dto.request.StudyStartRequest;
 import com.gpt.geumpumtabackend.study.dto.response.StudySessionResponse;
 import com.gpt.geumpumtabackend.study.dto.response.StudyStartResponse;
 import com.gpt.geumpumtabackend.study.event.StudySessionEndedEvent;
+import com.gpt.geumpumtabackend.study.event.StudySessionChanged;
 import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
@@ -56,6 +57,7 @@ public class StudySessionService {
     public StudyStartResponse startStudySession(StudyStartRequest request, Long userId) {
         verifyCampusWifiConnection(request, userId);
         StudySession savedSession = makeStudySession(userId);
+        eventPublisher.publishEvent(new StudySessionChanged(userId));
         return StudyStartResponse.fromEntity(savedSession);
     }
 
@@ -68,6 +70,7 @@ public class StudySessionService {
                 .orElseThrow(()->new BusinessException(ExceptionType.STUDY_SESSION_NOT_FOUND));
         LocalDateTime endTime = LocalDateTime.now();
         studysession.endStudySession(endTime);
+        eventPublisher.publishEvent(new StudySessionChanged(userId));
         eventPublisher.publishEvent(new StudySessionEndedEvent(userId));
     }
 
@@ -116,6 +119,7 @@ public class StudySessionService {
         List<User> usersToNotify = new ArrayList<>();
         for (StudySession expiredSession : expiredSessions) {
             expiredSession.endMaxFocusStudySession(maxFocusHours);
+            eventPublisher.publishEvent(new StudySessionChanged(expiredSession.getUser().getId()));
             usersToNotify.add(expiredSession.getUser());
         }
         return usersToNotify;

@@ -11,6 +11,7 @@ import com.gpt.geumpumtabackend.study.repository.StudySessionRepository;
 import com.gpt.geumpumtabackend.user.domain.User;
 import com.gpt.geumpumtabackend.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -28,14 +29,19 @@ public class PersonalRankService {
     private final UserRankingRepository userRankingRepository;
     private final StudySessionRepository studySessionRepository;
     private final UserRepository userRepository;
+    @Autowired(required = false)
+    private RedisDailyRanking redisDailyRanking;
     /*
     현재 진행 중인 세션의 일간 랭킹 조회
      */
     public PersonalRankingResponse getCurrentDaily(Long userId) {
-        LocalDate today = LocalDate.now();
+        LocalDateTime nowTime = LocalDateTime.now();
+        if (redisDailyRanking != null) {
+            return buildPersonalRankingResponse(redisDailyRanking.top(nowTime), userId);
+        }
+        LocalDate today = nowTime.toLocalDate();
         LocalDateTime startToday = today.atStartOfDay();
         LocalDateTime endToday = today.atTime(23, 59, 59);
-        LocalDateTime nowTime = LocalDateTime.now();
         List<PersonalRankingTemp> userRankingTempList = studySessionRepository.calculateCurrentPeriodRanking(startToday, endToday, nowTime);
         return buildPersonalRankingResponse(userRankingTempList, userId);
     }
