@@ -1,2 +1,2 @@
 mysql 200
-# Retry with byte-preserving token transport.
+# Retry after handling the Windows UTF-8 byte-order mark.
