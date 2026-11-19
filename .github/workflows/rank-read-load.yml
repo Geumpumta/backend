@@ -61,7 +61,7 @@ jobs:
           export RANK_USERS=10000
           export RANK_RUN_ID="$RANK_MODE-$RANK_RATE-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           export RANK_REPORT="build/rank-read/$RANK_RUN_ID.json"
-          tailscale ping --c=5 "$RANK_VPN_IP" | tee build/rank-read/vpn-before.txt
+          tailscale ping --c=5 "$RANK_VPN_IP" | tee build/rank-read/vpn-before.txt || true
           curl --silent --show-error --connect-timeout 5 --max-time 10 -o /dev/null \
             -w 'HTTP %{http_code} connect %{time_connect}s total %{time_total}s\n' \
             "$RANK_BASE_URL/api/v1/rank/personal/daily" | tee build/rank-read/network-before.txt

@@ -1,2 +1,2 @@
 mysql 10
-# Low-rate probe for the indexed MySQL path.
+# Low-rate probe through the available VPN path.
