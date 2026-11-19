@@ -33,6 +33,8 @@ GitHub의 `rank-read-lab` Environment에 변수 `RANK_VPN_IP`(서버의 Tailscal
 
 서버에서 조회 모드를 직접 적용한 다음 **Actions → Rank read load test → Run workflow**에서 같은 모드와 요청률을 선택한다. 한 실행은 한 조합만 측정하며 네 조합을 순차로 호출한다. 모드 전환은 서버에서 관리한다. 실행마다 러너 VM이 달라질 수 있으므로 아티팩트의 VPN 연결 방식, 연결 시간, 러너 CPU·메모리 요약을 비교한다. 기준에 미달한 경우에도 k6가 생성한 결과 JSON을 아티팩트에 저장한다.
 
+기본 브랜치에 워크플로가 아직 없다면 실험 브랜치 `perf/daily-ranking-redis-read`에서 `tools/rank-read/hosted-run.txt`를 한 줄 `mysql 200` 형식으로 갱신해 push한다. 해당 파일을 바꾸는 실험 브랜치 push만 측정을 시작한다. 서버 모드를 먼저 맞추고 이전 실행이 끝난 뒤 다음 조합을 요청한다. 연결 실패로 같은 조합을 재시도할 때는 GitHub Actions에서 해당 실행을 다시 실행한다.
+
 기본값에서 Prometheus는 로컬 앱·컨테이너 지표를 계속 수집하고 k6 지표는 JSON으로 저장한다. k6 실시간 전송도 필요하면 Prometheus TCP 9090을 서버 Tailscale 주소에서 해당 러너 태그에만 허용한 뒤 Environment 변수 `RANK_PROMETHEUS_ENABLED=true`를 지정한다. GitHub의 실행 시각을 JSON의 UTC 측정 구간으로 가져와 Grafana 구간과 맞춘다.
 
 10,000명으로 200 RPS MySQL → Redis, 400 RPS Redis → MySQL을 각 1회 순서대로 측정한다. 각 조합에서 모드를 확인하고 다음 명령의 인자를 바꿔 실행한다. 토큰은 숨김 프롬프트에 입력한다.

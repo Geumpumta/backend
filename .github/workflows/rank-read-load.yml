@@ -1,6 +1,9 @@
 name: Rank read load test
 
 on:
+  push:
+    branches: [perf/daily-ranking-redis-read]
+    paths: [tools/rank-read/hosted-run.txt]
   workflow_dispatch:
     inputs:
       mode:
@@ -45,6 +48,12 @@ jobs:
           RANK_TOKEN: ${{ secrets.RANK_TOKEN }}
           RANK_PROMETHEUS_ENABLED: ${{ vars.RANK_PROMETHEUS_ENABLED }}
         run: |
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            read -r RANK_MODE RANK_RATE < tools/rank-read/hosted-run.txt
+            export RANK_MODE RANK_RATE
+          fi
+          [[ "$RANK_MODE" == mysql || "$RANK_MODE" == redis ]]
+          [[ "$RANK_RATE" == 200 || "$RANK_RATE" == 400 ]]
           python3 -c 'import ipaddress, os; assert ipaddress.IPv4Address(os.environ["RANK_VPN_IP"]) in ipaddress.IPv4Network("100.64.0.0/10"), "Use the lab server Tailscale IPv4"'
           test -n "$RANK_TOKEN"
           mkdir -p build/rank-read
@@ -75,6 +84,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rank-read-${{ inputs.mode }}-${{ inputs.rate }}-${{ github.run_attempt }}
+          name: rank-read-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/rank-read/
           if-no-files-found: ignore
