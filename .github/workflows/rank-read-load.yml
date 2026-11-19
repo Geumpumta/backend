@@ -45,7 +45,7 @@ jobs:
           RANK_VPN_IP: ${{ vars.RANK_VPN_IP }}
           RANK_MODE: ${{ inputs.mode }}
           RANK_RATE: ${{ inputs.rate }}
-          RANK_TOKEN: ${{ secrets.RANK_TOKEN }}
+          RANK_TOKEN_B64: ${{ secrets.RANK_TOKEN_B64 }}
           RANK_PROMETHEUS_ENABLED: ${{ vars.RANK_PROMETHEUS_ENABLED }}
         run: |
           if [[ "$GITHUB_EVENT_NAME" == push ]]; then
@@ -55,7 +55,7 @@ jobs:
           [[ "$RANK_MODE" == mysql || "$RANK_MODE" == redis ]]
           [[ "$RANK_RATE" == 200 || "$RANK_RATE" == 400 ]]
           python3 -c 'import ipaddress, os; assert ipaddress.IPv4Address(os.environ["RANK_VPN_IP"]) in ipaddress.IPv4Network("100.64.0.0/10"), "Use the lab server Tailscale IPv4"'
-          test -n "$RANK_TOKEN"
+          test -n "$RANK_TOKEN_B64"
           mkdir -p build/rank-read
           export RANK_BASE_URL="http://$RANK_VPN_IP:8080"
           export RANK_USERS=10000
@@ -65,7 +65,7 @@ jobs:
           curl --silent --show-error --connect-timeout 5 --max-time 10 -o /dev/null \
             -w 'HTTP %{http_code} connect %{time_connect}s total %{time_total}s\n' \
             "$RANK_BASE_URL/api/v1/rank/personal/daily" | tee build/rank-read/network-before.txt
-          python3 -c 'import os, re; assert re.fullmatch(r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", os.environ["RANK_TOKEN"].strip()), "Expected a compact lab JWT"'
+          python3 -c 'import base64, os, re; token = base64.b64decode(os.environ["RANK_TOKEN_B64"].strip(), validate=True); assert re.fullmatch(rb"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", token), "Expected a compact lab JWT"'
           output=()
           if [[ "$RANK_PROMETHEUS_ENABLED" == true ]]; then
             curl --fail --silent --show-error --max-time 5 "http://$RANK_VPN_IP:9090/-/ready"

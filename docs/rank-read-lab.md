@@ -29,7 +29,7 @@ Grafana의 **Daily rank read**와 Prometheus는 서버의 루프백에 둔다. �
 
 ### GitHub-hosted runner
 
-GitHub의 `rank-read-lab` Environment에 변수 `RANK_VPN_IP`(서버의 Tailscale IPv4)와 Secrets `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`, `RANK_TOKEN`을 설정한다. Tailscale에서 임시 러너 태그 `tag:rank-k6`를 발급할 수 있는 OAuth 클라이언트를 만들고 해당 태그에서 실험 서버의 TCP 8080에만 접근하도록 제한한다. 서버의 `RANK_BIND_IP`에는 Tailscale IPv4를 지정한다. GitHub에서 실행 가능한 브랜치에 워크플로와 k6 스크립트가 반영되어 있어야 한다. [Tailscale GitHub Actions 연동](https://tailscale.com/docs/solutions/connect-github-cicd-workflows-to-private-infrastructure-without-public-exposure)
+GitHub의 `rank-read-lab` Environment에 변수 `RANK_VPN_IP`(서버의 Tailscale IPv4)와 Secrets `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`, `RANK_TOKEN_B64`를 설정한다. `RANK_TOKEN_B64`에는 JWT 원본 바이트를 표준 Base64로 인코딩한 값을 넣는다. Tailscale에서 임시 러너 태그 `tag:rank-k6`를 발급할 수 있는 OAuth 클라이언트를 만들고 해당 태그에서 실험 서버의 TCP 8080에만 접근하도록 제한한다. 서버의 `RANK_BIND_IP`에는 Tailscale IPv4를 지정한다. GitHub에서 실행 가능한 브랜치에 워크플로와 k6 스크립트가 반영되어 있어야 한다. [Tailscale GitHub Actions 연동](https://tailscale.com/docs/solutions/connect-github-cicd-workflows-to-private-infrastructure-without-public-exposure)
 
 서버에서 조회 모드를 직접 적용한 다음 **Actions → Rank read load test → Run workflow**에서 같은 모드와 요청률을 선택한다. 한 실행은 한 조합만 측정하며 네 조합을 순차로 호출한다. 모드 전환은 서버에서 관리한다. 실행마다 러너 VM이 달라질 수 있으므로 아티팩트의 VPN 연결 방식, 연결 시간, 러너 CPU·메모리 요약을 비교한다. 기준에 미달한 경우에도 k6가 생성한 결과 JSON을 아티팩트에 저장한다.
 

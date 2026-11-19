@@ -1,9 +1,13 @@
 import http from 'k6/http';
 import { Counter, Rate, Trend, Gauge } from 'k6/metrics';
 import exec from 'k6/execution';
+import encoding from 'k6/encoding';
 
 const target = Number(__ENV.RANK_RATE);
 const duration = 120;
+const bearerToken = (__ENV.RANK_TOKEN_B64
+    ? encoding.b64decode(__ENV.RANK_TOKEN_B64.trim(), 'std', 's')
+    : __ENV.RANK_TOKEN || '').trim();
 const started = new Counter('rank_started');
 const succeeded = new Counter('rank_succeeded');
 const errors = new Rate('rank_errors');
@@ -39,7 +43,7 @@ export const options = {
 function requestRank(phase) {
     const response = http.get(`${__ENV.RANK_BASE_URL}/api/v1/rank/personal/daily`, {
         headers: {
-            Authorization: `Bearer ${(__ENV.RANK_TOKEN || '').trim()}`,
+            Authorization: `Bearer ${bearerToken}`,
             'X-Rank-Run': __ENV.RANK_RUN_ID,
             'X-Rank-Phase': phase,
         },

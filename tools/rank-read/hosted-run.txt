@@ -1,2 +1,2 @@
 mysql 200
-# Retry with authenticated preflight diagnostics.
+# Retry with byte-preserving token transport.
