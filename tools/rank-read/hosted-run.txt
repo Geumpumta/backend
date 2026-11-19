@@ -1,1 +1,2 @@
 mysql 200
+# Retry after correcting the k6 installer version.
