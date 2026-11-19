@@ -1,2 +1,2 @@
-mysql 200
-# Retry after handling the Windows UTF-8 byte-order mark.
+mysql 10
+# Low-rate probe for the indexed MySQL path.

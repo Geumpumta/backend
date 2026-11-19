@@ -4,7 +4,9 @@ import exec from 'k6/execution';
 import encoding from 'k6/encoding';
 
 const target = Number(__ENV.RANK_RATE);
-const duration = 120;
+const diagnostic = target === 10;
+const duration = diagnostic ? 30 : 120;
+const expected = target * duration;
 const bearerToken = (__ENV.RANK_TOKEN_B64
     ? encoding.b64decode(__ENV.RANK_TOKEN_B64.trim(), 'std', 's')
     : __ENV.RANK_TOKEN || '').trim();
@@ -14,6 +16,8 @@ const errors = new Rate('rank_errors');
 const endToEnd = new Trend('rank_e2e', true);
 const connect = new Trend('rank_connect', true);
 const transfer = new Trend('rank_transfer', true);
+const wait = new Trend('rank_wait', true);
+const requestTimeouts = new Counter('rank_timeouts');
 const firstStart = new Gauge('rank_measure_start_ms');
 const lastEnd = new Gauge('rank_measure_end_ms');
 
@@ -23,19 +27,20 @@ export const options = {
     scenarios: {
         warmup: {
             executor: 'constant-arrival-rate', exec: 'warmup', rate: target,
-            timeUnit: '1s', duration: '30s', gracefulStop: '5s',
+            timeUnit: '1s', duration: diagnostic ? '5s' : '30s', gracefulStop: '5s',
             preAllocatedVUs: target, maxVUs: target * 2,
         },
         measure: {
             executor: 'constant-arrival-rate', exec: 'measure', rate: target,
-            timeUnit: '1s', startTime: '35s', duration: `${duration}s`, gracefulStop: '6s',
+            timeUnit: '1s', startTime: diagnostic ? '10s' : '35s',
+            duration: `${duration}s`, gracefulStop: '6s',
             preAllocatedVUs: target, maxVUs: target * 2,
         },
     },
     thresholds: {
         rank_e2e: ['p(99)<=200'],
         rank_errors: ['rate<=0.001'],
-        rank_started: [`count==${target * duration}`],
+        rank_started: [diagnostic ? `count>=${expected}` : `count==${expected}`],
         'dropped_iterations{scenario:measure}': ['count==0'],
     },
 };
@@ -95,6 +100,8 @@ export function measure() {
     errors.add(!ok);
     connect.add(response.timings.blocked + response.timings.connecting + response.timings.tls_handshaking);
     transfer.add(response.timings.sending + response.timings.receiving);
+    wait.add(response.timings.waiting);
+    requestTimeouts.add(response.error_code === 1050 ? 1 : 0);
 }
 
 export function handleSummary(data) {
@@ -116,13 +123,17 @@ export function handleSummary(data) {
         completed,
         successfulRps: (metric('rank_succeeded').count || 0) / duration,
         dropped,
+        timeouts: metric('rank_timeouts').count || 0,
         measurementStartUtc: issued ? new Date(metric('rank_measure_start_ms').value).toISOString() : null,
         dispatchEndUtc: issued ? new Date(metric('rank_measure_start_ms').value + duration * 1000).toISOString() : null,
         lastCompletionUtc: completed ? new Date(metric('rank_measure_end_ms').max).toISOString() : null,
         averageMs: avg,
         p99Ms: p99,
+        connectionP99Ms: metric('rank_connect')['p(99)'] ?? null,
+        transferP99Ms: metric('rank_transfer')['p(99)'] ?? null,
+        waitingP99Ms: metric('rank_wait')['p(99)'] ?? null,
         errorRate,
-        verdict: issued !== target * duration || completed !== issued || dropped !== 0
+        verdict: (diagnostic ? issued < expected : issued !== expected) || completed !== issued || dropped !== 0
             ? 'incomplete-load'
             : p99 !== null && p99 <= 200 && errorRate !== null && errorRate <= 0.001 ? 'pass' : 'fail',
     };

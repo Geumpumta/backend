@@ -14,7 +14,7 @@ on:
       rate:
         description: Requests per second
         type: choice
-        options: ['200', '400']
+        options: ['10', '200', '400']
         required: true
 
 permissions:
@@ -53,7 +53,7 @@ jobs:
             export RANK_MODE RANK_RATE
           fi
           [[ "$RANK_MODE" == mysql || "$RANK_MODE" == redis ]]
-          [[ "$RANK_RATE" == 200 || "$RANK_RATE" == 400 ]]
+          [[ "$RANK_RATE" == 10 || "$RANK_RATE" == 200 || "$RANK_RATE" == 400 ]]
           python3 -c 'import ipaddress, os; assert ipaddress.IPv4Address(os.environ["RANK_VPN_IP"]) in ipaddress.IPv4Network("100.64.0.0/10"), "Use the lab server Tailscale IPv4"'
           test -n "$RANK_TOKEN_B64"
           mkdir -p build/rank-read
