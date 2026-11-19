@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: rank-app
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['rank-app:8080']
+  - job_name: rank-containers
+    static_configs:
+      - targets: ['cadvisor:8080']

@@ -1,0 +1,44 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - default
+      - lab
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/rank-read.yml:ro
+      - ./grafana/provider.yml:/etc/grafana/provisioning/dashboards/rank-read.yml:ro
+      - ./grafana/dashboard.json:/var/lib/grafana/dashboards/rank-read.json:ro
+      - grafana-data:/var/lib/grafana
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.5
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    devices:
+      - /dev/kmsg
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  lab:
+    external: true
+    name: ${RANK_DB_NETWORK:-backend_appnet}

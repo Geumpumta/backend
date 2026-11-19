@@ -1,0 +1,80 @@
+name: Rank read load test
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Active Spring ranking mode on the lab server
+        type: choice
+        options: [mysql, redis]
+        required: true
+      rate:
+        description: Requests per second
+        type: choice
+        options: ['200', '400']
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rank-read-lab
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    environment: rank-read-lab
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: v2.4.0
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:rank-k6
+      - name: Measure rank read
+        shell: bash
+        env:
+          RANK_VPN_IP: ${{ vars.RANK_VPN_IP }}
+          RANK_MODE: ${{ inputs.mode }}
+          RANK_RATE: ${{ inputs.rate }}
+          RANK_TOKEN: ${{ secrets.RANK_TOKEN }}
+          RANK_PROMETHEUS_ENABLED: ${{ vars.RANK_PROMETHEUS_ENABLED }}
+        run: |
+          python3 -c 'import ipaddress, os; assert ipaddress.IPv4Address(os.environ["RANK_VPN_IP"]) in ipaddress.IPv4Network("100.64.0.0/10"), "Use the lab server Tailscale IPv4"'
+          test -n "$RANK_TOKEN"
+          mkdir -p build/rank-read
+          export RANK_BASE_URL="http://$RANK_VPN_IP:8080"
+          export RANK_USERS=10000
+          export RANK_RUN_ID="$RANK_MODE-$RANK_RATE-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          export RANK_REPORT="build/rank-read/$RANK_RUN_ID.json"
+          tailscale ping --c=5 "$RANK_VPN_IP" | tee build/rank-read/vpn-before.txt
+          curl --silent --show-error --connect-timeout 5 --max-time 10 -o /dev/null \
+            -w 'HTTP %{http_code} connect %{time_connect}s total %{time_total}s\n' \
+            "$RANK_BASE_URL/api/v1/rank/personal/daily" | tee build/rank-read/network-before.txt
+          output=()
+          if [[ "$RANK_PROMETHEUS_ENABLED" == true ]]; then
+            curl --fail --silent --show-error --max-time 5 "http://$RANK_VPN_IP:9090/-/ready"
+            export K6_PROMETHEUS_RW_SERVER_URL="http://$RANK_VPN_IP:9090/api/v1/write"
+            export K6_PROMETHEUS_RW_TREND_STATS='avg,p(99)'
+            export K6_PROMETHEUS_RW_PUSH_INTERVAL=5s
+            export K6_PROMETHEUS_RW_STALE_MARKERS=true
+            output=(-o experimental-prometheus-rw)
+          fi
+          result=0
+          /usr/bin/time -v -o build/rank-read/runner-resources.txt \
+            k6 run "${output[@]}" --tag "run_id=$RANK_RUN_ID" --tag "mode=$RANK_MODE" \
+            --tag "target_rps=$RANK_RATE" tools/rank-read/rank.js || result=$?
+          tailscale ping --c=5 "$RANK_VPN_IP" | tee build/rank-read/vpn-after.txt || true
+          exit "$result"
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rank-read-${{ inputs.mode }}-${{ inputs.rate }}-${{ github.run_attempt }}
+          path: build/rank-read/
+          if-no-files-found: ignore

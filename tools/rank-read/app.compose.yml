@@ -1,0 +1,39 @@
+services:
+  rank-app:
+    image: eclipse-temurin:21-jre
+    environment:
+      TZ: Asia/Seoul
+      JAVA_TOOL_OPTIONS: -Xms512m -Xmx1g -Duser.timezone=Asia/Seoul
+      SPRING_PROFILES_ACTIVE: ${RANK_PROFILES:-rank-read-lab}
+      SPRING_CONFIG_ADDITIONAL_LOCATION: file:/run/rank-lab/application.yml
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-geumpumta:3306/${RANK_SCHEMA:-rank_lab_10000}
+      SPRING_DATA_REDIS_HOST: redis-geumpumta
+      SPRING_DATA_REDIS_PORT: "6379"
+      STUDY_MAX_FOCUS_HOURS: "24"
+    command: ["java", "-jar", "/app/server.jar"]
+    ports:
+      - "${RANK_BIND_IP:?Set the isolated LAN server IPv4}:8080:8080"
+    volumes:
+      - type: bind
+        source: ${RANK_APP_JAR:?Set the executable Spring Boot jar path}
+        target: /app/server.jar
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${RANK_APP_CONFIG:?Set the approved local Spring config file path}
+        target: /run/rank-lab/application.yml
+        read_only: true
+        bind:
+          create_host_path: false
+      - rank-access-logs:/build/rank-read-tomcat
+    networks:
+      - lab
+
+networks:
+  lab:
+    external: true
+    name: ${RANK_DB_NETWORK:-backend_appnet}
+
+volumes:
+  rank-access-logs:
